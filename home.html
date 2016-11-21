@@ -27,6 +27,21 @@
             float: right;
         }
     </style>
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script>
+      $( function() {
+        $( "#draggable" ).draggable();
+        $( "#droppable" ).droppable({
+          drop: function( event, ui ) {
+            $( this )
+              .addClass( "ui-state-highlight" )
+              .find( "p" )
+                .html( "Dropped!" );
+          }
+        });
+      } );
+    </script>
 </head>
 
 <body>
@@ -35,9 +50,15 @@
     <div id="panels">
         <div id="quiz-panel">
             <h2>Quizzes</h2>
+            <div id="droppable" class="ui-widget-header">
+              <p>Drop here</p>
+            </div>
         </div>
         <div id="question-panel">
             <h2>Questions</h2>
+            <div id="draggable" class="ui-widget-content">
+              <p>Drag me to my target</p>
+            </div>
         </div>
     </div>
 </body>
