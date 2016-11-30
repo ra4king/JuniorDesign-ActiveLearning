@@ -79,28 +79,37 @@
     </script>
 
     <script>
-        var socket = new WebSocket('ws://localhost:1337');
-        socket.onopen = function() {
-            console.log('Connected to server!');
-            socket.send(JSON.stringify({
-                username: 'Professor'
-            }));
-            socket.send(JSON.stringify({ get_quizzes: true }));
-            socket.send(JSON.stringify({ get_questions: true }));
-        };
-        socket.onmessage = function(msg) {
-            var data = JSON.parse(msg.data);
-            console.log('Received: ' + JSON.stringify(data, null, 4));
-        };
-
-        function createQuestion() {
-            var question = {
-                name: "Fancy Question",
-                answers: ["A stupid answer", "Another stupid answer", "A third stupid answer!", "Why..." ],
-                correct: 1
+        var questions = [];
+        var quizzes = [];
+        
+        var socket;
+        function connect() {
+            console.log('Connecting...');
+            var s = new WebSocket('ws://localhost:1337');
+            s.onopen = function() {
+                socket = s;
+                console.log('Connected to server!');
+                socket.send(JSON.stringify({
+                    username: 'Professor'
+                }));
+                socket.send(JSON.stringify({ get_quizzes: true }));
+                socket.send(JSON.stringify({ get_questions: true }));
             };
+            s.onmessage = function(msg) {
+                var data = JSON.parse(msg.data);
+                console.log('Received: ' + JSON.stringify(data, null, 4));
+            };
+            s.onclose = function() {
+                console.log('Connection closed.');
+                setTimeout(connect, 1000);
+            };
+        }
 
-            socket.send(JSON.stringify({ create_question: question }));
+        connect();
+
+        function createQuestion(name, answers, correct) {
+            console.log("Create question: " + name + " = " + answers + ", correct = " + correct);
+            socket.send(JSON.stringify({ create_question: { name: name, answers: answers, correct: correct } }));
         }
 
         function getQuestions() {
@@ -128,22 +137,26 @@
                 <form name="QuestionForm">
                     <fieldset>
                         <label for="question">Question:</label><br>
-                        <input type="text" id="question" name="question" value="" size="75"><br><br>
+                        <input type="text" id="question" name="question" value="" size="75"><br>
                         <label for="answer1">Answer 1:</label><br>
-                        <input type="text" id="answer1" name="answer1" value="" size="35"><br><br>
+                        <input type="text" id="answer1" name="answer1" value="" size="35">
+                        <input type="radio" name="correct" value="0" checked>Correct</input><br>
                         <label for="answer2">Answer 2:</label><br>
-                        <input type="text" id="answer2" name="answer2" value="" size="35"><br><br>
+                        <input type="text" id="answer2" name="answer2" value="" size="35">
+                        <input type="radio" name="correct" value="1">Correct</input><br>
                         <label for="answer3">Answer 3:</label><br>
-                        <input type="text" id="answer3" name="answer3" value="" size="35"><br><br>
+                        <input type="text" id="answer3" name="answer3" value="" size="35">
+                        <input type="radio" name="correct" value="2">Correct</input><br>
                         <label for="answer4">Answer 4:</label><br>
-                        <input type="text" id="answer4" name="answer4" value="" size="35"><br><br>
+                        <input type="text" id="answer4" name="answer4" value="" size="35">
+                        <input type="radio" name="correct" value="3">Correct</input><br>
 
-                        <input type="file" onchange="readURL(this);"/>
+                        <!-- <input type="file" onchange="readURL(this);"/>
                         <div>
                            <img id="imageInput" src="#" alt="your image" name="imageInput"/>
                         </div>
-                        <br>
-                        <button type="button" onclick="submitForm(question, answer1, answer2, answer3, answer4, imageInput)">
+                        <br> -->
+                        <button type="button" onclick="createQuestion(question.value, [answer1.value, answer2.value, answer3.value, answer4.value], correct.value)">
                             submit
                         </button>
                     </fieldset>
@@ -153,7 +166,6 @@
         </div>
     </div>
 
-    <button onclick="createQuestion()">Create Question!</button>
     <button onclick="getQuestions()">Get Questions!</button>
 </body>
 

@@ -6,11 +6,12 @@ var server = new ws.Server({ port: 1337 }, function() {
 });
 
 var config = JSON.parse(fs.readFileSync('config.json'));
+var last_id = config.last_id;
 var quizzes = config.quizzes;
 var questions = config.questions;
 
 function save_config() {
-    fs.writeFileSync('config.json', JSON.stringify({ quizzes: quizzes, questions: questions }, null, 4));
+    fs.writeFileSync('config.json', JSON.stringify({ last_id: last_id, quizzes: quizzes, questions: questions }, null, 4));
 }
 
 server.on('connection', function(socket) {
@@ -26,17 +27,20 @@ server.on('connection', function(socket) {
             username = data.username;
         } else if(data.create_question) {
             var question = data.create_question;
-            question.id = questions.length;
-            questions.push(question);
-            socket.send(JSON.stringify({ question_id:  question.id }));
+            question.id = last_id++;
+            questions[question.id] = question;
             save_config();
+
+            socket.send(JSON.stringify({ questions: questions }));
         } else if(data.get_questions) {
             socket.send(JSON.stringify({ questions: questions }));
         } else if(data.create_quiz) {
             var quiz = data.create_quiz;
-            quiz.id = quizzes.length;
-            quizzes.push(quiz);
+            quiz.id = last_id++;
+            quizzes[quiz.id] = quiz;
             save_config();
+
+            socket.send(JSON.stringify({ quizzes: quizzes }));
         } else if(data.get_quizzes) {
             socket.send(JSON.stringify({ quizzes: quizzes }));
         }

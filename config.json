@@ -1,4 +1,17 @@
 {
-    "quizzes": [],
-    "questions": []
+    "last_id": 1,
+    "quizzes": {},
+    "questions": {
+        "0": {
+            "name": "How many roads must a man walk down?",
+            "answers": [
+                "20",
+                "50",
+                "42",
+                "17"
+            ],
+            "correct": "2",
+            "id": 0
+        }
+    }
 }
