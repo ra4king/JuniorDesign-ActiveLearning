@@ -13,13 +13,29 @@
             color: white;
         }
     </style>
+    <script type="text/javascript">
+    	function readURL(input) {
+	        if (input.files && input.files[0]) {
+	            var reader = new FileReader();
+
+	            reader.onload = function (e) {
+	                $('#imageInput')
+	                    .attr('src', e.target.result)
+	                    .width(300)
+	                    .height(180);
+	            };
+	            reader.readAsDataURL(input.files[0]);
+	        }
+	    }
+	</script>
 
 </head>
 
 <body>
 	<script type="text/javascript">
-		function submitForm(q, a1, a2, a3, a4, img){
-			window.alert("Question submitted")
+        function submitForm(q, a1, a2, a3, a4, img){
+        	window.alert("Form Submitted");	
+
 		}
 	</script>
 	<form name="QuestionForm">
@@ -34,30 +50,15 @@
 		    <input type="text" id="answer3" name="answer3" value="" size="35"><br><br>
 		    <label for="answer4">Answer 4:</label><br>
 		    <input type="text" id="answer4" name="answer4" value="" size="35"><br><br>
-	    	
 
-
-	    
-	        <script type="text/javascript">
-	            function readURL(input) {
-		        if (input.files && input.files[0]) {
-		            var reader = new FileReader();
-
-		            reader.onload = function (e) {
-		                $('#imageInput')
-		                    .attr('src', e.target.result)
-		                    .width(300)
-		                    .height(180);
-		            };
-		            reader.readAsDataURL(input.files[0]);
-		        }
-		    }</script>
-		   <input type="file" onchange="readURL(this);"/>
-		   <div>
+		    <input type="file" onchange="readURL(this);"/>
+		    <div>
 			   <img id="imageInput" src="#" alt="your image" name="imageInput"/>
 			</div>
 			<br>
-			<button type="button" onclick="submitForm(question, answer1, answer2, answer3, answer4, imageInput)">submit</button>
+			<button type="button" onclick="submitForm(question, answer1, answer2, answer3, answer4, imageInput)">
+				submit
+			</button>
 		</fieldset>
 	</form>
 </body>

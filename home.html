@@ -31,6 +31,7 @@
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script>
       $( function() {
+        document.getElementById('questionFrame').style.display = 'none';
         $( "#draggable" ).draggable();
         $( "#droppable" ).droppable({
           drop: function( event, ui ) {
@@ -41,6 +42,12 @@
           }
         });
       } );
+      function displayQuestionForm(){
+            var e = document.getElementById('questionFrame');
+            e.style.display = ((e.style.display != 'none') ? 'none' : 'block');
+            var b = document.getElementById('createButton');
+            b.firstChild.data = ((b.firstChild.data != 'Create Question') ? 'Create Question' : 'Discard Question');
+        }
     </script>
 </head>
 
@@ -53,12 +60,15 @@
             <p>Drop here</p>
         </div>
         <div id="question-panel">
+            
             <h2>Questions</h2>
+            <button type="button" onclick="displayQuestionForm()" id="createButton">Create Question</button>
             <div id="draggable" class="ui-widget-content">
               <p>Drag me to my target</p>
             </div>
+            <iframe id="questionFrame" src="questionCreator.html" width="600" height="500"></iframe>
             
-            <object type="text/html" data="questionCreator.html" width="500" height="500"></object>
+            
         </div>
     </div>
 </body>
