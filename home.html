@@ -42,6 +42,36 @@
         });
       } );
     </script>
+
+    <script>
+        var socket = new WebSocket('ws://localhost:1337');
+        socket.onopen = function() {
+            console.log('Connected to server!');
+            socket.send(JSON.stringify({
+                username: 'Professor'
+            }));
+            socket.send(JSON.stringify({ get_quizzes: true }));
+            socket.send(JSON.stringify({ get_questions: true }));
+        };
+        socket.onmessage = function(msg) {
+            var data = JSON.parse(msg.data);
+            console.log('Received: ' + JSON.stringify(data, null, 4));
+        };
+
+        function createQuestion() {
+            var question = {
+                name: "Fancy Question",
+                answers: ["A stupid answer", "Another stupid answer", "A third stupid answer!", "Why..." ],
+                correct: 1
+            };
+
+            socket.send(JSON.stringify({ create_question: question }));
+        }
+
+        function getQuestions() {
+            socket.send(JSON.stringify({ get_questions: true }));
+        }
+    </script>
 </head>
 
 <body>
@@ -59,6 +89,9 @@
             </div>
         </div>
     </div>
+
+    <button onclick="createQuestion()">Create Question!</button>
+    <button onclick="getQuestions()">Get Questions!</button>
 </body>
 
 </html>
