@@ -16,6 +16,7 @@
             min-width: 45%;
             min-height: 500px;
             border: 1px solid black;
+            float: right;
         }
         #droppable {
             background-color: #2C2C2B;
@@ -24,13 +25,13 @@
             min-width: 45%;
             min-height: 500px;
             border: 1px solid black;
-            float: right;
         }
     </style>
     <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script>
       $( function() {
+        document.getElementById('questionCreator').style.display = 'none';
         $( "#draggable" ).draggable();
         $( "#droppable" ).droppable({
           drop: function( event, ui ) {
@@ -41,6 +42,40 @@
           }
         });
       } );
+        function displayQuestionForm(){
+            var e = document.getElementById('questionCreator');
+            e.style.display = ((e.style.display != 'none') ? 'none' : 'block');
+            var b = document.getElementById('createButton');
+            b.firstChild.data = ((b.firstChild.data != 'Create Question') ? 'Create Question' : 'Hide Question') ;
+        }
+        function readURL(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+
+                reader.onload = function (e) {
+                    $('#imageInput')
+                        .attr('src', e.target.result)
+                        .width(300)
+                        .height(180);
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+        function submitForm(q, a1, a2, a3, a4, img){
+            window.alert("Form Submitted with: " + q.value + " " + a1.value + " " + a2.value + " " + a3.value + " " + a4.value); 
+            displayQuestionForm();
+            //Server code goes here
+
+
+
+            //To clear the input values:
+            q.value = ""
+            a1.value = ""
+            a2.value = ""
+            a3.value = ""
+            a4.value = ""
+            img.src = ""
+        }
     </script>
 
     <script>
@@ -83,10 +118,38 @@
             <p>Drop here</p>
         </div>
         <div id="question-panel">
+            
             <h2>Questions</h2>
+            <button type="button" onclick="displayQuestionForm()" id="createButton">Create Question</button>
             <div id="draggable" class="ui-widget-content">
               <p>Drag me to my target</p>
             </div>
+            <div id="questionCreator">
+                <form name="QuestionForm">
+                    <fieldset>
+                        <label for="question">Question:</label><br>
+                        <input type="text" id="question" name="question" value="" size="75"><br><br>
+                        <label for="answer1">Answer 1:</label><br>
+                        <input type="text" id="answer1" name="answer1" value="" size="35"><br><br>
+                        <label for="answer2">Answer 2:</label><br>
+                        <input type="text" id="answer2" name="answer2" value="" size="35"><br><br>
+                        <label for="answer3">Answer 3:</label><br>
+                        <input type="text" id="answer3" name="answer3" value="" size="35"><br><br>
+                        <label for="answer4">Answer 4:</label><br>
+                        <input type="text" id="answer4" name="answer4" value="" size="35"><br><br>
+
+                        <input type="file" onchange="readURL(this);"/>
+                        <div>
+                           <img id="imageInput" src="#" alt="your image" name="imageInput"/>
+                        </div>
+                        <br>
+                        <button type="button" onclick="submitForm(question, answer1, answer2, answer3, answer4, imageInput)">
+                            submit
+                        </button>
+                    </fieldset>
+                </form>
+            </div>
+            
         </div>
     </div>
 
