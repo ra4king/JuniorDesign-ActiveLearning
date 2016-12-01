@@ -30,18 +30,18 @@
     <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script>
-      $( function() {
-        document.getElementById('questionCreator').style.display = 'none';
-        $( "#draggable" ).draggable();
-        $( "#droppable" ).droppable({
-          drop: function( event, ui ) {
-            $( this )
-              .addClass( "ui-state-highlight" )
-              .find( "p" )
-                .html( "Dropped!" );
-          }
+        $(function() {
+            document.getElementById('questionCreator').style.display = 'none';
+            $( '#draggable' ).draggable();
+            $( '#droppable' ).droppable({
+              drop: function(event, ui) {
+                $(this)
+                  .addClass('ui-state-highlight')
+                  .find('p')
+                    .html('Dropped!');
+              }
+            });
         });
-      } );
         function displayQuestionForm(){
             var e = document.getElementById('questionCreator');
             e.style.display = ((e.style.display != 'none') ? 'none' : 'block');
@@ -60,21 +60,6 @@
                 };
                 reader.readAsDataURL(input.files[0]);
             }
-        }
-        function submitForm(q, a1, a2, a3, a4, img){
-            window.alert("Form Submitted with: " + q.value + " " + a1.value + " " + a2.value + " " + a3.value + " " + a4.value); 
-            displayQuestionForm();
-            //Server code goes here
-
-
-
-            //To clear the input values:
-            q.value = ""
-            a1.value = ""
-            a2.value = ""
-            a3.value = ""
-            a4.value = ""
-            img.src = ""
         }
     </script>
 
@@ -107,9 +92,8 @@
 
         connect();
 
-        function createQuestion(name, answers, correct) {
-            console.log("Create question: " + name + " = " + answers + ", correct = " + correct);
-            socket.send(JSON.stringify({ create_question: { name: name, answers: answers, correct: correct } }));
+        function createQuestion(name, answers, correct, image) {
+            socket.send(JSON.stringify({ create_question: { name: name, answers: answers, correct: correct, image: image } }));
         }
 
         function getQuestions() {
@@ -127,7 +111,6 @@
             <p>Drop here</p>
         </div>
         <div id="question-panel">
-            
             <h2>Questions</h2>
             <button type="button" onclick="displayQuestionForm()" id="createButton">Create Question</button>
             <div id="draggable" class="ui-widget-content">
@@ -151,18 +134,18 @@
                         <input type="text" id="answer4" name="answer4" value="" size="35">
                         <input type="radio" name="correct" value="3">Correct</input><br>
 
-                        <!-- <input type="file" onchange="readURL(this);"/>
+                        <input id="fileInput" type="file" onchange="readURL(this);"/>
                         <div>
-                           <img id="imageInput" src="#" alt="your image" name="imageInput"/>
+                           <img id="imageInput" src="" alt="Please choose an image" name="imageInput"/>
                         </div>
-                        <br> -->
-                        <button type="button" onclick="createQuestion(question.value, [answer1.value, answer2.value, answer3.value, answer4.value], correct.value)">
+                        <br>
+                        <button type="button" onclick="createQuestion(question.value, [answer1.value, answer2.value, answer3.value, answer4.value], correct.value,
+                        $('#imageInput').attr('src'))">
                             submit
                         </button>
                     </fieldset>
                 </form>
             </div>
-            
         </div>
     </div>
 

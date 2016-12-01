@@ -24,7 +24,7 @@
         float: right;
     }
     li.question {
-        background-color: grey;
+        background-color: gray;
         width: 280px;
         height: 100px;
         margin-left: 10px;
@@ -44,9 +44,9 @@
 
     </style>
 </head>
-<body>
+<body ondragover="allowDrop(event)">
     <div id="Boxes">
-        <span ondrop="drop(event)" ondragover="allowDrop(event)" id="Questions">
+        <span ondrop="drop(event)" id="Questions">
             <ul id="QuestionsList"></ul>
         </span>
         <span id="SampleQuestionsList">
@@ -54,7 +54,6 @@
         </span>
     </div>
 
-    
     <script>
     var questions = {
         question1: {
@@ -68,22 +67,20 @@
         }
     }
 
-    var list = function(questions) {
-        var counter = 1;
-        for (var q in questions) {
-            document.getElementById('sampleQuestions').innerHTML += '<li id="q' + counter + '" class="question vaultQuestion" draggable="true" ondragstart="drag(event)"> <p class="questionName"> ' + questions[q].name + '</p></li>' ;
-            counter++;
-
-        }
-
+    var counter = 1;
+    for (var q in questions) {
+        document.getElementById('sampleQuestions').innerHTML +=
+        '<li id="q' + counter + '" class="question vaultQuestion" draggable="true" ondragstart="drag(event)"> <p class="questionName"> ' + questions[q].name + '</p></li>';
+        counter++;
     }
-    list(questions);
     </script>
     <script>
     function allowDrop(ev) {
         ev.preventDefault();
         if (ev.target.id == "Questions") {
             ev.target.style.backgroundColor = "green";
+        } else {
+            document.getElementById("Questions").style.backgroundColor = "black";
         }
     }
 
@@ -104,8 +101,6 @@
             list.removeChild(nodes[index]);
         }
     }
-
-
 
     function drop(ev) {
         ev.preventDefault();
