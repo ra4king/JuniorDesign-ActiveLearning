@@ -1,53 +1,97 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Active Learning Tool - Home</title>
+        <title>Active Learning Tool - Professor Home</title>
         <style>
             body {
                 background-color: #EEB211;
             }
-            h2 {
-                text-align: center;
+
+            #question-creator {
+                display: none;
             }
-            #question-panel {
+
+            #quiz-panel, #question-panel {
                 background-color: #2C2C2B;
                 color: white;
-                display: inline-block;
                 min-width: 45%;
                 min-height: 500px;
+                max-width: 500px;
                 border: 1px solid black;
+            }
+
+            #quiz-panel {
+                float: left;
+            }
+
+            #question-panel {
                 float: right;
             }
-            #droppable {
-                background-color: #2C2C2B;
-                color: white;
+
+            #quiz-list, #question-list {
+                list-style-position: inside;
+            }
+
+            #quiz-title, #question-title {
+                text-align: center;
+                margin-left: 10px;
+            }
+
+            #refresh-quizzes, #refresh-questions {
+                margin-left: 10px;
+            }
+
+            #quiz-list, #question-list {
+                list-style-position: inside;
+                margin: 0px;
+                padding: 0px;
+            }
+
+            .answer-list {
+                list-style-type: upper-alpha;
+                margin: auto;
+                font-size: 1em;
+                font-weight: normal;
+            }
+
+            .question {
+                font-size: 1.5em;
+                font-weight: bold;
+                color: black;
+                background-color: white;
+                border: solid 1px black;
+                padding: 10px;
+                margin: 10px;
+            }
+
+            .question-list {
+                width: 70%;
                 display: inline-block;
-                min-width: 45%;
-                min-height: 500px;
-                border: 1px solid black;
+            }
+
+            .question-image {
+                width: 30%;
+                display: inline-block;
+            }
+
+            .question-name {
+                margin: 0px;
             }
         </style>
         <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
         <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
         <script>
-            $(function() {
-                document.getElementById('questionCreator').style.display = 'none';
-                $( '#draggable' ).draggable();
-                $( '#droppable' ).droppable({
-                  drop: function(event, ui) {
-                    $(this)
-                      .addClass('ui-state-highlight')
-                      .find('p')
-                        .html('Dropped!');
-                  }
-                });
-            });
-            function displayQuestionForm(){
-                var e = document.getElementById('questionCreator');
-                e.style.display = ((e.style.display != 'none') ? 'none' : 'block');
-                var b = document.getElementById('createButton');
+            function toggleQuestionForm(){
+                var e1 = document.getElementById('question-creator');
+                e1.style.display = e1.style.display == 'block' ? 'none' : 'block';
+
+                var e2 = document.getElementById('question-list');
+                e2.style.display = e2.style.display == 'none' ? 'block' : 'none';
+
+                var b = document.getElementById('create-button');
                 b.firstChild.data = ((b.firstChild.data != 'Create Question') ? 'Create Question' : 'Hide Question') ;
             }
+
             function readURL(input) {
                 if (input.files && input.files[0]) {
                     var reader = new FileReader();
@@ -61,11 +105,40 @@
                     reader.readAsDataURL(input.files[0]);
                 }
             }
+
+            var questions = {};
+            var quizzes = {};
+
+            function updateQuestions(new_questions) {
+                questions = new_questions;
+
+                var html = "";
+                for(var id in questions) {
+                    var question = questions[id];
+                    var body = '<p class="question-name"> ' + question.name + '</p>'
+                    body += '<ol class="answer-list">';
+                    question.answers.forEach(function(answer, idx) {
+                        body += '<li id="question-' + id + '-' + idx + '" class="answer"><input type="radio" name="answers-' + id + '">' + answer + '</input></li>';
+                    });
+                    body += '</ol>';
+
+                    html += '<div class="question"><li id="question-' + id + '" class="question-list">' + body + '</li>';
+
+                    if(question.image) {
+                        html += '<img class="question-image" src="' + question.image + '" />';
+                    }
+
+                    html += '</div>';
+                };
+
+                document.getElementById('question-list').innerHTML = html;
+            }
+
+            function updateQuizzes(new_quizzes) {
+                quizzes = new_quizzes;
+            }
             
-            var questions = [];
-            var quizzes = [];
-            
-            var socket;
+            var socket = null;
             function connect() {
                 console.log('Connecting...');
                 var s = new WebSocket('ws://localhost:1337');
@@ -80,9 +153,15 @@
                 };
                 s.onmessage = function(msg) {
                     var data = JSON.parse(msg.data);
-                    console.log('Received: ' + JSON.stringify(data, null, 4));
+                    if(data.questions) {
+                        updateQuestions(data.questions);
+                    }
+                    if(data.quizzes) {
+                        updateQuizzes(data.quizzes);
+                    }
                 };
                 s.onclose = function() {
+                    socket = null;
                     console.log('Connection closed.');
                     setTimeout(connect, 1000);
                 };
@@ -91,61 +170,68 @@
             connect();
 
             function createQuestion(name, answers, correct, image) {
-                socket.send(JSON.stringify({ create_question: { name: name, answers: answers, correct: correct, image: image } }));
+                if(socket != null) {
+                    socket.send(JSON.stringify({ create_question: { name: name, answers: answers, correct: correct, image: image } }));
+                }
             }
 
             function getQuestions() {
-                socket.send(JSON.stringify({ get_questions: true }));
+                if(socket != null) {
+                    socket.send(JSON.stringify({ get_questions: true }));
+                }
+            }
+
+            function getQuizzes() {
+                if(socket != null) {
+                    socket.send(JSON.stringify({ get_quizzes: true }));
+                }
             }
         </script>
     </head>
+
     <body>
         <h1>Active Learning Tool</h1>
 
-        <div id="panels">
-            <div id="droppable" class="ui-widget-header">
-                <h2>Quizzes</h2>
-                <p>Drop here</p>
-            </div>
-            <div id="question-panel">
-                <h2>Questions</h2>
-                <button type="button" onclick="displayQuestionForm()" id="createButton">Create Question</button>
-                <div id="draggable" class="ui-widget-content">
-                  <p>Drag me to my target</p>
-                </div>
-                <div id="questionCreator">
-                    <form name="QuestionForm">
-                        <fieldset>
-                            <label for="question">Question:</label><br>
-                            <input type="text" id="question" name="question" value="" size="75"><br>
-                            <label for="answer1">Answer 1:</label><br>
-                            <input type="text" id="answer1" name="answer1" value="" size="35">
-                            <input type="radio" name="correct" value="0" checked>Correct</input><br>
-                            <label for="answer2">Answer 2:</label><br>
-                            <input type="text" id="answer2" name="answer2" value="" size="35">
-                            <input type="radio" name="correct" value="1">Correct</input><br>
-                            <label for="answer3">Answer 3:</label><br>
-                            <input type="text" id="answer3" name="answer3" value="" size="35">
-                            <input type="radio" name="correct" value="2">Correct</input><br>
-                            <label for="answer4">Answer 4:</label><br>
-                            <input type="text" id="answer4" name="answer4" value="" size="35">
-                            <input type="radio" name="correct" value="3">Correct</input><br>
-
-                            <input id="fileInput" type="file" onchange="readURL(this);"/>
-                            <div>
-                               <img id="imageInput" src="" alt="Please choose an image" name="imageInput"/>
-                            </div>
-                            <br>
-                            <button type="button" onclick="createQuestion(question.value, [answer1.value, answer2.value, answer3.value, answer4.value], correct.value,
-                            $('#imageInput').attr('src'))">
-                                submit
-                            </button>
-                        </fieldset>
-                    </form>
-                </div>
-            </div>
+        <div id="quiz-panel">
+            <h2 id="quiz-title">Quizzes</h2>
+            <button id="refresh-quizzes" onclick="getQuizzes()">Refresh</button>
+            <ol id="quiz-list"></ol>
         </div>
+        <div id="question-panel">
+            <h2 id="question-title">Questions</h2>
+            <button id="refresh-questions" onclick="getQuestions()">Refresh</button>
+            <button type="button" onclick="toggleQuestionForm()" id="create-button">Create Question</button>
+            <div id="question-creator">
+                <form>
+                    <fieldset>
+                        <label for="question">Question:</label><br>
+                        <input type="text" id="question" name="question" value="" size="75"><br>
+                        <label for="answer1">Answer 1:</label><br>
+                        <input type="text" id="answer1" name="answer1" value="" size="35">
+                        <input type="radio" name="correct" value="0" checked>Correct</input><br>
+                        <label for="answer2">Answer 2:</label><br>
+                        <input type="text" id="answer2" name="answer2" value="" size="35">
+                        <input type="radio" name="correct" value="1">Correct</input><br>
+                        <label for="answer3">Answer 3:</label><br>
+                        <input type="text" id="answer3" name="answer3" value="" size="35">
+                        <input type="radio" name="correct" value="2">Correct</input><br>
+                        <label for="answer4">Answer 4:</label><br>
+                        <input type="text" id="answer4" name="answer4" value="" size="35">
+                        <input type="radio" name="correct" value="3">Correct</input><br>
 
-        <button onclick="getQuestions()">Get Questions!</button>
+                        <input id="fileInput" type="file" onchange="readURL(this);"/>
+                        <div>
+                           <img id="imageInput" src="" alt="Please choose an image" name="imageInput"/>
+                        </div>
+                        <br>
+                        <button type="button" onclick="createQuestion(question.value, [answer1.value, answer2.value, answer3.value, answer4.value], correct.value,
+                        $('#imageInput').attr('src'))">
+                            submit
+                        </button>
+                    </fieldset>
+                </form>
+            </div>
+            <ol id="question-list"></ol>
+        </div>
     </body>
 </html>

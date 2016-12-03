@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Active Learning Tool - Home</title>
+        <title>Active Learning Tool - Student Home</title>
         <style>
             body {
                 background-color: #EEB211;
@@ -60,6 +60,16 @@
                 margin: 10px;
             }
 
+            .question-list {
+                width: 70%;
+                display: inline-block;
+            }
+
+            .question-image {
+                width: 30%;
+                display: inline-block;
+            }
+
             .question-name {
                 margin: 0px;
             }
@@ -81,7 +91,13 @@
                     });
                     body += '</ol>';
 
-                    html += '<li id="question-' + id + '" class="question">' + body + '</li>';
+                    html += '<div class="question"><li id="question-' + id + '" class="question-list">' + body + '</li>';
+
+                    if(question.image) {
+                        html += '<img class="question-image" src="' + question.image + '" />';
+                    }
+
+                    html += '</div>';
                 };
 
                 document.getElementById('question-list').innerHTML = html;
@@ -122,12 +138,6 @@
             }
 
             connect();
-
-            function createQuestion(name, answers, correct, image) {
-                if(socket != null) {
-                    socket.send(JSON.stringify({ create_question: { name: name, answers: answers, correct: correct, image: image } }));
-                }
-            }
 
             function getQuestions() {
                 if(socket != null) {
