@@ -9,6 +9,12 @@
 
             #question-creator {
                 display: none;
+                margin: 10px;
+            }
+
+            #quiz-creator {
+                display: none;
+                margin: 10px;
             }
 
             #quiz-panel, #question-panel {
@@ -17,7 +23,7 @@
                 min-width: 45%;
                 min-height: 500px;
                 max-width: 500px;
-                border: 1px solid black;
+                border: solid 1px black;
             }
 
             #quiz-panel {
@@ -28,8 +34,21 @@
                 float: right;
             }
 
-            #quiz-list, #question-list {
+            #quiz-list, #quiz-question-list, #question-list {
                 list-style-position: inside;
+                border: solid 1px white;
+                min-height: 500px;
+                margin: 0px;
+                padding: 0px;
+            }
+
+            #quiz-list {
+                list-style-type: none;
+            }
+
+            #quiz-question-list {
+                text-align: center;
+                padding-top: 20px;
             }
 
             #quiz-title, #question-title {
@@ -41,41 +60,62 @@
                 margin-left: 10px;
             }
 
-            #quiz-list, #question-list {
-                list-style-position: inside;
-                margin: 0px;
-                padding: 0px;
+            #quiz-name {
+                display: inline-block;
+                margin: 5px;
+                float: left;
             }
 
-            .answer-list {
-                list-style-type: upper-alpha;
-                margin: auto;
-                font-size: 1em;
-                font-weight: normal;
+            #submit-quiz {
+                display: inline-block;
+                margin: 5px;
+                float: right;
             }
 
-            .question {
-                font-size: 1.5em;
+            .quiz, .quiz-question, .question {
+                font-size: 25px;
                 font-weight: bold;
                 color: black;
                 background-color: white;
                 border: solid 1px black;
                 padding: 10px;
                 margin: 10px;
+                vertical-align: top;
             }
 
-            .question-list {
-                width: 70%;
+            .quiz-body {
+                height: 50px;
+                width: 90%;
+                vertical-align: top;
+            }
+
+            .quiz-delete {
+                width: 10%;
+                height: 50px;
+                vertical-align: top;
+            }
+
+            .question-body {
+                width: 60%;
                 display: inline-block;
+                vertical-align: top;
+            }
+
+            .question-name {
+                margin: 0px;
+            }
+
+            .answer-list {
+                list-style-type: upper-alpha;
+                list-style-position: outside;
+                font-size: 18px;
+                font-weight: normal;
             }
 
             .question-image {
                 width: 30%;
                 display: inline-block;
-            }
-
-            .question-name {
-                margin: 0px;
+                vertical-align: top;
             }
         </style>
         <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
@@ -92,18 +132,90 @@
                 b.firstChild.data = ((b.firstChild.data != 'Create Question') ? 'Create Question' : 'Hide Question') ;
             }
 
+            var current_quiz_questions = [];
+
+            function clearQuizForm() {
+                current_quiz_questions = [];
+                $('#quiz-question-list').css('text-align', 'center')
+                                        .html('<p id="drag-questions-msg">Drag questions here!</p>');
+            }
+
+            function toggleQuizForm() {
+                var e1 = document.getElementById('quiz-creator');
+                e1.style.display = e1.style.display == 'block' ? 'none' : 'block';
+
+                var e2 = document.getElementById('quiz-list');
+                e2.style.display = e2.style.display == 'none' ? 'block' : 'none';
+
+                for(var id in questions) {
+                    $('#question-' + id).attr('draggable', e1.style.display == 'block');
+                }
+            }
+
             function readURL(input) {
                 if (input.files && input.files[0]) {
                     var reader = new FileReader();
 
                     reader.onload = function (e) {
-                        $('#imageInput')
+                        $('#image-input')
                             .attr('src', e.target.result)
                             .width(300)
                             .height(180);
                     };
                     reader.readAsDataURL(input.files[0]);
+                } else {
+                    $('#image-input').attr('src', '').width(0).height(0);
                 }
+            }
+
+            function allowDrop(ev) {
+                ev.preventDefault();
+                // do something?
+            }
+
+            function drag(ev) {
+                if(ev.target.id.startsWith('question-')) {
+                    ev.dataTransfer.setData('q', ev.target.id);
+                }
+            }
+
+            function removeQuestion(id) {
+                var list = document.getElementById('quiz-question-list');
+                var nodes = list.childNodes;
+                var index = -1;
+                for (var i = 0; i < nodes.length; i++ ) {
+                    if (nodes[i].id == id) {
+                        index = i;
+                    }
+                }
+                if (index != -1 && confirm('Are you sure you want to delete this question?')) {
+                    list.removeChild(nodes[index]);
+
+                    var question_id = id.substring('quiz-question-'.length);
+                    var idx = current_quiz_questions.indexOf(question_id);
+                    current_quiz_questions.splice(idx, 1);
+                }
+            }
+
+            function drop(ev) {
+                ev.preventDefault();
+                var id = ev.dataTransfer.getData('q');
+                var elem = document.getElementById(id).cloneNode(true);
+
+                var question_id = id.substring('question-'.length);
+                current_quiz_questions.push(question_id);
+                
+                $('#drag-questions-msg').css('display', 'none');
+                $('#quiz-question-list').css('text-align', 'left');
+
+                var list = document.getElementById('quiz-question-list');
+                // if (elem.classList.contains('vault-question')) {
+                elem.id = 'quiz-' + elem.id;
+                elem.classList.remove('question');
+                elem.classList.add('quiz-question');
+                elem.innerHTML += '<button onclick="removeQuestion(\'' + elem.id +'\')">X</button>'
+                list.innerHTML += elem.outerHTML;
+                console.log(elem.outerHTML);
             }
 
             var questions = {};
@@ -112,23 +224,23 @@
             function updateQuestions(new_questions) {
                 questions = new_questions;
 
-                var html = "";
+                var html = '';
                 for(var id in questions) {
                     var question = questions[id];
                     var body = '<p class="question-name"> ' + question.name + '</p>'
                     body += '<ol class="answer-list">';
                     question.answers.forEach(function(answer, idx) {
-                        body += '<li id="question-' + id + '-' + idx + '" class="answer"><input type="radio" name="answers-' + id + '">' + answer + '</input></li>';
+                        body += '<li id="answer-' + id + '-' + idx + '" class="answer"><input type="radio" name="answers-' + id + '">' + answer + '</input></li>';
                     });
                     body += '</ol>';
 
-                    html += '<div class="question"><li id="question-' + id + '" class="question-list">' + body + '</li>';
+                    html += '<li id="question-' + id + '" class="question" ondragstart="drag(event)"><div class="question-body">' + body + '</div>';
 
                     if(question.image) {
                         html += '<img class="question-image" src="' + question.image + '" />';
                     }
 
-                    html += '</div>';
+                    html += '</li>';
                 };
 
                 document.getElementById('question-list').innerHTML = html;
@@ -136,12 +248,20 @@
 
             function updateQuizzes(new_quizzes) {
                 quizzes = new_quizzes;
+
+                var html = '';
+                for(var id in quizzes) {
+                    var quiz = quizzes[id];
+                    html += '<li id="quiz-' + id + '" class="quiz"><button class="quiz-body">' + quiz.name + '</button><button class="quiz-delete">&#10006;</button></li>';
+                }
+
+                document.getElementById('quiz-list').innerHTML = html;
             }
             
             var socket = null;
             function connect() {
                 console.log('Connecting...');
-                var s = new WebSocket('ws://localhost:1337');
+                var s = new WebSocket('ws://www.roiatalla.com:1337');
                 s.onopen = function() {
                     socket = s;
                     console.log('Connected to server!');
@@ -171,8 +291,10 @@
 
             function createQuestion(name, answers, correct, image) {
                 if(socket != null) {
-                    socket.send(JSON.stringify({ create_question: { name: name, answers: answers, correct: correct, image: image } }));
+                    socket.send(JSON.stringify({ create_question: { name: name, answers: answers, correct: correct, image: image }}));
                 }
+
+                toggleQuestionForm();
             }
 
             function getQuestions() {
@@ -186,6 +308,13 @@
                     socket.send(JSON.stringify({ get_quizzes: true }));
                 }
             }
+
+            function createQuiz() {
+                if(socket != null) {
+                    var name = $('#quiz-name-field').val();
+                    socket.send(JSON.stringify({ create_quiz: { name: name, questions: current_quiz_questions }}));
+                }
+            }
         </script>
     </head>
 
@@ -195,12 +324,19 @@
         <div id="quiz-panel">
             <h2 id="quiz-title">Quizzes</h2>
             <button id="refresh-quizzes" onclick="getQuizzes()">Refresh</button>
+            <button id="create-quiz" onclick="toggleQuizForm()">Create Quiz</button>
+            <div id="quiz-creator">
+                <div id="quiz-name">Name: <input type="text" id="quiz-name-field" /></div>
+                <div id="submit-quiz"><button onclick="createQuiz()">Submit</button></div>
+                <ol id="quiz-question-list" ondrop="drop(event)" ondragover="allowDrop(event)"></ol>
+            </div>
             <ol id="quiz-list"></ol>
         </div>
         <div id="question-panel">
             <h2 id="question-title">Questions</h2>
             <button id="refresh-questions" onclick="getQuestions()">Refresh</button>
-            <button type="button" onclick="toggleQuestionForm()" id="create-button">Create Question</button>
+            <button onclick="toggleQuestionForm()" id="create-button">Create Question</button>
+            <ol id="question-list"></ol>
             <div id="question-creator">
                 <form>
                     <fieldset>
@@ -231,7 +367,6 @@
                     </fieldset>
                 </form>
             </div>
-            <ol id="question-list"></ol>
         </div>
     </body>
 </html>
