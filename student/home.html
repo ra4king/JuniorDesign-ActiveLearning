@@ -42,7 +42,21 @@
                 margin: 0px;
                 padding: 0px;
             }
+            #live-quiz {
+                display: none;
+                background-color: #2C2C2B;
+                color: white;
+                min-width: 45%;
+                min-height: 500px;
+                max-width: 500px;
+                border: 1px solid black;
+                left: 30%;
+            }
 
+            .live-quiz {
+                position: absolute;
+                z-index: 3;
+            }
             .answer-list {
                 list-style-type: upper-alpha;
                 margin: auto;
@@ -73,6 +87,33 @@
             .question-name {
                 margin: 0px;
             }
+            .blur   {
+                filter: blur(5px);
+                -webkit-filter: blur(5px);
+                -moz-filter: blur(5px);
+                -o-filter: blur(5px);
+                -ms-filter: blur(5px);
+            }
+            #overlay    {
+                position: fixed;
+                display: none;
+                left: 0px;
+                top: 0px;
+                right: 0px;
+                bottom: 0px;
+                background: rgba(150,150,150,.8);
+                z-index: 2;
+            }
+            .delete-button {
+                position: absolute;
+                right: 0;
+                top: 0;
+                background-color: #FF2222;
+                color: white;
+                border: none;
+                text-align: center;
+            }
+
         </style>
         <script>
             var questions = {};
@@ -150,21 +191,60 @@
                     socket.send(JSON.stringify({ get_quizzes: true }));
                 }
             }
+            var state = true;
+            function displayLiveQuiz() {
+                var e1 = document.getElementById('live-quiz');
+                e1.style.display = e1.style.display == 'block' ? 'none' : 'block';
+                if(state) {
+                    myBlurFunction(1);
+                    state = false;
+                } else {
+                    myBlurFunction(0)
+                    state = true;
+                }
+
+            }
+            var myBlurFunction = function(state) {
+                /* state can be 1 or 0 */
+                var containerElement = document.getElementById('main_container');
+                var overlayEle = document.getElementById('overlay');
+
+                if (state) {
+                    overlayEle.style.display = 'block';
+                    containerElement.setAttribute('class', 'blur');
+                } else {
+                    overlayEle.style.display = 'none';
+                    containerElement.setAttribute('class', null);
+                }
+            }
         </script>
     </head>
 
-    <body>
-        <h1>Active Learning Tool</h1>
+    <div id="live-quiz" class="live-quiz">
+            <button id="live-quiz-button" onclick="displayLiveQuiz()" class="delete-button">&#10006;</button>
+            <div id="live-questions">
+                To populate with the live question presented by the professor.
+            </div>
+        </div>
 
-        <div id="quiz-panel">
-            <h2 id="quiz-title">Quizzes</h2>
-            <button id="refresh-quizzes" onclick="getQuizzes()">Refresh</button>
-            <ol id="quiz-list"></ol>
+    <body>
+        <div id="overlay"></div>
+        <div id="main_container">
+            <h1>Active Learning Tool</h1>
+            
+            <div id="quiz-panel">
+                <h2 id="quiz-title">Quizzes</h2>
+                <button id="refresh-quizzes" onclick="getQuizzes()">Refresh</button>
+                <button id="live-quiz-button" onclick="displayLiveQuiz()">Live Quiz</button>
+                <ol id="quiz-list"></ol>
+            </div>
+
+            <div id="question-panel">
+                <h2 id="question-title">Questions</h2>
+                <button id="refresh-questions" onclick="getQuestions()">Refresh</button>
+                <ol id="question-list"></ol>
+            </div>
         </div>
-        <div id="question-panel">
-            <h2 id="question-title">Questions</h2>
-            <button id="refresh-questions" onclick="getQuestions()">Refresh</button>
-            <ol id="question-list"></ol>
-        </div>
+
     </body>
 </html>
