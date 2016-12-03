@@ -1,139 +1,140 @@
+<!DOCTYPE html>
 <html>
-<head>
-    <style>
-    #Boxes {
-        height: 700px;
-        width: 700px;
-
-    }
-    #Questions {
-        background-color: black;
-        height: 600px;
-        width: 300px;
-        margin-top: 50px;
-        margin-left: 50px;
-        float: left;
-    }
-
-    #SampleQuestionsList {
-        background-color: blue;
-        height: 600px;
-        width: 300px;
-        margin-top: 50px;
-        margin-left: 50px;
-        float: right;
-    }
-    li.question {
-        background-color: gray;
-        width: 280px;
-        height: 100px;
-        margin-left: 10px;
-        margin-top: 10px;
-    }
-
-    p.questionName {
-        color: white;
-        padding-left: 30px;
-        padding-top: 40px;
-    }
-    ul {
-        color: white;
-        margin: 0;
-        padding: 0;
-    }
-
-    </style>
-</head>
-<body ondragover="allowDrop(event)">
-    <div id="Boxes">
-        <span ondrop="drop(event)" id="Questions">
-            <ul id="QuestionsList"></ul>
-        </span>
-        <span id="SampleQuestionsList">
-            <ul id="sampleQuestions"></ul>
-        </span>
-    </div>
-
-    <script>
-    var questions = {
-        question1: {
-            name: 'Question 1'
-        }, 
-        question2: {
-            name: 'Question 2'
-        },
-        question3: {
-            name: 'Question 3'
-        }
-    }
-
-    var counter = 1;
-    for (var q in questions) {
-        document.getElementById('sampleQuestions').innerHTML +=
-        '<li id="q' + counter + '" class="question vaultQuestion" draggable="true" ondragstart="drag(event)"> <p class="questionName"> ' + questions[q].name + '</p></li>';
-        counter++;
-    }
-    </script>
-    <script>
-    function allowDrop(ev) {
-        ev.preventDefault();
-        if (ev.target.id == "Questions") {
-            ev.target.style.backgroundColor = "green";
-        } else {
-            document.getElementById("Questions").style.backgroundColor = "black";
-        }
-    }
-
-    function drag(ev) {
-        ev.dataTransfer.setData("q", ev.target.id);
-    }
-
-    function remove(id) {
-        var list = document.getElementById("QuestionsList");
-        var nodes = list.childNodes;
-        var index = -1;
-        for (var i = 0; i < nodes.length; i++ ) {
-            if (nodes[i].id == id) {
-                index = i;
+    <head>
+        <style>
+            #boxes {
+                height: 700px;
+                width: 700px;
             }
-        }
-        if (index != -1 && confirm('Are you sure you want to delete ' + nodes[index].children[0].innerHTML + '?')) {
-            list.removeChild(nodes[index]);
-        }
-    }
 
-    function drop(ev) {
-        ev.preventDefault();
-        var data = ev.dataTransfer.getData("q");
-        var elem = document.getElementById(data).cloneNode(true);
-        
-        if (ev.target.id == "Questions") {
-            var list = document.getElementById("QuestionsList");
-            if (elem.classList.contains("vaultQuestion")) {
-                elem.id += "quiz";
-                elem.classList.add("quizQuestion");
-                elem.classList.remove("vaultQuestion");
-                elem.innerHTML += '<button onclick="remove(\'' + elem.id +'\')">X</button>'
-                list.innerHTML += elem.outerHTML;
-            } else {
+            #quiz {
+                background-color: black;
+                height: 600px;
+                width: 300px;
+                margin-top: 50px;
+                margin-left: 50px;
+                float: left;
+            }
+
+            #questions {
+                background-color: blue;
+                height: 600px;
+                width: 300px;
+                margin-top: 50px;
+                margin-left: 50px;
+                float: right;
+            }
+
+            li.question {
+                background-color: gray;
+                width: 280px;
+                height: 100px;
+                margin-left: 10px;
+                margin-top: 10px;
+            }
+
+            p.question-name {
+                color: white;
+                padding-left: 30px;
+                padding-top: 40px;
+            }
+
+            ul {
+                color: white;
+                margin: 0;
+                padding: 0;
+            }
+        </style>
+    </head>
+    <body ondragover="allowDrop(event)">
+        <div id="boxes">
+            <span ondrop="drop(event)" id="quiz">
+                <ul id="quiz-list"></ul>
+            </span>
+            <span id="questions">
+                <ul id="questions-list"></ul>
+            </span>
+        </div>
+
+        <script>
+            var questions = {
+                question1: {
+                    name: 'Question 1'
+                }, 
+                question2: {
+                    name: 'Question 2'
+                },
+                question3: {
+                    name: 'Question 3'
+                }
+            }
+
+            var counter = 1;
+            for (var q in questions) {
+                document.getElementById('questions-list').innerHTML +=
+                '<li id="q' + counter + '" class="question vault-question" draggable="true" ondragstart="drag(event)"> <p class="question-name"> ' + questions[q].name + '</p></li>';
+                counter++;
+            }
+            
+            function allowDrop(ev) {
+                ev.preventDefault();
+                if (ev.target.id == 'quiz') {
+                    ev.target.style.backgroundColor = 'green';
+                } else {
+                    document.getElementById('quiz').style.backgroundColor = 'black';
+                }
+            }
+
+            function drag(ev) {
+                ev.dataTransfer.setData('q', ev.target.id);
+            }
+
+            function remove(id) {
+                var list = document.getElementById('quiz-list');
+                var nodes = list.childNodes;
                 var index = -1;
-                for (var i = 0; i <list.childNodes.length; i++ ) {
-                    if (list.childNodes[i].outerHTML == elem.outerHTML) {
+                for (var i = 0; i < nodes.length; i++ ) {
+                    if (nodes[i].id == id) {
                         index = i;
                     }
                 }
-                if (index != -1) {
-                    var saved = list.childNodes[index];
-                    list.removeChild(saved);
-                    list.appendChild(saved);
+                if (index != -1 && confirm('Are you sure you want to delete ' + nodes[index].children[0].innerHTML + '?')) {
+                    list.removeChild(nodes[index]);
                 }
             }
-        }
-        if (ev.target.id == "Questions") {
-            ev.target.style.backgroundColor = "black";
-        }
-    }
-    </script>
-</body>
 
+            function drop(ev) {
+                ev.preventDefault();
+                var data = ev.dataTransfer.getData('q');
+                var elem = document.getElementById(data).cloneNode(true);
+                
+                if (ev.target.id == 'quiz') {
+                    var list = document.getElementById('quiz-list');
+                    if (elem.classList.contains('vault-question')) {
+                        elem.id += 'quiz';
+                        elem.classList.add('quiz-question');
+                        elem.classList.remove('vault-question');
+                        elem.innerHTML += '<button onclick="remove(\'' + elem.id +'\')">X</button>'
+                        list.innerHTML += elem.outerHTML;
+                    } else {
+                        var index = -1;
+                        for (var i = 0; i <list.childNodes.length; i++ ) {
+                            if (list.childNodes[i].id == elem.id + 'quiz') {
+                                index = i;
+                                break;
+                            }
+                        }
+                        if (index != -1) {
+                            var saved = list.childNodes[index];
+                            list.removeChild(saved);
+                            list.appendChild(saved);
+                        }
+                    }
+                }
+                if (ev.target.id == 'quiz') {
+                    ev.target.style.backgroundColor = 'black';
+                }
+            }
+        </script>
+    </body>
 </html>

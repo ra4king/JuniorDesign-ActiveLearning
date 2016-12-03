@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Active Learning Tool - Home</title>
+        <style>
+            body {
+                background-color: #EEB211;
+            }
+
+            #quiz-panel, #question-panel {
+                background-color: #2C2C2B;
+                color: white;
+                min-width: 45%;
+                min-height: 500px;
+                max-width: 500px;
+                border: 1px solid black;
+            }
+
+            #quiz-panel {
+                float: left;
+            }
+
+            #question-panel {
+                float: right;
+            }
+
+            #quiz-list, #question-list {
+                list-style-position: inside;
+            }
+
+            #quiz-title, #question-title {
+                text-align: center;
+                margin-left: 10px;
+            }
+
+            #refresh-quizzes, #refresh-questions {
+                margin-left: 10px;
+            }
+
+            #quiz-list, #question-list {
+                list-style-position: inside;
+                margin: 0px;
+                padding: 0px;
+            }
+
+            .answer-list {
+                list-style-type: upper-alpha;
+                margin: auto;
+                font-size: 1em;
+                font-weight: normal;
+            }
+
+            .question {
+                font-size: 1.5em;
+                font-weight: bold;
+                color: black;
+                background-color: white;
+                border: solid 1px black;
+                padding: 10px;
+                margin: 10px;
+            }
+
+            .question-name {
+                margin: 0px;
+            }
+        </style>
+        <script>
+            var questions = {};
+            var quizzes = {};
+
+            function updateQuestions(new_questions) {
+                questions = new_questions;
+
+                var html = "";
+                for(var id in questions) {
+                    var question = questions[id];
+                    var body = '<p class="question-name"> ' + question.name + '</p>'
+                    body += '<ol class="answer-list">';
+                    question.answers.forEach(function(answer, idx) {
+                        body += '<li id="question-' + id + '-' + idx + '" class="answer"><input type="radio" name="answers-' + id + '">' + answer + '</input></li>';
+                    });
+                    body += '</ol>';
+
+                    html += '<li id="question-' + id + '" class="question">' + body + '</li>';
+                };
+
+                document.getElementById('question-list').innerHTML = html;
+            }
+
+            function updateQuizzes(new_quizzes) {
+                quizzes = new_quizzes;
+            }
+            
+            var socket = null;
+            function connect() {
+                console.log('Connecting...');
+                var s = new WebSocket('ws://localhost:1337');
+                s.onopen = function() {
+                    socket = s;
+                    console.log('Connected to server!');
+                    socket.send(JSON.stringify({
+                        username: 'Professor'
+                    }));
+                    socket.send(JSON.stringify({ get_quizzes: true }));
+                    socket.send(JSON.stringify({ get_questions: true }));
+                };
+                s.onmessage = function(msg) {
+                    var data = JSON.parse(msg.data);
+                    console.log('Received: ' + msg.data);
+                    if(data.questions) {
+                        updateQuestions(data.questions);
+                    }
+                    if(data.quizzes) {
+                        updateQuizzes(data.quizzes);
+                    }
+                };
+                s.onclose = function() {
+                    socket = null;
+                    console.log('Connection closed.');
+                    setTimeout(connect, 1000);
+                };
+            }
+
+            connect();
+
+            function createQuestion(name, answers, correct, image) {
+                if(socket != null) {
+                    socket.send(JSON.stringify({ create_question: { name: name, answers: answers, correct: correct, image: image } }));
+                }
+            }
+
+            function getQuestions() {
+                if(socket != null) {
+                    socket.send(JSON.stringify({ get_questions: true }));
+                }
+            }
+
+            function getQuizzes() {
+                if(socket != null) {
+                    socket.send(JSON.stringify({ get_quizzes: true }));
+                }
+            }
+        </script>
+    </head>
+
+    <body>
+        <h1>Active Learning Tool</h1>
+
+        <div id="quiz-panel">
+            <h2 id="quiz-title">Quizzes</h2>
+            <button id="refresh-quizzes" onclick="getQuizzes()">Refresh</button>
+            <ol id="quiz-list"></ol>
+        </div>
+        <div id="question-panel">
+            <h2 id="question-title">Questions</h2>
+            <button id="refresh-questions" onclick="getQuestions()">Refresh</button>
+            <ol id="question-list"></ol>
+        </div>
+    </body>
+</html>

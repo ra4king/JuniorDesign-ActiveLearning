@@ -25,23 +25,55 @@ server.on('connection', function(socket) {
 
         if(username == null && data.username) {
             username = data.username;
-        } else if(data.create_question) {
+        }
+
+        if(data.create_question) {
             var question = data.create_question;
             question.id = last_id++;
             questions[question.id] = question;
             save_config();
 
             socket.send(JSON.stringify({ questions: questions }));
-        } else if(data.get_questions) {
+        }
+
+        if(data.delete_question) {
+            var question_id = data.delete_question;
+            delete questions[question_id];
+            save_config();
+
             socket.send(JSON.stringify({ questions: questions }));
-        } else if(data.create_quiz) {
+        }
+
+        if(data.get_questions) {
+            socket.send(JSON.stringify({ questions: questions }));
+        }
+
+        if(data.create_quiz) {
             var quiz = data.create_quiz;
             quiz.id = last_id++;
             quizzes[quiz.id] = quiz;
             save_config();
 
             socket.send(JSON.stringify({ quizzes: quizzes }));
-        } else if(data.get_quizzes) {
+        }
+
+        if(data.update_quiz) {
+            var quiz = data.update_quiz;
+            quizzes[quiz.id] = quiz;
+            save_config();
+
+            socket.send(JSON.stringify({ quizzes: quizzes }));
+        }
+
+        if(data.delete_quiz) {
+            var quiz_id = data.delete_quiz;
+            delete quizzes[quiz.id];
+            save_config();
+
+            socket.send(JSON.stringify({ quizzes: quizzes }));
+        }
+
+        if(data.get_quizzes) {
             socket.send(JSON.stringify({ quizzes: quizzes }));
         }
     });
