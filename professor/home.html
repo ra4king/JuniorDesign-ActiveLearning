@@ -179,7 +179,24 @@
         <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
         <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
         <script>
-            function toggleQuestionForm(){
+            function clearQuestionForm() {
+                document.getElementById('question').value = "";
+                document.getElementById('answer1').value = "";
+                document.getElementById('answer2').value = "";
+                document.getElementById('answer3').value = "";
+                document.getElementById('answer4').value = "";
+                document.getElementById('file-input').value = "";
+                document.getElementById('image-input').src = "";
+
+                var buttons = document.getElementsByName('correct');
+                for (var i = 0; i < buttons.length; ++i) {
+                    buttons[i].checked = i == 0;
+                }
+            }
+
+            function toggleQuestionForm() {
+                clearQuestionForm();
+
                 var e1 = document.getElementById('question-creator');
                 e1.style.display = e1.style.display == 'block' ? 'none' : 'block';
 
@@ -187,7 +204,7 @@
                 e2.style.display = e2.style.display == 'none' ? 'block' : 'none';
 
                 var b = document.getElementById('create-button');
-                b.innerHTML = b.innerHTML != 'Create Question' ? 'Create Question' : 'Hide Question' ;
+                b.innerHTML = b.innerHTML != 'Create Question' ? 'Create Question' : 'Discard' ;
             }
 
             var current_quiz_id = null;
@@ -509,7 +526,7 @@
                     <input type="text" id="answer4" name="answer4" value="" size="35">
                     <input type="radio" name="correct" value="3">Correct</input><br>
                     <br>
-                    <input type="file" onchange="readURL(this);"/>
+                    <input id="file-input" type="file" onchange="readURL(this);"/>
                     <div>
                        <br><img id="image-input" src="" alt="Please choose an image"/>
                     </div>
