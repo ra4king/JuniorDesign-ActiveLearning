@@ -20,15 +20,7 @@
                 z-index: 3;
             }
 
-            #header-panel {
-                background-color: #777777;
-                display: inline-block;
-                min-width: 100%;
-                margin-bottom: 10px;
-                height: 75px;
-            }
-
-            .blur   {
+            .blur {
                 filter: blur(5px);
                 -webkit-filter: blur(5px);
                 -moz-filter: blur(5px);
@@ -47,7 +39,15 @@
                 z-index: 2;
             }
 
-            logo {
+            #header-panel {
+                background-color: #777777;
+                display: inline-block;
+                min-width: 100%;
+                margin-bottom: 10px;
+                height: 75px;
+            }
+
+            #logo {
                 float: left;
             }
             
@@ -57,12 +57,8 @@
                 background-color: #2C2C2B;
                 color:white;
                 border: none;
-                min-height: 45px;
+                min-height: 30px;
                 min-width: 125px;
-            }
-
-            #course-select select{
-                color: white;
             }
 
             #header-panel button {
@@ -121,14 +117,20 @@
                 color: white;
             }
 
-            #quiz-list, #question-list {
+            #quiz-list, #question-list, #live-question-list {
                 list-style-position: inside;
                 margin: 0px;
                 padding: 0px;
+                min-height: 400px;
             }
 
             #quiz-list {
                 list-style-type: none;
+            }
+
+            #live-question-list {
+                margin-top: 25px;
+                text-align: center;
             }
 
             #quiz-title, #question-title {
@@ -266,13 +268,13 @@
                     socket = s;
                     console.log('Connected to server!');
                     socket.send(JSON.stringify({
-                        username: 'Professor'
+                        username: 'Student'
                     }));
-                    socket.send(JSON.stringify({ get_quizzes: true }));
-                    socket.send(JSON.stringify({ get_questions: true }));
+                    refresh();
                 };
                 s.onmessage = function(msg) {
                     var data = JSON.parse(msg.data);
+
                     if(data.questions) {
                         questions = data.questions;
 
@@ -280,9 +282,16 @@
                             chooseQuiz(current_quiz_id);
                         }
                     }
+
                     if(data.quizzes) {
                         quizzes = data.quizzes;
                         updateQuizzes();
+                    }
+
+                    if(data.live_question) {
+                        populateLiveQuestion(data.live_question);
+                    } else if(data.live_question === null) {
+                        $('#live-question-list').css('text-align', 'center').html('Live question has ended.');
                     }
                 };
                 s.onclose = function() {
@@ -292,12 +301,22 @@
                 };
             }
 
+            function isSocketAvailable() {
+                if(socket == null) {
+                    alert('No connection to the server. Attemping to reconnect.');
+                    return false;
+                }
+
+                return true;
+            }
+
             connect();
 
             function refresh() {
-                if(socket != null) {
+                if(isSocketAvailable()) {
                     socket.send(JSON.stringify({ get_quizzes: true }));
                     socket.send(JSON.stringify({ get_questions: true }));
+                    socket.send(JSON.stringify({ get_live_question: true }));
                 }
             }
 
@@ -309,8 +328,12 @@
                 if(state) {
                     myBlurFunction(1);
                     state = false;
+
+                    if(isSocketAvailable()) {
+                        socket.send(JSON.stringify({ get_live_question: true }));
+                    }
                 } else {
-                    myBlurFunction(0)
+                    myBlurFunction(0);
                     state = true;
                 }
             }
@@ -329,39 +352,36 @@
                 }
             }
 
-            function populateLiveQuestion(id) {
-                question = questions[id]
+            function populateLiveQuestion(question) {
                 var body = '<p class="question-name"> ' + question.name + '</p>'
                 body += '<ol class="answer-list">';
                 question.answers.forEach(function(answer, idx) {
-                    body += '<li id="question-' + id + '-' + idx + '" class="answer"><input type="radio" name="answers-' + id + '">' + answer + '</input></li>';
+                    body += '<li id="live-question-' + idx + '" class="answer"><input type="radio" name="live-answers">' + answer + '</input></li>';
                 });
                 body += '</ol>';
 
                 if(question.image) {
-                    html += '<img class="question-image" src="' + question.image + '" />';
+                    body += '<img class="question-image" src="' + question.image + '" />';
                 }
 
-                html += '<div class="question"><li id="question-' + id + '" class="question-list">' + body + '</li>';
+                var html = '<div class="question"><li id="live-question" class="question-list">' + body + '</li></div>';
 
-                html += '</div>';
-                document.getElementById('live-questions').innerHTML = html;
+                $('#live-question-list').css('text-align', 'left').html(html);
             }
         </script>
     </head>
-
     <body>
         <div id="overlay"></div>
         <div id="live-quiz">
             <button id="live-quiz-button" onclick="toggleLiveQuiz()" class="delete-button">&#10006;</button>
-            <ol id="live-questions">
-                Live question will be displayed shortly.
+            <ol id="live-question-list">
+                Live question has ended.
             </ol>
         </div>
 
         <div id="main-container">
             <div id="header-panel">
-                <logo><img src="../active_learning_logo.png" width="175" height="75" /></logo>
+                <img id="logo" src="../active_learning_logo.png" width="175" height="75" />
                 <button id="settings-button">Settings</button>
                 <button id="statistics-button">Statistics</button>
                 <select id="course-select">
