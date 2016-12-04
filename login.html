@@ -6,13 +6,51 @@
             background-color: #EEB211;
             text-align: center;
         }
+
+        h1 {
+            text-align: center;
+            font-size: 50px;
+        }
+        
+        button {
+            background-color: #2C2C2B;
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            margin: 15px;
+            text-align: center;
+            font-size:40;
+            transition-duration: .6s;
+            min-height: 100px;
+            min-width: 250px;
+        }
+
+        button:hover {
+            background-color: #3c6668;
+            color: white;
+        }
+
+        #login {
+            text-align: center;
+            color: white;
+        }
+
+        a:link {
+            color: white;
+            text-decoration: none;
+        }
+
+        a:visited {
+            color: white;
+            text-decoration: none;
+        }
     </style>
 </head>
 
 <body>
     <h1>Active Learning Tool</h1>
-    <h2><a href="professor/home.html">Professor Login</a></h2>
-    <h2><a href="student/home.html">Student Login</a></h2>
+    <div id="login"><button><a href="professor/home.html">Professor Login</a></div>
+    <div id="login"><button><a href="student/home.html">Student Login</a></div>
 </body>
 
 </html>

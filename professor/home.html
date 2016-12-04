@@ -7,6 +7,57 @@
                 background-color: #EEB211;
             }
 
+            #header-panel {
+                background-color: #e5d454;
+                display:inline-block;
+                min-width: 100%;
+                margin-bottom: 10px;
+                height:75px;
+            }
+
+            logo {
+                float: left;
+            }
+            
+            #course-select {
+                float: right;
+                margin-right: 50px;
+                background-color: #2C2C2B;
+                color:white;
+                border: none;
+                min-height: 45px;
+                min-width: 125px;
+            }
+
+            #course-select select{
+                color: white;
+            }
+
+            #settings-button, #statistics-button {
+                background-color: #2C2C2B;
+                border: none;
+                color: white;
+                padding: 15px 30px;
+                text-align: center;
+                font-size:20;
+                transition-duration: .6s;
+            }
+
+            #settings-button {
+                float: right;
+                margin-right:25px
+            }
+
+            #statistics-button {
+                float: right;
+                margin-right:50px
+            }
+
+            #settings-button:hover, #statistics-button:hover {
+                background-color: #3c6668;
+                color: white;
+            }
+
             #question-creator {
                 display: none;
                 margin: 10px;
@@ -412,7 +463,16 @@
     </head>
 
     <body>
-        <h1>Active Learning Tool</h1>
+        <div id="header-panel">
+            <logo><img src="../active_learning_logo.png" width="175" height="75" /></logo>
+            <button id="settings-button">Settings</button>
+            <button id="statistics-button">Statistics</button>
+            <select id="course-select">
+                <option value="CS 2110">CS 2110</option>
+                <option value="CS 2200">CS 2200</option>
+                <option value="CS 3600">CS 2200</option>
+            </select>
+        </div>
 
         <div id="quiz-panel">
             <h2 id="quiz-title">Quizzes</h2>
