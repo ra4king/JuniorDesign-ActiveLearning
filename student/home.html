@@ -13,7 +13,7 @@
                 min-width: 45%;
                 min-height: 500px;
                 max-width: 500px;
-                border: 1px solid black;
+                border: solid 1px black;
             }
 
             #quiz-panel {
@@ -77,6 +77,7 @@
             .question-list {
                 width: 70%;
                 display: inline-block;
+                vertical-align: top;
             }
 
             .question-image {
@@ -118,27 +119,32 @@
         <script>
             var questions = {};
             var quizzes = {};
+            var current_quiz = null;
 
-            function updateQuestions(new_questions) {
-                questions = new_questions;
+            function updateQuestions(quiz_id) {
+                current_quiz = quiz_id;
 
-                var html = "";
-                for(var id in questions) {
+                if(current_quiz == null) {
+                    return;
+                }
+
+                var html = '';
+                for(var id in quizzes[current_quiz]) {
                     var question = questions[id];
                     var body = '<p class="question-name"> ' + question.name + '</p>'
                     body += '<ol class="answer-list">';
                     question.answers.forEach(function(answer, idx) {
-                        body += '<li id="question-' + id + '-' + idx + '" class="answer"><input type="radio" name="answers-' + id + '">' + answer + '</input></li>';
+                        body += '<li id="answer-' + id + '-' + idx + '" class="answer"><input type="radio" name="answers-' + id + '">' + answer + '</input></li>';
                     });
                     body += '</ol>';
 
-                    html += '<div class="question"><li id="question-' + id + '" class="question-list">' + body + '</li>';
+                    html += '<li id="question-' + id + '" class="question" ondragstart="drag(event)"><div class="question-list">' + body + '</div>';
 
                     if(question.image) {
                         html += '<img class="question-image" src="' + question.image + '" />';
                     }
 
-                    html += '</div>';
+                    html += '</li>';
                 };
 
                 document.getElementById('question-list').innerHTML = html;
@@ -146,12 +152,18 @@
 
             function updateQuizzes(new_quizzes) {
                 quizzes = new_quizzes;
+
+                var html = '';
+                for(var id in quizzes) {
+                    var quiz = quizzes[id];
+                    var body = '<p class="quiz-name">' + quiz.name
+                }
             }
             
             var socket = null;
             function connect() {
                 console.log('Connecting...');
-                var s = new WebSocket('ws://localhost:1337');
+                var s = new WebSocket('ws://www.roiatalla.com:1337');
                 s.onopen = function() {
                     socket = s;
                     console.log('Connected to server!');
@@ -165,7 +177,7 @@
                     var data = JSON.parse(msg.data);
                     console.log('Received: ' + msg.data);
                     if(data.questions) {
-                        updateQuestions(data.questions);
+                        questions = data.questions;
                     }
                     if(data.quizzes) {
                         updateQuizzes(data.quizzes);
