@@ -431,7 +431,7 @@
                 element.innerHTML += '<button class="delete-button" onclick="deleteQuestion(\'' + id + '\')">&#10006;</button>';
 
                 if(with_live) {
-                    element.innerHTML += '<button id="live-button-' + id + '" class="live-button" onclick="presentLiveQuestion(\'' + id + '\')">L</button>';
+                    element.innerHTML += '<button id="live-button-' + id + '" class="live-button" onclick="presentLiveQuiz([\'' + id + '\']) & presentLiveQuestion(\'' + id + '\')">L</button>';
                 }
 
                 return element;

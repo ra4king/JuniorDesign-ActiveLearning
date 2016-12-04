@@ -17,24 +17,28 @@ function save_config() {
 
 var admin_username = 'Professor';
 
-var connections = [];
+var current_connection_id = 0;
+
+var connections = {};
 var live_question_id = null;
 
 function set_live_question_id(id) {
     live_question_id = id;
+    broadcast(JSON.stringify({ live_question: live_question_id == 0 ? null : questions[live_question_id]}));
+}
 
-    connections.forEach(function(conn) {
-        if(conn.username != admin_username) {
-            conn.connection.send(JSON.stringify({ live_question: live_question_id == 0 ? null : questions[live_question_id]}))
-        }
-    });
+function broadcast(msg, source_id) {
+    for(var conn_id in connections) {
+        var conn = connections[conn_id];
+        conn.connection.send(msg);
+    }
 }
 
 server.on('connection', function(socket) {
     console.log('Accepted connection.');
 
     var username = null;
-    var index = -1;
+    var conn_id = -1;
 
     function verifyAdmin() {
         if(username != admin_username) {
@@ -52,8 +56,8 @@ server.on('connection', function(socket) {
         if(username == null && data.username) {
             username = data.username;
 
-            index = connections.length;
-            connections.push({ connection: socket, username: username });
+            conn_id = current_connection_id++;
+            connections[conn_id] = { connection: socket, username: username };
         }
 
         if(data.create_question) {
@@ -69,7 +73,7 @@ server.on('connection', function(socket) {
             questions[question.id] = question;
             save_config();
 
-            socket.send(JSON.stringify({ questions: questions }));
+            broadcast(JSON.stringify({ questions: questions }));
         }
 
         if(data.delete_question) {
@@ -79,7 +83,7 @@ server.on('connection', function(socket) {
             delete questions[question_id];
             save_config();
 
-            socket.send(JSON.stringify({ questions: questions }));
+            broadcast(JSON.stringify({ questions: questions }));
         }
 
         if(data.get_questions) {
@@ -96,7 +100,7 @@ server.on('connection', function(socket) {
             quizzes[quiz.id] = quiz;
             save_config();
 
-            socket.send(JSON.stringify({ quizzes: quizzes }));
+            broadcast(JSON.stringify({ quizzes: quizzes }));
         }
 
         if(data.update_quiz) {
@@ -108,7 +112,7 @@ server.on('connection', function(socket) {
             quizzes[quiz.id] = quiz;
             save_config();
 
-            socket.send(JSON.stringify({ quizzes: quizzes }));
+            broadcast(JSON.stringify({ quizzes: quizzes }));
         }
 
         if(data.delete_quiz) {
@@ -118,7 +122,7 @@ server.on('connection', function(socket) {
             delete quizzes[quiz_id];
             save_config();
 
-            socket.send(JSON.stringify({ quizzes: quizzes }));
+            broadcast(JSON.stringify({ quizzes: quizzes }));
         }
 
         if(data.get_quizzes) {
@@ -138,10 +142,16 @@ server.on('connection', function(socket) {
         }
     });
 
+    socket.on('error', function(error) {
+        console.log('Error in connection: ' + error);
+    });
+
     socket.on('close', function() {
         console.log('Connection closed.');
 
-        connections.splice(index, 1);
+        if(conn_id != -1) {
+            delete connections[conn_id];
+        }
 
         if(username == admin_username) {
             set_live_question_id(0);

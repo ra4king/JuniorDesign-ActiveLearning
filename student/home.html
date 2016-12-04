@@ -257,7 +257,14 @@
                     html += '<li id="quiz-' + id + '" class="quiz"><button class="quiz-body" onclick="chooseQuiz(\'' + id + '\')">' + quiz.name + '</button></li>';
                 }
 
-                document.getElementById('quiz-list').innerHTML = html;
+                if(!html) {
+                    html = 'No quizzes to show.';
+                    $('#quiz-list').css('text-align', 'center');
+                } else {
+                    $('#quiz-list').css('text-align', 'left');
+                }
+
+                $('#quiz-list').html(html);
             }
             
             var socket = null;
