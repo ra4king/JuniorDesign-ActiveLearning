@@ -1,5 +1,6 @@
 var ws = require('ws');
 var fs = require('fs');
+var escape = require('escape-html');
 
 var server = new ws.Server({ port: 1337 }, function() {
     console.log('Websockets server up on port 1337...');
@@ -29,6 +30,11 @@ server.on('connection', function(socket) {
 
         if(data.create_question) {
             var question = data.create_question;
+            question.name = escape(question.name);
+            question.answers.forEach(function(elem, idx) {
+                question.answers[idx] = escape(elem);
+            });
+
             question.id = last_id++;
             questions[question.id] = question;
             save_config();
@@ -50,6 +56,8 @@ server.on('connection', function(socket) {
 
         if(data.create_quiz) {
             var quiz = data.create_quiz;
+            quiz.name = escape(quiz.name);
+            
             quiz.id = last_id++;
             quizzes[quiz.id] = quiz;
             save_config();
@@ -67,7 +75,7 @@ server.on('connection', function(socket) {
 
         if(data.delete_quiz) {
             var quiz_id = data.delete_quiz;
-            delete quizzes[quiz.id];
+            delete quizzes[quiz_id];
             save_config();
 
             socket.send(JSON.stringify({ quizzes: quizzes }));
