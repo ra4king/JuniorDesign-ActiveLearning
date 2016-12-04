@@ -432,6 +432,8 @@
                 toggleLiveQuiz();
                 quiz = quizzes[id];
                 var list = document.getElementById('live-questions');
+                list.innerHTML = '';
+
                 quiz.questions.forEach(function(question_id, index) {
                     var element = document.createElement('li');
                     element.setAttribute('id', 'live-question-' + question_id);
@@ -456,6 +458,7 @@
             }
             var open = true;
             var curr_live_id = null;
+
             function presentLiveQuestion(id) {
                 if (curr_live_id != null) {
                     document.getElementById('presenting-live-button-' + curr_live_id).style['background-color']='#008800';
@@ -469,6 +472,8 @@
             var state = true;
 
             function toggleLiveQuiz() {
+                curr_live_id = null;
+                
                 var e1 = document.getElementById('live-quiz');
                 e1.style.display = e1.style.display == 'block' ? 'none' : 'block';
                 if(state) {
