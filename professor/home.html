@@ -4,18 +4,19 @@
         <title>Active Learning Tool - Professor Home</title>
         <style type="text/css">
             body {
-                background-color: #EEB211;
+                background-color: #DDEEFF;
+                height: 100%;
             }
 
             #header-panel {
-                background-color: #e5d454;
+                background-color: #777777;
                 display:inline-block;
                 min-width: 100%;
                 margin-bottom: 10px;
-                height:75px;
+                height: 75px;
             }
 
-            logo {
+            #logo {
                 float: left;
             }
             
@@ -25,15 +26,11 @@
                 background-color: #2C2C2B;
                 color:white;
                 border: none;
-                min-height: 45px;
+                min-height: 30px;
                 min-width: 125px;
             }
 
-            #course-select select{
-                color: white;
-            }
-
-            #settings-button, #statistics-button {
+            #header-panel button {
                 background-color: #2C2C2B;
                 border: none;
                 color: white;
@@ -41,6 +38,11 @@
                 text-align: center;
                 font-size: 20px;
                 transition-duration: .6s;
+            }
+
+            #header-panel button:hover {
+                background-color: #3c6668;
+                color: white;
             }
 
             #settings-button {
@@ -53,30 +55,11 @@
                 margin-right: 50px
             }
 
-            #settings-button:hover, #statistics-button:hover {
-                background-color: #3c6668;
-                color: white;
-            }
-
-            #question-creator {
-                display: none;
-                margin: 10px;
-            }
-
-            #quiz-creator {
-                display: none;
-            }
-
-            #quiz-creator-header {
-                margin: 10px;
-            }
-
             #quiz-panel, #question-panel {
                 background-color: #2C2C2B;
                 color: white;
                 min-width: 48%;
                 min-height: 500px;
-                max-width: 500px;
             }
 
             #quiz-panel {
@@ -87,9 +70,40 @@
                 float: right;
             }
 
+            .option-button {
+                background-color: #555555;
+                border: none;
+                color: white;
+                padding: 5px;
+                margin: 5px;
+                text-align: center;
+                font-size: 18px;
+                transition-duration: .6s;
+            }
+
+            .option-button:hover {
+                background-color: #3c6668;
+                color: white;
+            }
+
+            #question-creator {
+                display: none;
+                margin: 10px;
+                padding: 10px;
+                background-color: white;
+                color: black;
+            }
+
+            #quiz-creator {
+                display: none;
+            }
+
+            #quiz-creator-header {
+                margin: 10px;
+            }
+
             #quiz-list, #quiz-question-list, #question-list {
                 list-style-position: inside;
-                min-height: 500px;
                 margin: 0px;
                 padding: 0px;
             }
@@ -139,7 +153,7 @@
 
             .quiz-body {
                 height: 50px;
-                width: 90%;
+                width: 100%;
                 vertical-align: top;
             }
 
@@ -202,7 +216,7 @@
                 document.getElementById('answer3').value = "";
                 document.getElementById('answer4').value = "";
                 document.getElementById('file-input').value = "";
-                document.getElementById('image-input').src = "";
+                document.getElementById('image-input').style.display = "none";
 
                 var buttons = document.getElementsByName('correct');
                 for (var i = 0; i < buttons.length; ++i) {
@@ -220,7 +234,7 @@
                 e2.style.display = e2.style.display == 'none' ? 'block' : 'none';
 
                 var b = document.getElementById('create-button');
-                b.innerHTML = b.innerHTML != 'Create Question' ? 'Create Question' : 'Discard' ;
+                b.innerHTML = b.innerHTML != 'Create Question' ? 'Create Question' : 'Discard Question' ;
             }
 
             var current_quiz_id = null;
@@ -256,9 +270,10 @@
 
                     reader.onload = function (e) {
                         $('#image-input')
+                            .css('display', 'block')
                             .attr('src', e.target.result)
                             .width(300)
-                            .height(180);
+                            .height(200);
                     };
                     reader.readAsDataURL(input.files[0]);
                 } else {
@@ -337,7 +352,7 @@
                 var body = '<p class="question-name"> ' + question.name + '</p>'
                 body += '<ol class="answer-list">';
                 question.answers.forEach(function(answer, idx) {
-                    body += '<li id="answer-' + id + '-' + idx + '" class="answer"><input type="radio" name="answers-' + id + '">' + answer + '</input></li>';
+                    body += '<li class="answer"><input type="radio" name="answers-' + id + '">' + answer + '</input></li>';
                 });
                 body += '</ol>';
 
@@ -500,7 +515,7 @@
 
     <body>
         <div id="header-panel">
-            <logo><img src="../active_learning_logo.png" width="175" height="75" /></logo>
+            <img id="logo" src="../active_learning_logo.png" width="175" height="75" />
             <button id="settings-button">Settings</button>
             <button id="statistics-button">Statistics</button>
             <select id="course-select">
@@ -512,8 +527,8 @@
 
         <div id="quiz-panel">
             <h2 id="quiz-title">Quizzes</h2>
-            <button id="refresh-quizzes" onclick="getQuizzes()">Refresh</button>
-            <button id="create-quiz" onclick="toggleQuizForm()">Create Quiz</button>
+            <button id="refresh-quizzes" class="option-button" onclick="getQuizzes()">Refresh</button>
+            <button id="create-quiz" class="option-button" onclick="toggleQuizForm()">Create Quiz</button>
             <div id="quiz-creator">
                 <div id="quiz-creator-header">
                     <div id="quiz-name">Name: <input type="text" id="quiz-name-field" /></div>
@@ -523,10 +538,11 @@
             </div>
             <ol id="quiz-list"></ol>
         </div>
+
         <div id="question-panel">
             <h2 id="question-title">Questions</h2>
-            <button id="refresh-questions" onclick="getQuestions()">Refresh</button>
-            <button onclick="toggleQuestionForm()" id="create-button">Create Question</button>
+            <button id="refresh-questions" class="option-button" onclick="getQuestions()">Refresh</button>
+            <button id="create-button" class="option-button" onclick="toggleQuestionForm()">Create Question</button>
             <ol id="question-list"></ol>
             <div id="question-creator">
                 <form>

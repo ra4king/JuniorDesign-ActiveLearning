@@ -4,7 +4,7 @@
         <title>Active Learning Tool - Professor Home</title>
         <style type="text/css">
             body {
-                background-color: #EEB211;
+                background-color: #DDEEFF;
             }
 
             #live-quiz {
@@ -21,7 +21,7 @@
             }
 
             #header-panel {
-                background-color: #e5d454;
+                background-color: #777777;
                 display: inline-block;
                 min-width: 100%;
                 margin-bottom: 10px;
@@ -65,7 +65,7 @@
                 color: white;
             }
 
-            #settings-button, #statistics-button {
+            #header-panel button {
                 background-color: #2C2C2B;
                 border: none;
                 color: white;
@@ -73,6 +73,11 @@
                 text-align: center;
                 font-size: 20px;
                 transition-duration: .6s;
+            }
+
+            #header-panel button:hover {
+                background-color: #3c6668;
+                color: white;
             }
 
             #settings-button {
@@ -85,17 +90,11 @@
                 margin-right: 50px
             }
 
-            #settings-button:hover, #statistics-button:hover {
-                background-color: #3c6668;
-                color: white;
-            }
-
             #quiz-panel, #question-panel {
                 background-color: #2C2C2B;
                 color: white;
                 min-width: 48%;
                 min-height: 500px;
-                max-width: 500px;
             }
 
             #quiz-panel {
@@ -106,9 +105,24 @@
                 float: right;
             }
 
+            .option-button {
+                background-color: #555555;
+                border: none;
+                color: white;
+                padding: 5px;
+                margin: 5px;
+                text-align: center;
+                font-size: 18px;
+                transition-duration: .6s;
+            }
+
+            .option-button:hover {
+                background-color: #3c6668;
+                color: white;
+            }
+
             #quiz-list, #question-list {
                 list-style-position: inside;
-                min-height: 500px;
                 margin: 0px;
                 padding: 0px;
             }
@@ -152,7 +166,7 @@
 
             .quiz-body {
                 height: 50px;
-                width: 90%;
+                width: 100%;
                 vertical-align: top;
             }
 
@@ -218,7 +232,7 @@
                     var body = '<p class="question-name"> ' + question.name + '</p>'
                     body += '<ol class="answer-list">';
                     question.answers.forEach(function(answer, idx) {
-                        body += '<li id="answer-' + question_id + '-' + idx + '" class="answer"><input type="radio" name="answers-' + question_id + '">' + answer + '</input></li>';
+                        body += '<li class="answer"><input type="radio" name="answers-' + question_id + '">' + answer + '</input></li>';
                     });
                     body += '</ol>';
 
@@ -359,13 +373,13 @@
 
             <div id="quiz-panel">
                 <h2 id="quiz-title">Quizzes</h2>
-                <button id="refresh-quizzes" onclick="refresh()">Refresh</button>
-                <button id="live-quiz-button" onclick="toggleLiveQuiz()">Live Quiz</button>
+                <button id="refresh-quizzes" class="option-button" onclick="refresh()">Refresh</button>
+                <button id="live-quiz-button" class="option-button" onclick="toggleLiveQuiz()">Live Quiz</button>
                 <ol id="quiz-list"></ol>
             </div>
             <div id="question-panel">
                 <h2 id="question-title">Questions</h2>
-                <button id="refresh-questions" onclick="refresh()">Refresh</button>
+                <button id="refresh-questions" class="option-button" onclick="refresh()">Refresh</button>
                 <ol id="question-list">
                     <p id="choose-quiz-msg">Choose a quiz from the left side!</p>
                 </ol>

@@ -3,44 +3,51 @@
     <title>Active Learning Tool - Login</title>
     <style  type="text/css">
         body {
-            background-color: #EEB211;
+            background-color: #DDEEFF;
             text-align: center;
         }
 
         h1 {
             text-align: center;
             font-size: 50px;
+            margin: 10px;
+        }
+
+        #logo {
+            margin: 10px;
+        }
+
+        #login-wrapper {
+            min-width: 250px;
+            min-height: 100px;
+            line-height: 100px;
+            text-align: center;
         }
         
-        button {
+        #login {
             background-color: #2C2C2B;
-            border: none;
             color: white;
             padding: 15px 30px;
-            margin: 15px;
+            margin: auto;
             text-align: center;
             font-size: 40px;
             transition-duration: .6s;
-            min-height: 100px;
-            min-width: 250px;
+            display: inline-block;
+            vertical-align: middle;
+            line-height: normal;
         }
 
-        button:hover {
+        #login:hover {
             background-color: #3c6668;
             color: white;
         }
 
-        #login {
-            text-align: center;
-            color: white;
-        }
-
-        a:link {
+        #login:link {
             color: white;
             text-decoration: none;
         }
 
-        a:visited {
+        #login:visited {
             color: white;
             text-decoration: none;
         }
@@ -48,9 +55,10 @@
 </head>
 
 <body>
+    <img id="logo" src="active_learning_logo.png" />
     <h1>Active Learning Tool</h1>
-    <div id="login"><button><a href="professor/home.html">Professor Login</a></div>
-    <div id="login"><button><a href="student/home.html">Student Login</a></div>
+    <div id="login-wrapper"><a id="login" href="professor/home.html">Professor Login</a></div>
+    <div id="login-wrapper"><a id="login" href="student/home.html">Student Login</a></div>
 </body>
 
 </html>
