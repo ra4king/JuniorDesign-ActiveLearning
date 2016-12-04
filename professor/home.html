@@ -168,9 +168,25 @@
 
             .delete-button {
                 position: absolute;
+                display: block;
+                width: 23px;
+                height: 23px;
                 right: 0;
                 top: 0;
                 background-color: #FF2222;
+                color: white;
+                border: none;
+                text-align: center;
+            }
+
+            .live-button {
+                position: absolute;
+                display: block;
+                width: 23px;
+                height: 23px;
+                right: 0;
+                bottom: 0;
+                background-color: #008800;
                 color: white;
                 border: none;
                 text-align: center;
@@ -331,7 +347,8 @@
                     element.innerHTML += '<img class="question-image" src="' + question.image + '" />';
                 }
 
-                element.innerHTML += '<button class=delete-button onclick="deleteQuestion(\'' + id + '\')">&#10006;</button>';
+                element.innerHTML += '<button class="delete-button" onclick="deleteQuestion(\'' + id + '\')">&#10006;</button>';
+                element.innerHTML += '<button class="live-button" onclick="presentLiveQuestion(\'' + id + '\')">L</button>';
 
                 return element;
             }
@@ -368,7 +385,7 @@
                 var html = '';
                 for(var id in quizzes) {
                     var quiz = quizzes[id];
-                    html += '<li id="quiz-' + id + '" class="quiz"><button class="quiz-body" onclick="chooseQuiz(\'' + id + '\')">' + quiz.name + '</button><button class="delete-button" onclick="deleteQuiz(\'' + id + '\')">&#10006;</button></li>';
+                    html += '<li id="quiz-' + id + '" class="quiz"><button class="quiz-body" onclick="chooseQuiz(\'' + id + '\')">' + quiz.name + '</button><button class="delete-button" onclick="deleteQuiz(\'' + id + '\')">&#10006;</button><button class="live-button" onclick="presentLiveQuiz(\'' + id + '\')">L</button></li>';
                 }
 
                 document.getElementById('quiz-list').innerHTML = html;
