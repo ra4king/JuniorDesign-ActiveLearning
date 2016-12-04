@@ -7,12 +7,43 @@
                 background-color: #EEB211;
             }
 
+            #live-quiz {
+                display: none;
+                background-color: #2C2C2B;
+                color: white;
+                min-width: 45%;
+                min-height: 500px;
+                max-width: 500px;
+                border: 1px solid black;
+                left: 30%;
+                position: absolute;
+                z-index: 3;
+            }
+
             #header-panel {
                 background-color: #e5d454;
                 display:inline-block;
                 min-width: 100%;
                 margin-bottom: 10px;
                 height:75px;
+            }
+
+            .blur   {
+                filter: blur(5px);
+                -webkit-filter: blur(5px);
+                -moz-filter: blur(5px);
+                -o-filter: blur(5px);
+                -ms-filter: blur(5px);
+            }
+            #overlay    {
+                position: fixed;
+                display: none;
+                left: 0px;
+                top: 0px;
+                right: 0px;
+                bottom: 0px;
+                background: rgba(150,150,150,.8);
+                z-index: 2;
             }
 
             logo {
@@ -251,32 +282,90 @@
                     socket.send(JSON.stringify({ get_questions: true }));
                 }
             }
+
+            var state = true;
+
+            function toggleLiveQuiz() {
+                var e1 = document.getElementById('live-quiz');
+                e1.style.display = e1.style.display == 'block' ? 'none' : 'block';
+                if(state) {
+                    myBlurFunction(1);
+                    state = false;
+                } else {
+                    myBlurFunction(0)
+                    state = true;
+                }
+            }
+
+            function myBlurFunction(state) {
+                /* state can be 1 or 0 */
+                var containerElement = document.getElementById('main-container');
+                var overlayElement = document.getElementById('overlay');
+
+                if (state) {
+                    overlayElement.style.display = 'block';
+                    containerElement.setAttribute('class', 'blur');
+                } else {
+                    overlayElement.style.display = 'none';
+                    containerElement.setAttribute('class', null);
+                }
+            }
+
+            function populateLiveQuestion(id) {
+                question = questions[id]
+                var body = '<p class="question-name"> ' + question.name + '</p>'
+                body += '<ol class="answer-list">';
+                question.answers.forEach(function(answer, idx) {
+                    body += '<li id="question-' + id + '-' + idx + '" class="answer"><input type="radio" name="answers-' + id + '">' + answer + '</input></li>';
+                });
+                body += '</ol>';
+
+                if(question.image) {
+                    html += '<img class="question-image" src="' + question.image + '" />';
+                }
+
+                html += '<div class="question"><li id="question-' + id + '" class="question-list">' + body + '</li>';
+
+                html += '</div>';
+                document.getElementById('live-questions').innerHTML = html;
+            }
         </script>
     </head>
 
     <body>
-        <div id="header-panel">
-            <logo><img src="../active_learning_logo.png" width="175" height="75" /></logo>
-            <button id="settings-button">Settings</button>
-            <button id="statistics-button">Statistics</button>
-            <select id="course-select">
-                <option value="CS 2110">CS 2110</option>
-                <option value="CS 2200">CS 2200</option>
-                <option value="CS 3600">CS 2200</option>
-            </select>
+        <div id="overlay"></div>
+        <div id="live-quiz">
+            <button id="live-quiz-button" onclick="toggleLiveQuiz()" class="delete-button">&#10006;</button>
+            <ol id="live-questions">
+                Live question will be displayed shortly.
+            </ol>
         </div>
 
-        <div id="quiz-panel">
-            <h2 id="quiz-title">Quizzes</h2>
-            <button id="refresh-quizzes" onclick="refresh()">Refresh</button>
-            <ol id="quiz-list"></ol>
-        </div>
-        <div id="question-panel">
-            <h2 id="question-title">Questions</h2>
-            <button id="refresh-questions" onclick="refresh()">Refresh</button>
-            <ol id="question-list">
-                <p id="choose-quiz-msg">Choose a quiz from the left side!</p>
-            </ol>
+        <div id="main-container">
+            <div id="header-panel">
+                <logo><img src="../active_learning_logo.png" width="175" height="75" /></logo>
+                <button id="settings-button">Settings</button>
+                <button id="statistics-button">Statistics</button>
+                <select id="course-select">
+                    <option value="CS 2110">CS 2110</option>
+                    <option value="CS 2200">CS 2200</option>
+                    <option value="CS 3600">CS 2200</option>
+                </select>
+            </div>
+
+            <div id="quiz-panel">
+                <h2 id="quiz-title">Quizzes</h2>
+                <button id="refresh-quizzes" onclick="refresh()">Refresh</button>
+                <button id="live-quiz-button" onclick="toggleLiveQuiz()">Live Quiz</button>
+                <ol id="quiz-list"></ol>
+            </div>
+            <div id="question-panel">
+                <h2 id="question-title">Questions</h2>
+                <button id="refresh-questions" onclick="refresh()">Refresh</button>
+                <ol id="question-list">
+                    <p id="choose-quiz-msg">Choose a quiz from the left side!</p>
+                </ol>
+            </div>
         </div>
     </body>
 </html>
