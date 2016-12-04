@@ -14,6 +14,9 @@
 
             #quiz-creator {
                 display: none;
+            }
+
+            #quiz-creator-header {
                 margin: 10px;
             }
 
@@ -23,7 +26,6 @@
                 min-width: 48%;
                 min-height: 500px;
                 max-width: 500px;
-                border: solid 1px black;
             }
 
             #quiz-panel {
@@ -36,7 +38,6 @@
 
             #quiz-list, #quiz-question-list, #question-list {
                 list-style-position: inside;
-                border: solid 1px white;
                 min-height: 500px;
                 margin: 0px;
                 padding: 0px;
@@ -62,13 +63,11 @@
 
             #quiz-name {
                 display: inline-block;
-                margin: 5px;
                 float: left;
             }
 
             #submit-quiz {
                 display: inline-block;
-                margin: 5px;
                 float: right;
             }
 
@@ -78,7 +77,6 @@
                 font-weight: bold;
                 color: black;
                 background-color: white;
-                border: solid 1px black;
                 padding: 10px;
                 margin: 10px;
                 vertical-align: top;
@@ -146,6 +144,7 @@
 
             function clearQuizForm() {
                 current_quiz_questions = [];
+                $('#quiz-name-field').val('');
                 $('#quiz-question-list').css('text-align', 'center')
                                         .html('<p id="drag-questions-msg">Drag questions here!</p>');
             }
@@ -247,6 +246,7 @@
                 //<li id="" class="question" ondragstart="drag(event)">
                 element.setAttribute('id', 'question-' + id);
                 element.setAttribute('class', 'question');
+                element.setAttribute('draggable', $('#create-quiz').html() == 'Quiz List');
                 element.setAttribute('ondragstart', 'drag(event)');
 
                 var question = questions[id];
@@ -419,8 +419,10 @@
             <button id="refresh-quizzes" onclick="getQuizzes()">Refresh</button>
             <button id="create-quiz" onclick="toggleQuizForm()">Create Quiz</button>
             <div id="quiz-creator">
-                <div id="quiz-name">Name: <input type="text" id="quiz-name-field" /></div>
-                <div id="submit-quiz"><button id="submit-quiz-button" onclick="createQuiz()">Submit</button></div>
+                <div id="quiz-creator-header">
+                    <div id="quiz-name">Name: <input type="text" id="quiz-name-field" /></div>
+                    <div id="submit-quiz"><button id="submit-quiz-button" onclick="createQuiz()">Submit</button></div>
+                </div>
                 <ol id="quiz-question-list" ondrop="drop(event)" ondragover="allowDrop(event)"></ol>
             </div>
             <ol id="quiz-list"></ol>
@@ -432,34 +434,33 @@
             <ol id="question-list"></ol>
             <div id="question-creator">
                 <form>
-                    <fieldset>
-                        <label for="question">Question:</label><br>
-                        <input type="text" id="question" name="question" value="" size="75"><br>
-                        <label for="answer1">Answer 1:</label><br>
-                        <input type="text" id="answer1" name="answer1" value="" size="35">
-                        <input type="radio" name="correct" value="0" checked>Correct</input><br>
-                        <label for="answer2">Answer 2:</label><br>
-                        <input type="text" id="answer2" name="answer2" value="" size="35">
-                        <input type="radio" name="correct" value="1">Correct</input><br>
-                        <label for="answer3">Answer 3:</label><br>
-                        <input type="text" id="answer3" name="answer3" value="" size="35">
-                        <input type="radio" name="correct" value="2">Correct</input><br>
-                        <label for="answer4">Answer 4:</label><br>
-                        <input type="text" id="answer4" name="answer4" value="" size="35">
-                        <input type="radio" name="correct" value="3">Correct</input><br>
-
-                        <input id="fileInput" type="file" onchange="readURL(this);"/>
-                        <div>
-                           <img id="imageInput" src="" alt="Please choose an image" name="imageInput"/>
-                        </div>
-                        <br>
-                        <button type="button" onclick="createQuestion(question.value, [answer1.value, answer2.value, answer3.value, answer4.value], correct.value,
-                        $('#imageInput').attr('src'))">
-                            submit
-                        </button>
-                    </fieldset>
+                    <label for="question">Question:</label><br>
+                    <input type="text" id="question" name="question" value="" size="75"><br>
+                    <label for="answer1">Answer 1:</label><br>
+                    <input type="text" id="answer1" name="answer1" value="" size="35">
+                    <input type="radio" name="correct" value="0" checked>Correct</input><br>
+                    <label for="answer2">Answer 2:</label><br>
+                    <input type="text" id="answer2" name="answer2" value="" size="35">
+                    <input type="radio" name="correct" value="1">Correct</input><br>
+                    <label for="answer3">Answer 3:</label><br>
+                    <input type="text" id="answer3" name="answer3" value="" size="35">
+                    <input type="radio" name="correct" value="2">Correct</input><br>
+                    <label for="answer4">Answer 4:</label><br>
+                    <input type="text" id="answer4" name="answer4" value="" size="35">
+                    <input type="radio" name="correct" value="3">Correct</input><br>
+                    <br>
+                    <input type="file" onchange="readURL(this);"/>
+                    <div>
+                       <br><img id="image-input" src="" alt="Please choose an image"/>
+                    </div>
+                    <br>
+                    <button type="button" onclick="createQuestion(question.value, [answer1.value, answer2.value, answer3.value, answer4.value], correct.value,
+                    $('#image-input').attr('src'))">
+                        submit
+                    </button>
                 </form>
             </div>
         </div>
     </body>
 </html>
+    
