@@ -1,19 +1,103 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Active Learning Tool - Student Home</title>
+        <title>Active Learning Tool - Professor Home</title>
         <style>
             body {
-                background-color: #EEB211;
+                background-color: #FFCC00;
             }
 
-            #quiz-panel, #question-panel {
-                background-color: #2C2C2B;
+            #live-quiz {
+                display: none;
+                background-color: #051854;
                 color: white;
                 min-width: 45%;
                 min-height: 500px;
                 max-width: 500px;
-                border: solid 1px black;
+                border: 1px solid black;
+                left: 30%;
+                position: absolute;
+                z-index: 3;
+            }
+
+            #header-panel {
+                background-color: #FFE266;
+                display:inline-block;
+                min-width: 100%;
+                margin-bottom: 10px;
+                height:75px;
+            }
+
+            .blur   {
+                filter: blur(5px);
+                -webkit-filter: blur(5px);
+                -moz-filter: blur(5px);
+                -o-filter: blur(5px);
+                -ms-filter: blur(5px);
+            }
+
+            #overlay {
+                position: fixed;
+                display: none;
+                left: 0px;
+                top: 0px;
+                right: 0px;
+                bottom: 0px;
+                background: rgba(150,150,150,.8);
+                z-index: 2;
+            }
+
+            logo {
+                float: left;
+            }
+            
+            #course-select {
+                float: right;
+                margin-right: 50px;
+                background-color: #2C2C2B;
+                color:white;
+                border: none;
+                min-height: 45px;
+                min-width: 125px;
+            }
+
+            #course-select select{
+                font-size: 20px;
+                color: white;
+            }
+
+            #settings-button, #statistics-button {
+                background-color: #2C2C2B;
+                border: none;
+                color: white;
+                padding: 15px 30px;
+                text-align: center;
+                font-size: 20px;
+                transition-duration: .6s;
+            }
+
+            #settings-button {
+                float: right;
+                margin-right:25px
+
+            }
+
+            #statistics-button {
+                float: right;
+                margin-right:50px
+            }
+
+            #settings-button:hover, #statistics-button:hover {
+                background-color: #3c6668;
+                color: white;
+            }
+
+            #quiz-panel, #question-panel {
+                background-color: #051854;
+                color: white;
+                min-width: 48%;
+                min-height: 500px;
+                max-width: 500px;
             }
 
             #quiz-panel {
@@ -26,6 +110,13 @@
 
             #quiz-list, #question-list {
                 list-style-position: inside;
+                min-height: 500px;
+                margin: 0px;
+                padding: 0px;
+            }
+
+            #quiz-list {
+                list-style-type: none;
             }
 
             #quiz-title, #question-title {
@@ -37,74 +128,59 @@
                 margin-left: 10px;
             }
 
-            #quiz-list, #question-list {
-                list-style-position: inside;
-                margin: 0px;
-                padding: 0px;
-            }
-            #live-quiz {
-                display: none;
-                background-color: #2C2C2B;
-                color: white;
-                min-width: 45%;
-                min-height: 500px;
-                max-width: 500px;
-                border: 1px solid black;
-                left: 30%;
+            #choose-quiz-msg {
+                text-align: center;
             }
 
-            .live-quiz {
-                position: absolute;
-                z-index: 3;
-            }
-            .answer-list {
-                list-style-type: upper-alpha;
-                margin: auto;
-                font-size: 1em;
-                font-weight: normal;
+            #quiz-name {
+                display: inline-block;
+                float: left;
             }
 
-            .question {
-                font-size: 1.5em;
+            .quiz, .question {
+                position: relative;
+                font-size: 25px;
                 font-weight: bold;
                 color: black;
                 background-color: white;
-                border: solid 1px black;
                 padding: 10px;
                 margin: 10px;
-            }
-
-            .question-list {
-                width: 70%;
-                display: inline-block;
                 vertical-align: top;
             }
 
-            .question-image {
-                width: 30%;
+            .quiz {
+                padding: 0px;
+            }
+
+            .quiz-body {
+                height: 50px;
+                width: 90%;
+                vertical-align: top;
+            }
+
+            .question-body {
+                width: 60%;
                 display: inline-block;
+                vertical-align: top;
             }
 
             .question-name {
                 margin: 0px;
             }
-            .blur   {
-                filter: blur(5px);
-                -webkit-filter: blur(5px);
-                -moz-filter: blur(5px);
-                -o-filter: blur(5px);
-                -ms-filter: blur(5px);
+
+            .answer-list {
+                list-style-type: upper-alpha;
+                list-style-position: outside;
+                font-size: 18px;
+                font-weight: normal;
             }
-            #overlay    {
-                position: fixed;
-                display: none;
-                left: 0px;
-                top: 0px;
-                right: 0px;
-                bottom: 0px;
-                background: rgba(150,150,150,.8);
-                z-index: 2;
+
+            .question-image {
+                width: 30%;
+                display: inline-block;
+                vertical-align: top;
             }
+
             .delete-button {
                 position: absolute;
                 right: 0;
@@ -114,50 +190,57 @@
                 border: none;
                 text-align: center;
             }
-
         </style>
+        <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
         <script>
             var questions = {};
             var quizzes = {};
-            var current_quiz = null;
 
-            function updateQuestions(quiz_id) {
-                current_quiz = quiz_id;
+            var current_quiz_id = null;
 
-                if(current_quiz == null) {
-                    return;
-                }
+            function chooseQuiz(id) {
+                current_quiz_id = id;
 
-                var html = '';
-                for(var id in quizzes[current_quiz]) {
-                    var question = questions[id];
+                var quiz = quizzes[id];
+
+                $('#question-list').css('text-align', 'left');
+                $('#question-title').html(quiz.name);
+
+                var html = ''
+                quiz.questions.forEach(function(question_id) {
+                    var element = document.createElement('li');
+                    element.setAttribute('id', 'question-' + question_id);
+                    element.setAttribute('class', 'question');
+
+                    var question = questions[question_id];
                     var body = '<p class="question-name"> ' + question.name + '</p>'
                     body += '<ol class="answer-list">';
                     question.answers.forEach(function(answer, idx) {
-                        body += '<li id="answer-' + id + '-' + idx + '" class="answer"><input type="radio" name="answers-' + id + '">' + answer + '</input></li>';
+                        body += '<li id="answer-' + question_id + '-' + idx + '" class="answer"><input type="radio" name="answers-' + question_id + '">' + answer + '</input></li>';
                     });
                     body += '</ol>';
 
-                    html += '<li id="question-' + id + '" class="question" ondragstart="drag(event)"><div class="question-list">' + body + '</div>';
+                    element.innerHTML += '<div class="question-body">' + body + '</div>';
 
                     if(question.image) {
-                        html += '<img class="question-image" src="' + question.image + '" />';
+                        element.innerHTML += '<img class="question-image" src="' + question.image + '" />';
                     }
 
-                    html += '</li>';
-                };
+                    html += element.outerHTML;
+                });
 
                 document.getElementById('question-list').innerHTML = html;
             }
 
-            function updateQuizzes(new_quizzes) {
-                quizzes = new_quizzes;
-
+            function updateQuizzes() {
                 var html = '';
                 for(var id in quizzes) {
                     var quiz = quizzes[id];
-                    var body = '<p class="quiz-name">' + quiz.name
+                    html += '<li id="quiz-' + id + '" class="quiz"><button class="quiz-body" onclick="chooseQuiz(\'' + id + '\')">' + quiz.name + '</button><button class="delete-button" onclick="deleteQuiz(\'' + id + '\')">&#10006;</button></li>';
                 }
+
+                document.getElementById('quiz-list').innerHTML = html;
             }
             
             var socket = null;
@@ -175,12 +258,16 @@
                 };
                 s.onmessage = function(msg) {
                     var data = JSON.parse(msg.data);
-                    console.log('Received: ' + msg.data);
                     if(data.questions) {
                         questions = data.questions;
+
+                        if(current_quiz_id != null) {
+                            chooseQuiz(current_quiz_id);
+                        }
                     }
                     if(data.quizzes) {
-                        updateQuizzes(data.quizzes);
+                        quizzes = data.quizzes;
+                        updateQuizzes();
                     }
                 };
                 s.onclose = function() {
@@ -192,19 +279,16 @@
 
             connect();
 
-            function getQuestions() {
+            function refresh() {
                 if(socket != null) {
+                    socket.send(JSON.stringify({ get_quizzes: true }));
                     socket.send(JSON.stringify({ get_questions: true }));
                 }
             }
 
-            function getQuizzes() {
-                if(socket != null) {
-                    socket.send(JSON.stringify({ get_quizzes: true }));
-                }
-            }
             var state = true;
-            function displayLiveQuiz() {
+
+            function toggleLiveQuiz() {
                 var e1 = document.getElementById('live-quiz');
                 e1.style.display = e1.style.display == 'block' ? 'none' : 'block';
                 if(state) {
@@ -214,21 +298,22 @@
                     myBlurFunction(0)
                     state = true;
                 }
-
             }
-            var myBlurFunction = function(state) {
+
+            function myBlurFunction(state) {
                 /* state can be 1 or 0 */
-                var containerElement = document.getElementById('main_container');
-                var overlayEle = document.getElementById('overlay');
+                var containerElement = document.getElementById('main-container');
+                var overlayElement = document.getElementById('overlay');
 
                 if (state) {
-                    overlayEle.style.display = 'block';
+                    overlayElement.style.display = 'block';
                     containerElement.setAttribute('class', 'blur');
                 } else {
-                    overlayEle.style.display = 'none';
+                    overlayElement.style.display = 'none';
                     containerElement.setAttribute('class', null);
                 }
             }
+
             function populateLiveQuestion(id) {
                 question = questions[id]
                 var body = '<p class="question-name"> ' + question.name + '</p>'
@@ -250,31 +335,40 @@
         </script>
     </head>
 
-    <div id="live-quiz" class="live-quiz">
-            <button id="live-quiz-button" onclick="displayLiveQuiz()" class="delete-button">&#10006;</button>
+    <body>
+        <div id="overlay"></div>
+        <div id="live-quiz">
+            <button id="live-quiz-button" onclick="toggleLiveQuiz()" class="delete-button">&#10006;</button>
             <ol id="live-questions">
                 Live question will be displayed shortly.
             </ol>
         </div>
 
-    <body>
-        <div id="overlay"></div>
-        <div id="main_container">
-            <h1>Active Learning Tool</h1>
-            
+        <div id="main-container">
+            <div id="header-panel">
+                <logo><img src="../active_learning_logo.png" width="175" height="75" /></logo>
+                <button id="settings-button">Settings</button>
+                <button id="statistics-button">Statistics</button>
+                <select id="course-select">
+                    <option value="CS 2110">CS 2110</option>
+                    <option value="CS 2200">CS 2200</option>
+                    <option value="CS 3600">CS 2200</option>
+                </select>
+            </div>
+
             <div id="quiz-panel">
                 <h2 id="quiz-title">Quizzes</h2>
-                <button id="refresh-quizzes" onclick="getQuizzes()">Refresh</button>
-                <button id="live-quiz-button" onclick="displayLiveQuiz()">Live Quiz</button>
+                <button id="refresh-quizzes" onclick="refresh()">Refresh</button>
+                <button id="live-quiz-button" onclick="toggleLiveQuiz()">Live Quiz</button>
                 <ol id="quiz-list"></ol>
             </div>
-
             <div id="question-panel">
                 <h2 id="question-title">Questions</h2>
-                <button id="refresh-questions" onclick="getQuestions()">Refresh</button>
-                <ol id="question-list"></ol>
+                <button id="refresh-questions" onclick="refresh()">Refresh</button>
+                <ol id="question-list">
+                    <p id="choose-quiz-msg">Choose a quiz from the left side!</p>
+                </ol>
             </div>
         </div>
-
     </body>
 </html>

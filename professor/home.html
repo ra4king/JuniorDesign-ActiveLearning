@@ -4,11 +4,41 @@
         <title>Active Learning Tool - Professor Home</title>
         <style>
             body {
-                background-color: #EEB211;
+                background-color: #FFCC00;
+            }
+            #live-quiz {
+                display: none;
+                background-color: #051854;
+                color: white;
+                min-width: 45%;
+                min-height: 500px;
+                max-width: 500px;
+                border: 1px solid black;
+                left: 30%;
+                position: absolute;
+                z-index: 3;
+            }
+            .blur   {
+                filter: blur(5px);
+                -webkit-filter: blur(5px);
+                -moz-filter: blur(5px);
+                -o-filter: blur(5px);
+                -ms-filter: blur(5px);
+            }
+
+            #overlay {
+                position: fixed;
+                display: none;
+                left: 0px;
+                top: 0px;
+                right: 0px;
+                bottom: 0px;
+                background: rgba(150,150,150,.8);
+                z-index: 2;
             }
 
             #header-panel {
-                background-color: #e5d454;
+                background-color: #FFE266;
                 display:inline-block;
                 min-width: 100%;
                 margin-bottom: 10px;
@@ -30,6 +60,7 @@
             }
 
             #course-select select{
+                font-size: 20px;
                 color: white;
             }
 
@@ -39,7 +70,7 @@
                 color: white;
                 padding: 15px 30px;
                 text-align: center;
-                font-size:20;
+                font-size: 20px;
                 transition-duration: .6s;
             }
 
@@ -72,7 +103,7 @@
             }
 
             #quiz-panel, #question-panel {
-                background-color: #2C2C2B;
+                background-color: #051854;
                 color: white;
                 min-width: 48%;
                 min-height: 500px;
@@ -87,7 +118,7 @@
                 float: right;
             }
 
-            #quiz-list, #quiz-question-list, #question-list {
+            #quiz-list, #quiz-question-list, #question-list, #live-questions {
                 list-style-position: inside;
                 min-height: 500px;
                 margin: 0px;
@@ -101,6 +132,10 @@
             #quiz-question-list {
                 text-align: center;
                 padding-top: 20px;
+            }
+
+            #live-questions {
+                margin-top: 25px;
             }
 
             #quiz-title, #question-title {
@@ -168,12 +203,41 @@
 
             .delete-button {
                 position: absolute;
+                display: block;
+                width: 23px;
+                height: 23px;
                 right: 0;
                 top: 0;
                 background-color: #FF2222;
                 color: white;
                 border: none;
                 text-align: center;
+            }
+
+            .live-button {
+                position: absolute;
+                display: block;
+                width: 23px;
+                height: 23px;
+                right: 0;
+                bottom: 0;
+                background-color: #008800;
+                color: white;
+                border: none;
+                text-align: center;
+            }
+
+            .presenting-live-button {
+                position: absolute;
+                display: block;
+                right: 0;
+                bottom: 0;
+                background-color: #008800;
+                color: white;
+                border: none;
+                text-align: center;
+                min-height: 100%;
+                min-width: 5%;
             }
         </style>
         <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
@@ -331,7 +395,8 @@
                     element.innerHTML += '<img class="question-image" src="' + question.image + '" />';
                 }
 
-                element.innerHTML += '<button class=delete-button onclick="deleteQuestion(\'' + id + '\')">&#10006;</button>';
+                element.innerHTML += '<button class="delete-button" onclick="deleteQuestion(\'' + id + '\')">&#10006;</button>';
+                element.innerHTML += '<button id="live-button-' + id + '"class="live-button" onclick="presentLiveQuestion(\'' + id + '\')">L</button>';
 
                 return element;
             }
@@ -362,13 +427,81 @@
                 document.getElementById('question-list').innerHTML = html;
             }
 
+            //Live question code
+            function presentLiveQuiz(id){
+                toggleLiveQuiz();
+                quiz = quizzes[id];
+                var list = document.getElementById('live-questions');
+                quiz.questions.forEach(function(question_id, index) {
+                    var element = document.createElement('li');
+                    element.setAttribute('id', 'live-question-' + question_id);
+                    element.setAttribute('class', 'question');
+
+                    var question = questions[question_id];
+                    var body = '<p class="question-name"> ' + question.name + '</p>'
+                    body += '<ol class="answer-list">';
+                    question.answers.forEach(function(answer, idx) {
+                        body += '<li id="live-answer-' + question_id + '-' + idx + '" class="answer"><input type="radio" name="answers-' + question_id + '">' + answer + '</input></li>';
+                    });
+                    body += '</ol>';
+
+                    element.innerHTML += '<div class="question-body">' + body + '</div>';
+
+                    if(question.image) {
+                        element.innerHTML += '<img class="question-image" src="' + question.image + '" />';
+                    }
+                    element.innerHTML += '<button id="presenting-live-button-' + question_id + '" class="presenting-live-button" onclick="presentLiveQuestion(\'' + question_id + '\')">L</button>';
+                    list.appendChild(element)
+                });
+            }
+            var open = true;
+            var curr_live_id = null;
+            function presentLiveQuestion(id) {
+                if (curr_live_id != null) {
+                    document.getElementById('presenting-live-button-' + curr_live_id).style['background-color']='#008800';
+                } 
+                document.getElementById('presenting-live-button-' + id).style['background-color']='#DD0000';
+                curr_live_id = id;
+                //Network code goes here
+                
+            }
+
+            var state = true;
+
+            function toggleLiveQuiz() {
+                var e1 = document.getElementById('live-quiz');
+                e1.style.display = e1.style.display == 'block' ? 'none' : 'block';
+                if(state) {
+                    myBlurFunction(1);
+                    state = false;
+                } else {
+                    myBlurFunction(0)
+                    state = true;
+                }
+            }
+
+            function myBlurFunction(state) {
+                /* state can be 1 or 0 */
+                var containerElement = document.getElementById('main-container');
+                var overlayElement = document.getElementById('overlay');
+
+                if (state) {
+                    overlayElement.style.display = 'block';
+                    containerElement.setAttribute('class', 'blur');
+                } else {
+                    overlayElement.style.display = 'none';
+                    containerElement.setAttribute('class', null);
+                }
+            }
+            //Live question code
+
             function updateQuizzes(new_quizzes) {
                 quizzes = new_quizzes;
 
                 var html = '';
                 for(var id in quizzes) {
                     var quiz = quizzes[id];
-                    html += '<li id="quiz-' + id + '" class="quiz"><button class="quiz-body" onclick="chooseQuiz(\'' + id + '\')">' + quiz.name + '</button><button class="delete-button" onclick="deleteQuiz(\'' + id + '\')">&#10006;</button></li>';
+                    html += '<li id="quiz-' + id + '" class="quiz"><button class="quiz-body" onclick="chooseQuiz(\'' + id + '\')">' + quiz.name + '</button><button class="delete-button" onclick="deleteQuiz(\'' + id + '\')">&#10006;</button><button class="live-button" onclick="presentLiveQuiz(\'' + id + '\')">L</button></li>';
                 }
 
                 document.getElementById('quiz-list').innerHTML = html;
@@ -480,64 +613,72 @@
     </head>
 
     <body>
-        <div id="header-panel">
-            <logo><img src="../active_learning_logo.png" width="175" height="75" /></logo>
-            <button id="settings-button">Settings</button>
-            <button id="statistics-button">Statistics</button>
-            <select id="course-select">
-                <option value="CS 2110">CS 2110</option>
-                <option value="CS 2200">CS 2200</option>
-                <option value="CS 3600">CS 2200</option>
-            </select>
-        </div>
 
-        <div id="quiz-panel">
-            <h2 id="quiz-title">Quizzes</h2>
-            <button id="refresh-quizzes" onclick="getQuizzes()">Refresh</button>
-            <button id="create-quiz" onclick="toggleQuizForm()">Create Quiz</button>
-            <div id="quiz-creator">
-                <div id="quiz-creator-header">
-                    <div id="quiz-name">Name: <input type="text" id="quiz-name-field" /></div>
-                    <div id="submit-quiz"><button id="submit-quiz-button" onclick="createQuiz()">Submit</button></div>
-                </div>
-                <ol id="quiz-question-list" ondrop="drop(event)" ondragover="allowDrop(event)"></ol>
-            </div>
-            <ol id="quiz-list"></ol>
+        <div id="overlay"></div>
+        <div id="live-quiz">
+            <button id="live-quiz-button" onclick="toggleLiveQuiz()" class="delete-button">&#10006;</button>
+            <ol id="live-questions">
+            </ol>
         </div>
-        <div id="question-panel">
-            <h2 id="question-title">Questions</h2>
-            <button id="refresh-questions" onclick="getQuestions()">Refresh</button>
-            <button onclick="toggleQuestionForm()" id="create-button">Create Question</button>
-            <ol id="question-list"></ol>
-            <div id="question-creator">
-                <form>
-                    <label for="question">Question:</label><br>
-                    <input type="text" id="question" name="question" value="" size="75"><br>
-                    <label for="answer1">Answer 1:</label><br>
-                    <input type="text" id="answer1" name="answer1" value="" size="35">
-                    <input type="radio" name="correct" value="0" checked>Correct</input><br>
-                    <label for="answer2">Answer 2:</label><br>
-                    <input type="text" id="answer2" name="answer2" value="" size="35">
-                    <input type="radio" name="correct" value="1">Correct</input><br>
-                    <label for="answer3">Answer 3:</label><br>
-                    <input type="text" id="answer3" name="answer3" value="" size="35">
-                    <input type="radio" name="correct" value="2">Correct</input><br>
-                    <label for="answer4">Answer 4:</label><br>
-                    <input type="text" id="answer4" name="answer4" value="" size="35">
-                    <input type="radio" name="correct" value="3">Correct</input><br>
-                    <br>
-                    <input id="file-input" type="file" onchange="readURL(this);"/>
-                    <div>
-                       <br><img id="image-input" src="" alt="Please choose an image"/>
+        <div id="main-container">
+            <div id="header-panel">
+                <logo><img src="../active_learning_logo.png" width="175" height="75" /></logo>
+                <button id="settings-button">Settings</button>
+                <button id="statistics-button">Statistics</button>
+                <select id="course-select">
+                    <option value="CS 2110">CS 2110</option>
+                    <option value="CS 2200">CS 2200</option>
+                    <option value="CS 3600">CS 2200</option>
+                </select>
+            </div>
+
+            <div id="quiz-panel">
+                <h2 id="quiz-title">Quizzes</h2>
+                <button id="refresh-quizzes" onclick="getQuizzes()">Refresh</button>
+                <button id="create-quiz" onclick="toggleQuizForm()">Create Quiz</button>
+                <div id="quiz-creator">
+                    <div id="quiz-creator-header">
+                        <div id="quiz-name">Name: <input type="text" id="quiz-name-field" /></div>
+                        <div id="submit-quiz"><button id="submit-quiz-button" onclick="createQuiz()">Submit</button></div>
                     </div>
-                    <br>
-                    <button type="button" onclick="createQuestion(question.value, [answer1.value, answer2.value, answer3.value, answer4.value], correct.value,
-                    $('#image-input').attr('src'))">
-                        submit
-                    </button>
-                </form>
+                    <ol id="quiz-question-list" ondrop="drop(event)" ondragover="allowDrop(event)"></ol>
+                </div>
+                <ol id="quiz-list"></ol>
+            </div>
+            <div id="question-panel">
+                <h2 id="question-title">Questions</h2>
+                <button id="refresh-questions" onclick="getQuestions()">Refresh</button>
+                <button onclick="toggleQuestionForm()" id="create-button">Create Question</button>
+                <ol id="question-list"></ol>
+                <div id="question-creator">
+                    <form>
+                        <label for="question">Question:</label><br>
+                        <input type="text" id="question" name="question" value="" size="75"><br>
+                        <label for="answer1">Answer 1:</label><br>
+                        <input type="text" id="answer1" name="answer1" value="" size="35">
+                        <input type="radio" name="correct" value="0" checked>Correct</input><br>
+                        <label for="answer2">Answer 2:</label><br>
+                        <input type="text" id="answer2" name="answer2" value="" size="35">
+                        <input type="radio" name="correct" value="1">Correct</input><br>
+                        <label for="answer3">Answer 3:</label><br>
+                        <input type="text" id="answer3" name="answer3" value="" size="35">
+                        <input type="radio" name="correct" value="2">Correct</input><br>
+                        <label for="answer4">Answer 4:</label><br>
+                        <input type="text" id="answer4" name="answer4" value="" size="35">
+                        <input type="radio" name="correct" value="3">Correct</input><br>
+                        <br>
+                        <input id="file-input" type="file" onchange="readURL(this);"/>
+                        <div>
+                           <br><img id="image-input" src="" alt="Please choose an image"/>
+                        </div>
+                        <br>
+                        <button type="button" onclick="createQuestion(question.value, [answer1.value, answer2.value, answer3.value, answer4.value], correct.value,
+                        $('#image-input').attr('src'))">
+                            submit
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </body>
 </html>
-    
