@@ -57,7 +57,7 @@ server.on('connection', function(socket) {
         if(data.create_quiz) {
             var quiz = data.create_quiz;
             quiz.name = escape(quiz.name);
-            
+
             quiz.id = last_id++;
             quizzes[quiz.id] = quiz;
             save_config();
@@ -67,6 +67,8 @@ server.on('connection', function(socket) {
 
         if(data.update_quiz) {
             var quiz = data.update_quiz;
+            quiz.name = escape(quiz.name);
+            
             quizzes[quiz.id] = quiz;
             save_config();
 

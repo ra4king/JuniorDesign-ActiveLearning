@@ -138,9 +138,10 @@
                 e2.style.display = e2.style.display == 'none' ? 'block' : 'none';
 
                 var b = document.getElementById('create-button');
-                b.firstChild.data = ((b.firstChild.data != 'Create Question') ? 'Create Question' : 'Hide Question') ;
+                b.innerHTML = b.innerHTML != 'Create Question' ? 'Create Question' : 'Hide Question' ;
             }
 
+            var current_quiz_id = null;
             var current_quiz_questions = [];
 
             function clearQuizForm() {
@@ -159,6 +160,11 @@
                 for(var id in questions) {
                     $('#question-' + id).attr('draggable', e1.style.display == 'block');
                 }
+
+                $('#create-quiz').html($('#create-quiz').html() == 'Create Quiz' ? 'Quiz List' : 'Create Quiz');
+                $('#submit-quiz-button').html('Submit');
+
+                clearQuizForm();
             }
 
             function readURL(input) {
@@ -188,6 +194,25 @@
                 }
             }
 
+            function addQuizQuestion(id, elem) {
+                current_quiz_questions.push(id);
+
+                $('#drag-questions-msg').css('display', 'none');
+                $('#quiz-question-list').css('text-align', 'left');
+
+                var list = document.getElementById('quiz-question-list');
+                elem.id = 'quiz-question-' + id;
+                elem.classList.remove('question');
+                elem.classList.add('quiz-question');
+                elem.childNodes.forEach(function(child) {
+                    if(child.tagName.toLowerCase() == 'button') {
+                        child.setAttribute('onclick', 'removeQuizQuestion(\'' + id + '\')');
+                    }
+                });
+
+                list.innerHTML += elem.outerHTML;
+            }
+
             function removeQuizQuestion(id) {
                 var list = document.getElementById('quiz-question-list');
                 var nodes = list.childNodes;
@@ -211,29 +236,18 @@
                 var elem = document.getElementById(id).cloneNode(true);
 
                 var question_id = id.substring('question-'.length);
-                current_quiz_questions.push(question_id);
-                
-                $('#drag-questions-msg').css('display', 'none');
-                $('#quiz-question-list').css('text-align', 'left');
-
-                var list = document.getElementById('quiz-question-list');
-                elem.id = 'quiz-' + elem.id;
-                elem.classList.remove('question');
-                elem.classList.add('quiz-question');
-                elem.childNodes.forEach(function(child) {
-                    if(child.tagName.toLowerCase() == 'button') {
-                        child.setAttribute('onclick', 'removeQuizQuestion(\'' + question_id + '\')');
-                    }
-                });
-
-                list.innerHTML += elem.outerHTML;
+                addQuizQuestion(question_id, elem);
             }
 
             var questions = {};
             var quizzes = {};
 
             function createQuestionElement(id) {
-                var element = '';
+                var element = document.createElement('li');
+                //<li id="" class="question" ondragstart="drag(event)">
+                element.setAttribute('id', 'question-' + id);
+                element.setAttribute('class', 'question');
+                element.setAttribute('ondragstart', 'drag(event)');
 
                 var question = questions[id];
                 var body = '<p class="question-name"> ' + question.name + '</p>'
@@ -243,17 +257,30 @@
                 });
                 body += '</ol>';
 
-                element += '<li id="question-' + id + '" class="question" ondragstart="drag(event)"><div class="question-body">' + body + '</div>';
+                element.innerHTML += '<div class="question-body">' + body + '</div>';
 
                 if(question.image) {
-                    element += '<img class="question-image" src="' + question.image + '" />';
+                    element.innerHTML += '<img class="question-image" src="' + question.image + '" />';
                 }
 
-                element += '<button class=delete-button onclick="deleteQuestion(\'' + id + '\')">&#10006;</button>';
-
-                element += '</li>';
+                element.innerHTML += '<button class=delete-button onclick="deleteQuestion(\'' + id + '\')">&#10006;</button>';
 
                 return element;
+            }
+
+            function chooseQuiz(id) {
+                toggleQuizForm();
+
+                current_quiz_id = id;
+
+                var quiz = quizzes[id];
+
+                $('#submit-quiz-button').html('Update');
+                $('#quiz-name-field').val(quiz.name);
+
+                quiz.questions.forEach(function(question_id) {
+                    addQuizQuestion(question_id, createQuestionElement(question_id));
+                });
             }
 
             function updateQuestions(new_questions) {
@@ -261,7 +288,7 @@
 
                 var html = '';
                 for(var id in questions) {
-                    html += createQuestionElement(id);
+                    html += createQuestionElement(id).outerHTML;
                 };
 
                 document.getElementById('question-list').innerHTML = html;
@@ -273,7 +300,7 @@
                 var html = '';
                 for(var id in quizzes) {
                     var quiz = quizzes[id];
-                    html += '<li id="quiz-' + id + '" class="quiz"><button class="quiz-body">' + quiz.name + '</button><button class="delete-button" onclick="deleteQuiz(\'' + id + '\')">&#10006;</button></li>';
+                    html += '<li id="quiz-' + id + '" class="quiz"><button class="quiz-body" onclick="chooseQuiz(\'' + id + '\')">' + quiz.name + '</button><button class="delete-button" onclick="deleteQuiz(\'' + id + '\')">&#10006;</button></li>';
                 }
 
                 document.getElementById('quiz-list').innerHTML = html;
@@ -353,7 +380,16 @@
             function createQuiz() {
                 if(socket != null) {
                     var name = $('#quiz-name-field').val();
-                    socket.send(JSON.stringify({ create_quiz: { name: name, questions: current_quiz_questions }}));
+                    var quiz = { name: name, questions: current_quiz_questions };
+
+                    console.log(quiz);
+
+                    if($('#submit-quiz-button').html() == 'Submit') {
+                        socket.send(JSON.stringify({ create_quiz: quiz}));
+                    } else {
+                        quiz.id = current_quiz_id;
+                        socket.send(JSON.stringify({ update_quiz: quiz}));
+                    }
                 }
 
                 toggleQuizForm();
@@ -384,7 +420,7 @@
             <button id="create-quiz" onclick="toggleQuizForm()">Create Quiz</button>
             <div id="quiz-creator">
                 <div id="quiz-name">Name: <input type="text" id="quiz-name-field" /></div>
-                <div id="submit-quiz"><button onclick="createQuiz()">Submit</button></div>
+                <div id="submit-quiz"><button id="submit-quiz-button" onclick="createQuiz()">Submit</button></div>
                 <ol id="quiz-question-list" ondrop="drop(event)" ondragover="allowDrop(event)"></ol>
             </div>
             <ol id="quiz-list"></ol>
