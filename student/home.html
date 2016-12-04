@@ -217,14 +217,32 @@
                     containerElement.setAttribute('class', null);
                 }
             }
+            function populateLiveQuestion(id) {
+                question = questions[id]
+                var body = '<p class="question-name"> ' + question.name + '</p>'
+                body += '<ol class="answer-list">';
+                question.answers.forEach(function(answer, idx) {
+                    body += '<li id="question-' + id + '-' + idx + '" class="answer"><input type="radio" name="answers-' + id + '">' + answer + '</input></li>';
+                });
+                body += '</ol>';
+
+                if(question.image) {
+                    html += '<img class="question-image" src="' + question.image + '" />';
+                }
+
+                html += '<div class="question"><li id="question-' + id + '" class="question-list">' + body + '</li>';
+
+                html += '</div>';
+                document.getElementById('live-questions').innerHTML = html;
+            }
         </script>
     </head>
 
     <div id="live-quiz" class="live-quiz">
             <button id="live-quiz-button" onclick="displayLiveQuiz()" class="delete-button">&#10006;</button>
-            <div id="live-questions">
-                To populate with the live question presented by the professor.
-            </div>
+            <ol id="live-questions">
+                Live question will be displayed shortly.
+            </ol>
         </div>
 
     <body>
