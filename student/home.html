@@ -2,7 +2,7 @@
 <html>
     <head>
         <title>Active Learning Tool - Professor Home</title>
-        <style>
+        <style type="text/css">
             body {
                 background-color: #EEB211;
             }
@@ -22,10 +22,10 @@
 
             #header-panel {
                 background-color: #e5d454;
-                display:inline-block;
+                display: inline-block;
                 min-width: 100%;
                 margin-bottom: 10px;
-                height:75px;
+                height: 75px;
             }
 
             .blur   {
@@ -71,18 +71,18 @@
                 color: white;
                 padding: 15px 30px;
                 text-align: center;
-                font-size:20;
+                font-size: 20px;
                 transition-duration: .6s;
             }
 
             #settings-button {
                 float: right;
-                margin-right:25px
+                margin-right: 25px
             }
 
             #statistics-button {
                 float: right;
-                margin-right:50px
+                margin-right: 50px
             }
 
             #settings-button:hover, #statistics-button:hover {
@@ -181,6 +181,9 @@
 
             .delete-button {
                 position: absolute;
+                display: block;
+                width: 23px;
+                height: 23px;
                 right: 0;
                 top: 0;
                 background-color: #FF2222;
@@ -235,7 +238,7 @@
                 var html = '';
                 for(var id in quizzes) {
                     var quiz = quizzes[id];
-                    html += '<li id="quiz-' + id + '" class="quiz"><button class="quiz-body" onclick="chooseQuiz(\'' + id + '\')">' + quiz.name + '</button><button class="delete-button" onclick="deleteQuiz(\'' + id + '\')">&#10006;</button></li>';
+                    html += '<li id="quiz-' + id + '" class="quiz"><button class="quiz-body" onclick="chooseQuiz(\'' + id + '\')">' + quiz.name + '</button></li>';
                 }
 
                 document.getElementById('quiz-list').innerHTML = html;
