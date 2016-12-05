@@ -8,15 +8,14 @@
             }
 
             #live-quiz {
+                position: absolute;
                 display: none;
                 background-color: #2C2C2B;
                 color: white;
                 min-width: 45%;
-                min-height: 500px;
-                max-width: 500px;
                 border: 1px solid black;
-                left: 30%;
-                position: absolute;
+                left: 27.5%;
+                top: 30%;
                 z-index: 3;
             }
 
@@ -40,7 +39,7 @@
             }
 
             #header-panel {
-                background-color: #777777;
+                background-color: #2C2C2B;
                 display: inline-block;
                 min-width: 100%;
                 margin-bottom: 10px;
@@ -52,6 +51,7 @@
             }
             
             #course-select {
+                display: none;
                 float: right;
                 margin-right: 50px;
                 background-color: #2C2C2B;
@@ -62,9 +62,10 @@
             }
 
             #header-panel button {
-                background-color: #2C2C2B;
+                background-color: #555555;
                 border: none;
                 color: white;
+                margin-top: 9px;
                 padding: 15px 30px;
                 text-align: center;
                 font-size: 20px;
@@ -78,27 +79,30 @@
 
             #settings-button {
                 float: right;
-                margin-right: 25px
+                margin-right: 25px;
             }
 
             #statistics-button {
                 float: right;
-                margin-right: 50px
+                margin-right: 30px;
             }
 
             #quiz-panel, #question-panel {
+                position: absolute;
+                overflow: scroll;
                 background-color: #2C2C2B;
                 color: white;
-                min-width: 48%;
-                min-height: 500px;
+                width: 45%;
+                top: 15%;
+                bottom: 8px;
             }
 
             #quiz-panel {
-                float: left;
+                left: 8px;
             }
 
             #question-panel {
-                float: right;
+                right: 8px;
             }
 
             .option-button {
@@ -106,7 +110,7 @@
                 border: none;
                 color: white;
                 padding: 5px;
-                margin: 5px;
+                margin: 10px;
                 text-align: center;
                 font-size: 18px;
                 transition-duration: .6s;
@@ -121,7 +125,6 @@
                 list-style-position: inside;
                 margin: 0px;
                 padding: 0px;
-                min-height: 400px;
             }
 
             #quiz-list {
@@ -167,6 +170,7 @@
             }
 
             .quiz-body {
+                background-color: #FFFFFF;
                 height: 50px;
                 width: 100%;
                 vertical-align: top;
@@ -399,14 +403,10 @@
             </div>
 
             <div id="quiz-panel">
-                <h2 id="quiz-title">Quizzes</h2>
-                <button id="refresh-quizzes" class="option-button" onclick="refresh()">Refresh</button>
                 <button id="live-quiz-button" class="option-button" onclick="toggleLiveQuiz()">Live Quiz</button>
                 <ol id="quiz-list"></ol>
             </div>
             <div id="question-panel">
-                <h2 id="question-title">Questions</h2>
-                <button id="refresh-questions" class="option-button" onclick="refresh()">Refresh</button>
                 <ol id="question-list">
                     <p id="choose-quiz-msg">Choose a quiz from the left side!</p>
                 </ol>
