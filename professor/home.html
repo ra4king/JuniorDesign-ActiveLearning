@@ -5,18 +5,19 @@
         <style type="text/css">
             body {
                 background-color: #DDEEFF;
+                font-family: "Noto Sans", sans-serif;
             }
 
             #live-quiz {
+                position: absolute;
                 display: none;
                 background-color: #2C2C2B;
                 color: white;
                 min-width: 45%;
                 min-height: 500px;
-                max-width: 500px;
                 border: 1px solid black;
-                left: 30%;
-                position: absolute;
+                left: 27.5%;
+                top: 30%;
                 z-index: 3;
             }
 
@@ -40,7 +41,7 @@
             }
 
             #header-panel {
-                background-color: #777777;
+                background-color: #2C2C2B;
                 display: inline-block;
                 min-width: 100%;
                 margin-bottom: 10px;
@@ -52,6 +53,7 @@
             }
             
             #course-select {
+                display: none;
                 float: right;
                 margin-right: 50px;
                 background-color: #2C2C2B;
@@ -62,9 +64,10 @@
             }
 
             #header-panel button {
-                background-color: #2C2C2B;
+                background-color: #555555;
                 border: none;
                 color: white;
+                margin-top: 9px;
                 padding: 15px 30px;
                 text-align: center;
                 font-size: 20px;
@@ -83,22 +86,25 @@
 
             #statistics-button {
                 float: right;
-                margin-right: 50px
+                margin-right: 30px
             }
 
             #quiz-panel, #question-panel {
+                position: absolute;
+                overflow: scroll;
                 background-color: #2C2C2B;
                 color: white;
-                min-width: 48%;
-                min-height: 500px;
+                width: 45%;
+                top: 15%;
+                bottom: 8px;
             }
 
             #quiz-panel {
-                float: left;
+                left: 8px;
             }
 
             #question-panel {
-                float: right;
+                right: 8px;
             }
 
             .option-button {
@@ -106,7 +112,7 @@
                 border: none;
                 color: white;
                 padding: 5px;
-                margin: 5px;
+                margin: 10px;
                 text-align: center;
                 font-size: 18px;
                 transition-duration: .6s;
@@ -146,7 +152,7 @@
 
             #quiz-question-list {
                 text-align: center;
-                padding-top: 20px;
+                padding-top: 30px;
             }
 
             #live-questions-list {
@@ -178,6 +184,11 @@
                 float: right;
             }
 
+            #submit-quiz-button, #present-live-button {
+                background-color: #FFFFFF;
+                border: none;
+            }
+
             .quiz, .quiz-question, .question {
                 position: relative;
                 font-size: 25px;
@@ -194,6 +205,7 @@
             }
 
             .quiz-body {
+                background-color: #FFFFFF;
                 height: 50px;
                 width: 100%;
                 vertical-align: top;
@@ -289,7 +301,7 @@
                 e2.style.display = e2.style.display == 'none' ? 'block' : 'none';
 
                 var b = document.getElementById('create-button');
-                b.innerHTML = b.innerHTML != 'Create Question' ? 'Create Question' : 'Discard Question' ;
+                b.innerHTML = b.innerHTML != 'Create Question' ? 'Create Question' : 'Cancel' ;
             }
 
             var current_quiz_id = null;
@@ -313,7 +325,7 @@
                     $('#question-' + id).attr('draggable', e1.style.display == 'block');
                 }
 
-                $('#create-quiz').html($('#create-quiz').html() == 'Create Quiz' ? 'Discard Quiz' : 'Create Quiz');
+                $('#create-quiz').html($('#create-quiz').html() == 'Create Quiz' ? 'Cancel' : 'Create Quiz');
                 $('#submit-quiz-button').html('Submit');
 
                 clearQuizForm();
@@ -326,9 +338,7 @@
                     reader.onload = function (e) {
                         $('#image-input')
                             .css('display', 'block')
-                            .attr('src', e.target.result)
-                            .width(300)
-                            .height(200);
+                            .attr('src', e.target.result);
                     };
                     reader.readAsDataURL(input.files[0]);
                 } else {
@@ -411,7 +421,7 @@
                 //<li id="" class="question" ondragstart="drag(event)">
                 element.setAttribute('id', 'question-' + id);
                 element.setAttribute('class', 'question');
-                element.setAttribute('draggable', $('#create-quiz').html() == 'Discard Quiz');
+                element.setAttribute('draggable', $('#create-quiz').html() == 'Cancel');
                 element.setAttribute('ondragstart', 'drag(event)');
 
                 var question = questions[id];
@@ -693,8 +703,6 @@
             </div>
 
             <div id="quiz-panel">
-                <h2 id="quiz-title">Quizzes</h2>
-                <button id="refresh-quizzes" class="option-button" onclick="getQuizzes()">Refresh</button>
                 <button id="create-quiz" class="option-button" onclick="toggleQuizForm()">Create Quiz</button>
                 <div id="quiz-creator">
                     <div id="quiz-creator-header">
@@ -708,8 +716,6 @@
             </div>
 
             <div id="question-panel">
-                <h2 id="question-title">Questions</h2>
-                <button id="refresh-questions" class="option-button" onclick="getQuestions()">Refresh</button>
                 <button id="create-button" class="option-button" onclick="toggleQuestionForm()">Create Question</button>
                 <ol id="question-list"></ol>
                 <div id="question-creator">
@@ -736,7 +742,7 @@
                         <br>
                         <button type="button" onclick="createQuestion(question.value, [answer1.value, answer2.value, answer3.value, answer4.value], correct.value,
                         $('#image-input').attr('src'))">
-                            submit
+                            Submit
                         </button>
                     </form>
                 </div>
