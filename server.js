@@ -81,9 +81,23 @@ server.on('connection', function(socket) {
 
             var question_id = data.delete_question;
             delete questions[question_id];
+
+            var quiz_modified = false;
+            for(var quiz_id in quizzes) {
+                var quiz = quizzes[quiz_id];
+                var id = quiz.questions.indexOf(question_id);
+                if(id != -1) {
+                    quiz_modified = true;
+                    quiz.questions.splice(id, 1);
+                }
+            }
+
             save_config();
 
             broadcast(JSON.stringify({ questions: questions }));
+            if(quiz_modified) {
+                broadcast(JSON.stringify({ quizzes: quizzes }));
+            }
         }
 
         if(data.get_questions) {

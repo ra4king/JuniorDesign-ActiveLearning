@@ -29,7 +29,7 @@
                 float: left;
             }
 
-            .question-image {
+            #live-question .question-image {
                 width: 40%;
             }
         </style>
@@ -117,6 +117,10 @@
                     if(data.quizzes) {
                         quizzes = data.quizzes;
                         updateQuizzes();
+
+                        if(current_quiz_id != null) {
+                            chooseQuiz(current_quiz_id);
+                        }
                     }
 
                     if(data.live_question) {
