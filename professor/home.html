@@ -86,7 +86,7 @@
                 display: block;
                 right: 0;
                 bottom: 0;
-                background-color: #DD0000;
+                background-color: #AA0000;
                 color: white;
                 border: none;
                 text-align: center;
@@ -96,7 +96,15 @@
             }
 
             .presenting-live-button:hover {
-                background-color: #66aa66;
+                background-color: #AA4444;
+            }
+
+            .presenting-live-button-selected {
+                background-color: #008800;
+            }
+
+            .presenting-live-button-selected:hover {
+                background-color: #008800;
             }
         </style>
         <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
@@ -481,11 +489,12 @@
 
             function presentLiveQuestion(id) {
                 if (curr_live_id != null) {
-                    document.getElementById('presenting-live-button-' + curr_live_id).style['background-color']='#DD0000';
+                    $('#presenting-live-button-' + curr_live_id).removeClass('presenting-live-button-selected');
                 }
 
                 if(isSocketAvailable()) {
-                    document.getElementById('presenting-live-button-' + id).style['background-color']='#008800';
+                    $('#presenting-live-button-' + id).addClass('presenting-live-button-selected');
+
                     if(curr_live_id != id) {
                         socket.send(JSON.stringify({ broadcast_live_question: id }));
                     }
