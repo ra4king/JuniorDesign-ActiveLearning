@@ -14,6 +14,7 @@
                 background-color: #2C2C2B;
                 color: white;
                 min-width: 45%;
+                min-height: 45%;
                 border: 1px solid black;
                 left: 27.5%;
                 top: 30%;
@@ -90,11 +91,11 @@
 
             #quiz-panel, #question-panel {
                 position: absolute;
-                overflow: scroll;
+                overflow: auto;
                 background-color: #2C2C2B;
                 color: white;
                 width: 45%;
-                top: 15%;
+                top: 100px;
                 bottom: 8px;
             }
 
@@ -136,6 +137,7 @@
 
             #quiz-creator-header {
                 margin: 10px;
+                height: 30px;
             }
 
             #quiz-list, #quiz-question-list, #question-list, #live-questions-list {
@@ -150,8 +152,10 @@
 
             #quiz-question-list {
                 text-align: center;
-                padding-top: 30px;
-                min-height: 400px;
+                position: absolute;
+                top: 90px;
+                width: 100%;
+                bottom: 0px;
             }
 
             #live-questions-list {
@@ -405,6 +409,7 @@
                 ev.preventDefault();
                 var id = ev.dataTransfer.getData('question-id');
                 var elem = document.getElementById(id).cloneNode(true);
+                elem.setAttribute('draggable', false);
 
                 var question_id = id.substring('question-'.length);
                 addQuizQuestion(question_id, elem);

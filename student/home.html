@@ -89,11 +89,11 @@
 
             #quiz-panel, #question-panel {
                 position: absolute;
-                overflow: scroll;
+                overflow: auto;
                 background-color: #2C2C2B;
                 color: white;
                 width: 45%;
-                top: 15%;
+                top: 100px;
                 bottom: 8px;
             }
 
@@ -133,6 +133,11 @@
 
             #live-question-list {
                 margin-top: 25px;
+                display: none;
+            }
+
+            #live-question-msg {
+                margin: 25px 0 10px 0;
                 text-align: center;
             }
 
@@ -302,7 +307,8 @@
                     if(data.live_question) {
                         populateLiveQuestion(data.live_question);
                     } else if(data.live_question === null) {
-                        $('#live-question-list').css('text-align', 'center').html('Live question has ended.');
+                        $('#live-question-msg').css('display', 'block');
+                        $('#live-question-list').css('display', 'none');
                     }
                 };
                 s.onclose = function() {
@@ -377,7 +383,8 @@
 
                 var html = '<div class="question"><li id="live-question" class="question-list">' + body + '</li></div>';
 
-                $('#live-question-list').css('text-align', 'left').html(html);
+                $('#live-question-msg').css('display', 'none');
+                $('#live-question-list').css('display', 'block').css('text-align', 'left').html(html);
             }
         </script>
     </head>
@@ -385,8 +392,8 @@
         <div id="overlay"></div>
         <div id="live-quiz">
             <button id="live-quiz-button" onclick="toggleLiveQuiz()" class="delete-button">&#10006;</button>
+            <p id="live-question-msg">Live question has ended.</p>
             <ol id="live-question-list">
-                Live question has ended.
             </ol>
         </div>
 
