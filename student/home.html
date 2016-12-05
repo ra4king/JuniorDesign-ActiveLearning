@@ -3,152 +3,20 @@
     <head>
         <title>Active Learning Tool - Professor Home</title>
         <link rel="icon" type="image/png" href="../active_learning_logo_icon.png" />
+        <link rel="stylesheet" type="text/css" href="../common.css">
         <style type="text/css">
-            body {
-                background-color: #DDEEFF;
-                font-family: "Noto Sans", sans-serif;
-            }
-
-            #live-quiz {
-                position: absolute;
-                display: none;
-                background-color: #2C2C2B;
-                color: white;
-                min-width: 45%;
-                border: 1px solid black;
-                left: 27.5%;
-                top: 30%;
-                z-index: 3;
-            }
-
-            .blur {
-                filter: blur(5px);
-                -webkit-filter: blur(5px);
-                -moz-filter: blur(5px);
-                -o-filter: blur(5px);
-                -ms-filter: blur(5px);
-            }
-
-            #overlay {
-                position: fixed;
-                display: none;
-                left: 0px;
-                top: 0px;
-                right: 0px;
-                bottom: 0px;
-                background: rgba(150,150,150,.8);
-                z-index: 2;
-            }
-
-            #header-panel {
-                background-color: #2C2C2B;
-                display: inline-block;
-                min-width: 100%;
-                margin-bottom: 10px;
-                height: 75px;
-            }
-
-            #logo {
-                float: left;
-            }
-            
-            #course-select {
-                display: none;
-                float: right;
-                margin-right: 50px;
-                background-color: #2C2C2B;
-                color:white;
-                border: none;
-                min-height: 30px;
-                min-width: 125px;
-            }
-
-            #header-panel button {
-                background-color: #555555;
-                border: none;
-                color: white;
-                margin-top: 9px;
-                padding: 15px 30px;
-                text-align: center;
-                font-size: 20px;
-                transition-duration: .6s;
-            }
-
-            #header-panel button:hover {
-                background-color: #3c6668;
-                color: white;
-            }
-
-            #settings-button {
-                float: right;
-                margin-right: 25px;
-            }
-
-            #statistics-button {
-                float: right;
-                margin-right: 30px;
-            }
-
-            #quiz-panel, #question-panel {
-                position: absolute;
-                overflow: auto;
-                background-color: #2C2C2B;
-                color: white;
-                width: 45%;
-                top: 100px;
-                bottom: 8px;
-            }
-
-            #quiz-panel {
-                left: 8px;
-            }
-
-            #question-panel {
-                right: 8px;
-            }
-
-            .option-button {
-                background-color: #555555;
-                border: none;
-                color: white;
-                padding: 5px;
-                margin: 10px;
-                text-align: center;
-                font-size: 18px;
-                transition-duration: .6s;
-            }
-
-            .option-button:hover {
-                background-color: #3c6668;
-                color: white;
-            }
-
-            #quiz-list, #question-list, #live-question-list {
-                list-style-position: inside;
-                margin: 0px;
-                padding: 0px;
-            }
-
-            #quiz-list {
-                list-style-type: none;
-            }
-
-            #live-question-list {
-                margin-top: 25px;
-                display: none;
-            }
-
             #live-question-msg {
                 margin: 25px 0 10px 0;
                 text-align: center;
             }
 
-            #quiz-title, #question-title {
-                text-align: center;
-                margin-left: 10px;
+            #live-question {
+                margin-top: 30px;
+                display: none;
             }
 
-            #refresh-quizzes, #refresh-questions {
+            #quiz-title {
+                text-align: center;
                 margin-left: 10px;
             }
 
@@ -161,66 +29,11 @@
                 float: left;
             }
 
-            .quiz, .question {
-                position: relative;
-                font-size: 25px;
-                font-weight: bold;
-                color: black;
-                background-color: white;
-                padding: 10px;
-                margin: 10px;
-                vertical-align: top;
-            }
-
-            .quiz {
-                padding: 0px;
-            }
-
-            .quiz-body {
-                background-color: #FFFFFF;
-                height: 50px;
-                width: 100%;
-                vertical-align: top;
-            }
-
-            .question-body {
-                width: 60%;
-                display: inline-block;
-                vertical-align: top;
-            }
-
-            .question-name {
-                margin: 0px;
-            }
-
-            .answer-list {
-                list-style-type: upper-alpha;
-                list-style-position: outside;
-                font-size: 18px;
-                font-weight: normal;
-            }
-
             .question-image {
-                width: 30%;
-                display: inline-block;
-                vertical-align: top;
-            }
-
-            .delete-button {
-                position: absolute;
-                display: block;
-                width: 23px;
-                height: 23px;
-                right: 0;
-                top: 0;
-                background-color: #FF2222;
-                color: white;
-                border: none;
-                text-align: center;
+                width: 40%;
             }
         </style>
         <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
-        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
         <script>
             var questions = {};
             var quizzes = {};
@@ -233,7 +46,7 @@
                 var quiz = quizzes[id];
 
                 $('#question-list').css('text-align', 'left');
-                $('#question-title').html(quiz.name);
+                $('#quiz-title').html(quiz.name);
 
                 var html = ''
                 quiz.questions.forEach(function(question_id) {
@@ -249,7 +62,7 @@
                     });
                     body += '</ol>';
 
-                    element.innerHTML += '<div class="question-body">' + body + '</div>';
+                    element.innerHTML += '<div class="question-body"' + (question.image ? '' : ' style="width: 90%"') + '>' + body + '</div>';
 
                     if(question.image) {
                         element.innerHTML += '<img class="question-image" src="' + question.image + '" />';
@@ -310,7 +123,7 @@
                         populateLiveQuestion(data.live_question);
                     } else if(data.live_question === null) {
                         $('#live-question-msg').css('display', 'block');
-                        $('#live-question-list').css('display', 'none');
+                        $('#live-question').css('display', 'none');
                     }
                 };
                 s.onclose = function() {
@@ -372,21 +185,21 @@
             }
 
             function populateLiveQuestion(question) {
-                var body = '<p class="question-name"> ' + question.name + '</p>'
-                body += '<ol class="answer-list">';
+                var html = '<div class="question-body"' + (question.image ? '' : ' style="width: 100%"') + '>';
+                html += '<p class="question-name"> ' + question.name + '</p>'
+                html += '<ol class="answer-list">';
                 question.answers.forEach(function(answer, idx) {
-                    body += '<li id="live-question-' + idx + '" class="answer"><input type="radio" name="live-answers">' + answer + '</input></li>';
+                    html += '<li id="live-question-' + idx + '" class="answer"><input type="radio" name="live-answers">' + answer + '</input></li>';
                 });
-                body += '</ol>';
+                html += '</ol>';
+                html += '</div>';
 
                 if(question.image) {
-                    body += '<img class="question-image" src="' + question.image + '" />';
+                    html += '<img class="question-image" src="' + question.image + '" />';
                 }
 
-                var html = '<div class="question"><li id="live-question" class="question-list">' + body + '</li></div>';
-
                 $('#live-question-msg').css('display', 'none');
-                $('#live-question-list').css('display', 'block').css('text-align', 'left').html(html);
+                $('#live-question').css('display', 'block').css('text-align', 'left').html(html);
             }
         </script>
     </head>
@@ -395,8 +208,7 @@
         <div id="live-quiz">
             <button id="live-quiz-button" onclick="toggleLiveQuiz()" class="delete-button">&#10006;</button>
             <p id="live-question-msg">Live question has ended.</p>
-            <ol id="live-question-list">
-            </ol>
+            <div id="live-question" class="question"></div>
         </div>
 
         <div id="main-container">
@@ -416,7 +228,7 @@
                 <ol id="quiz-list"></ol>
             </div>
             <div id="question-panel">
-                <h2 id="question-title"></h2>
+                <h2 id="quiz-title"></h2>
                 <ol id="question-list">
                     <p id="choose-quiz-msg">Choose a quiz from the left side!</p>
                 </ol>

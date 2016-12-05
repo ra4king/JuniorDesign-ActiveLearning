@@ -1,126 +1,16 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <meta charset="UTF-8">
+
         <title>Active Learning Tool - Professor Home</title>
+
         <link rel="icon" type="image/png" href="../active_learning_logo_icon.png" />
+        <link rel="stylesheet" type="text/css" href="../common.css">
         <style type="text/css">
-            body {
-                background-color: #DDEEFF;
-                font-family: "Noto Sans", sans-serif;
-            }
-
-            #live-quiz {
-                position: absolute;
-                display: none;
-                background-color: #2C2C2B;
-                color: white;
-                min-width: 45%;
-                border: 1px solid black;
-                left: 27.5%;
-                top: 30%;
-                z-index: 3;
-            }
-
-            .blur {
-                filter: blur(5px);
-                -webkit-filter: blur(5px);
-                -moz-filter: blur(5px);
-                -o-filter: blur(5px);
-                -ms-filter: blur(5px);
-            }
-
-            #overlay {
-                position: fixed;
-                display: none;
-                left: 0px;
-                top: 0px;
-                right: 0px;
-                bottom: 0px;
-                background: rgba(150,150,150,.8);
-                z-index: 2;
-            }
-
-            #header-panel {
-                background-color: #2C2C2B;
-                display: inline-block;
-                min-width: 100%;
-                margin-bottom: 10px;
-                height: 75px;
-            }
-
-            #logo {
-                float: left;
-            }
-            
-            #course-select {
-                display: none;
-                float: right;
-                margin-right: 50px;
-                background-color: #2C2C2B;
-                color:white;
-                border: none;
-                min-height: 30px;
-                min-width: 125px;
-            }
-
-            #header-panel button {
-                background-color: #555555;
-                border: none;
-                color: white;
-                margin-top: 9px;
-                padding: 15px 30px;
-                text-align: center;
-                font-size: 20px;
-                transition-duration: .6s;
-            }
-
-            #header-panel button:hover {
-                background-color: #3c6668;
-                color: white;
-            }
-
-            #settings-button {
-                float: right;
-                margin-right: 25px
-            }
-
-            #statistics-button {
-                float: right;
-                margin-right: 30px
-            }
-
-            #quiz-panel, #question-panel {
-                position: absolute;
-                overflow: auto;
-                background-color: #2C2C2B;
-                color: white;
-                width: 45%;
-                top: 100px;
-                bottom: 8px;
-            }
-
-            #quiz-panel {
-                left: 8px;
-            }
-
-            #question-panel {
-                right: 8px;
-            }
-
-            .option-button {
-                background-color: #555555;
-                border: none;
-                color: white;
-                padding: 5px;
-                margin: 10px;
-                text-align: center;
-                font-size: 18px;
-                transition-duration: .6s;
-            }
-
-            .option-button:hover {
-                background-color: #3c6668;
-                color: white;
+            .draggable {
+                border: dashed 1px red;
+                border-radius: 10px;
             }
 
             #question-creator {
@@ -140,35 +30,16 @@
                 height: 30px;
             }
 
-            #quiz-list, #quiz-question-list, #question-list, #live-questions-list {
-                list-style-position: inside;
-                margin: 0px;
-                padding: 0px;
-            }
-
-            #quiz-list {
-                list-style-type: none;
-            }
-
             #quiz-question-list {
-                text-align: center;
                 position: absolute;
+                text-align: center;
                 top: 90px;
                 width: 100%;
                 bottom: 0px;
             }
 
             #live-questions-list {
-                margin-top: 25px;
-            }
-
-            #quiz-title, #question-title {
-                text-align: center;
-                margin-left: 10px;
-            }
-
-            #refresh-quizzes, #refresh-questions {
-                margin-left: 10px;
+                margin-top: 30px;
             }
 
             #quiz-name {
@@ -192,64 +63,6 @@
                 border: none;
             }
 
-            .quiz, .quiz-question, .question {
-                position: relative;
-                font-size: 25px;
-                font-weight: bold;
-                color: black;
-                background-color: white;
-                padding: 10px;
-                margin: 10px;
-                vertical-align: top;
-            }
-
-            .quiz {
-                padding: 0px;
-            }
-
-            .quiz-body {
-                background-color: #FFFFFF;
-                height: 50px;
-                width: 100%;
-                vertical-align: top;
-            }
-
-            .question-body {
-                width: 60%;
-                display: inline-block;
-                vertical-align: top;
-            }
-
-            .question-name {
-                margin: 0px;
-            }
-
-            .answer-list {
-                list-style-type: upper-alpha;
-                list-style-position: outside;
-                font-size: 18px;
-                font-weight: normal;
-            }
-
-            .question-image {
-                width: 30%;
-                display: inline-block;
-                vertical-align: top;
-            }
-
-            .delete-button {
-                position: absolute;
-                display: block;
-                width: 23px;
-                height: 23px;
-                right: 0;
-                top: 0;
-                background-color: #FF2222;
-                color: white;
-                border: none;
-                text-align: center;
-            }
-
             .live-button {
                 position: absolute;
                 display: block;
@@ -261,6 +74,11 @@
                 color: white;
                 border: none;
                 text-align: center;
+                transition-duration: .6s;
+            }
+
+            .live-button:hover {
+                background-color: #66aa66;
             }
 
             .presenting-live-button {
@@ -274,10 +92,14 @@
                 text-align: center;
                 min-height: 100%;
                 min-width: 5%;
+                transition-duration: .6s;
+            }
+
+            .presenting-live-button:hover {
+                background-color: #66aa66;
             }
         </style>
         <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
-        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
         <script>
             function clearQuestionForm() {
                 document.getElementById('question').value = "";
@@ -307,31 +129,36 @@
                 b.innerHTML = b.innerHTML != 'Create Question' ? 'Create Question' : 'Cancel' ;
             }
 
-            var current_quiz_id = null;
-            var current_quiz_questions = [];
+            var current_quiz = { id: null, questions: [] };
 
             function clearQuizForm() {
-                current_quiz_questions = [];
+                current_quiz = { id: null, questions: [] };
                 $('#quiz-name-field').val('');
                 $('#quiz-question-list').css('text-align', 'center')
                                         .html('<p id="drag-questions-msg">Drag questions here!</p>');
             }
 
             function toggleQuizForm() {
-                var e1 = document.getElementById('quiz-creator');
-                e1.style.display = e1.style.display == 'block' ? 'none' : 'block';
+                clearQuizForm();
 
-                var e2 = document.getElementById('quiz-list');
-                e2.style.display = e2.style.display == 'none' ? 'block' : 'none';
+                var e1 = $('#quiz-creator');
+
+                var toggle = e1.css('display') == 'none';
+
+                e1.css('display', toggle ? 'block' : 'none');
+                $('#quiz-list').css('display', toggle ? 'none' : 'block');
 
                 for(var id in questions) {
-                    $('#question-' + id).attr('draggable', e1.style.display == 'block');
+                    var elem = $('#question-' + id).attr('draggable', toggle);
+                    if(toggle) {
+                        elem.addClass('draggable');
+                    } else {
+                        elem.removeClass('draggable');
+                    }
                 }
 
-                $('#create-quiz').html($('#create-quiz').html() == 'Create Quiz' ? 'Cancel' : 'Create Quiz');
+                $('#create-quiz').html(toggle ? 'Cancel' : 'Create Quiz');
                 $('#submit-quiz-button').html('Submit');
-
-                clearQuizForm();
             }
 
             function readURL(input) {
@@ -341,11 +168,12 @@
                     reader.onload = function (e) {
                         $('#image-input')
                             .css('display', 'block')
+                            .css('max-width', '80%')
                             .attr('src', e.target.result);
                     };
                     reader.readAsDataURL(input.files[0]);
                 } else {
-                    $('#image-input').attr('src', '').width(0).height(0);
+                    $('#image-input').css('display', 'none');
                 }
             }
 
@@ -361,22 +189,26 @@
             }
 
             function addQuizQuestion(id, elem) {
-                if(current_quiz_questions.indexOf(id) != -1) {
+                if(current_quiz.questions.indexOf(id) != -1) {
                     return;
                 }
 
-                current_quiz_questions.push(id);
+                current_quiz.questions.push(id);
 
                 $('#drag-questions-msg').css('display', 'none');
                 $('#quiz-question-list').css('text-align', 'left');
 
                 var list = document.getElementById('quiz-question-list');
                 elem.id = 'quiz-question-' + id;
-                elem.classList.remove('question');
+                elem.setAttribute('draggable', false);
+                elem.classList.remove('question', 'draggable');
                 elem.classList.add('quiz-question');
                 elem.childNodes.forEach(function(child) {
-                    if(child.tagName.toLowerCase() == 'button') {
+                    if(child.classList.contains("delete-button")) {
                         child.setAttribute('onclick', 'removeQuizQuestion(\'' + id + '\')');
+                    }
+                    if(child.classList.contains("live-button")) {
+                        child.style.display = 'none';
                     }
                 });
 
@@ -395,8 +227,8 @@
                 if (index != -1 && (confirmed || confirm('Are you sure you want to remove this question from the quiz?'))) {
                     list.removeChild(nodes[index]);
 
-                    var idx = current_quiz_questions.indexOf(id);
-                    current_quiz_questions.splice(idx, 1);
+                    var idx = current_quiz.questions.indexOf(id);
+                    current_quiz.questions.splice(idx, 1);
 
                     if(list.childNodes.length == 1) {
                         $('#drag-questions-msg').css('display', 'block');
@@ -409,44 +241,46 @@
                 ev.preventDefault();
                 var id = ev.dataTransfer.getData('question-id');
                 var elem = document.getElementById(id).cloneNode(true);
-                elem.setAttribute('draggable', false);
 
                 var question_id = id.substring('question-'.length);
                 addQuizQuestion(question_id, elem);
-
-                $('#live-button-' + question_id).css('display', 'none');
             }
 
             var questions = {};
             var quizzes = {};
 
-            function createQuestionElement(id, with_live) {
+            function createQuestionElement(id, in_question_list) {
                 var element = document.createElement('li');
                 //<li id="" class="question" ondragstart="drag(event)">
                 element.setAttribute('id', 'question-' + id);
                 element.setAttribute('class', 'question');
-                element.setAttribute('draggable', $('#create-quiz').html() == 'Cancel');
+                if(in_question_list) {
+                    element.setAttribute('draggable', $('#create-quiz').html() == 'Cancel');
+                }
                 element.setAttribute('ondragstart', 'drag(event)');
 
                 var question = questions[id];
-                var body = '<p class="question-name"> ' + question.name + '</p>'
-                body += '<ol class="answer-list">';
-                question.answers.forEach(function(answer, idx) {
-                    body += '<li class="answer"><input type="radio" name="answers-' + id + '">' + answer + '</input></li>';
-                });
-                body += '</ol>';
 
-                element.innerHTML += '<div class="question-body">' + body + '</div>';
+                var html = '<div class="question-body"' + (question.image ? '' : ' style="width: 90%"') + '>';
+                html += '<p class="question-name"> ' + question.name + '</p>'
+                html += '<ol class="answer-list">';
+                question.answers.forEach(function(answer, idx) {
+                    html += '<li class="answer"><input type="radio" name="answers-' + id + '">' + answer + '</input></li>';
+                });
+                html += '</ol>';
+                html += '</div>';
 
                 if(question.image) {
-                    element.innerHTML += '<img class="question-image" src="' + question.image + '" />';
+                    html += '<img class="question-image" src="' + question.image + '" />';
                 }
 
-                element.innerHTML += '<button class="delete-button" onclick="deleteQuestion(\'' + id + '\')">&#10006;</button>';
+                html += '<button class="delete-button" onclick="deleteQuestion(\'' + id + '\')">&#10006;</button>';
 
-                if(with_live) {
-                    element.innerHTML += '<button id="live-button-' + id + '" class="live-button" onclick="presentLiveQuiz([\'' + id + '\']) & presentLiveQuestion(\'' + id + '\')">L</button>';
+                if(in_question_list) {
+                    html += '<button class="live-button" onclick="presentLiveQuiz([\'' + id + '\']) & presentLiveQuestion(\'' + id + '\')">L</button>';
                 }
+
+                element.innerHTML = html;
 
                 return element;
             }
@@ -502,8 +336,11 @@
 
                 $('#quiz-list').html(html);
             }
-            
+
             var socket = null;
+
+            var curr_live_id = null;
+
             function connect() {
                 console.log('Connecting...');
                 var s = new WebSocket('wss://www.roiatalla.com/active-learning/server');
@@ -515,6 +352,10 @@
                     }));
                     socket.send(JSON.stringify({ get_quizzes: true }));
                     socket.send(JSON.stringify({ get_questions: true }));
+
+                    if(curr_live_id != null) {
+                        socket.send(JSON.stringify({ broadcast_live_question: curr_live_id }));
+                    }
                 };
                 s.onmessage = function(msg) {
                     var data = JSON.parse(msg.data);
@@ -587,9 +428,7 @@
             function createQuiz() {
                 if(isSocketAvailable()) {
                     var name = $('#quiz-name-field').val();
-                    var quiz = { name: name, questions: current_quiz_questions };
-
-                    console.log(quiz);
+                    var quiz = { name: name, questions: current_quiz.questions };
 
                     if($('#submit-quiz-button').html() == 'Submit') {
                         socket.send(JSON.stringify({ create_quiz: quiz}));
@@ -623,22 +462,23 @@
                     element.setAttribute('id', 'live-question-' + question_id);
                     element.setAttribute('class', 'question');
                     var question = questions[question_id];
-                    var body = '<p class="question-name"> ' + question.name + '</p>'
-                    body += '<ol class="answer-list">';
+                    var html = '<div class="question-body"' + (question.image ? '' : ' style="width: 90%"') + '>';
+                    html += '<p class="question-name"> ' + question.name + '</p>'
+                    html += '<ol class="answer-list">';
                     question.answers.forEach(function(answer, idx) {
-                        body += '<li id="live-answer-' + question_id + '-' + idx + '" class="answer"><input type="radio" name="answers-' + question_id + '">' + answer + '</input></li>';
+                        html += '<li id="live-answer-' + question_id + '-' + idx + '" class="answer"><input type="radio" name="answers-' + question_id + '">' + answer + '</input></li>';
                     });
-                    body += '</ol>';
-                    element.innerHTML += '<div class="question-body">' + body + '</div>';
+                    html += '</ol>';
+                    html += '</div>';
                     if(question.image) {
-                        element.innerHTML += '<img class="question-image" src="' + question.image + '" />';
+                        html += '<img class="question-image" src="' + question.image + '" />';
                     }
-                    element.innerHTML += '<button id="presenting-live-button-' + question_id + '" class="presenting-live-button" onclick="presentLiveQuestion(\'' + question_id + '\')">L</button>';
+                    html += '<button id="presenting-live-button-' + question_id + '" class="presenting-live-button" onclick="presentLiveQuestion(\'' + question_id + '\')">L</button>';
+                    element.innerHTML = html;
                     list.appendChild(element)
                 });
             }
 
-            var curr_live_id = null;
             function presentLiveQuestion(id) {
                 if (curr_live_id != null) {
                     document.getElementById('presenting-live-button-' + curr_live_id).style['background-color']='#DD0000';
@@ -712,7 +552,7 @@
                     <div id="quiz-creator-header">
                         <div id="quiz-name">Name: <input type="text" id="quiz-name-field" /></div>
                         <div id="submit-quiz"><button id="submit-quiz-button" onclick="createQuiz()">Submit</button></div>
-                        <div id="present-live"><button id="present-live-button" onclick="presentLiveQuiz(current_quiz_questions)">Present Live</button></div>
+                        <div id="present-live"><button id="present-live-button" onclick="presentLiveQuiz(current_quiz.questions)">Present Live</button></div>
                     </div>
                     <ol id="quiz-question-list" ondrop="drop(event)" ondragover="allowDrop(event)"></ol>
                 </div>
