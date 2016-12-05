@@ -253,7 +253,7 @@
                 display: block;
                 right: 0;
                 bottom: 0;
-                background-color: #008800;
+                background-color: #DD0000;
                 color: white;
                 border: none;
                 text-align: center;
@@ -627,11 +627,11 @@
             var curr_live_id = null;
             function presentLiveQuestion(id) {
                 if (curr_live_id != null) {
-                    document.getElementById('presenting-live-button-' + curr_live_id).style['background-color']='#008800';
+                    document.getElementById('presenting-live-button-' + curr_live_id).style['background-color']='#DD0000';
                 }
 
                 if(isSocketAvailable()) {
-                    document.getElementById('presenting-live-button-' + id).style['background-color']='#DD0000';
+                    document.getElementById('presenting-live-button-' + id).style['background-color']='#008800';
                     if(curr_live_id != id) {
                         socket.send(JSON.stringify({ broadcast_live_question: id }));
                     }
