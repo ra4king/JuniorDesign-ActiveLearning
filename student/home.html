@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <meta charset="UTF-8">
+
         <title>Active Learning Tool - Professor Home</title>
         <link rel="icon" type="image/png" href="../active_learning_logo_icon.png" />
         <link rel="stylesheet" type="text/css" href="../common.css">
@@ -45,6 +47,7 @@
 
                 var quiz = quizzes[id];
 
+                $('#choose-quiz-msg').css('display', 'none');
                 $('#question-list').css('text-align', 'left');
                 $('#quiz-title').html(quiz.name);
 
@@ -210,14 +213,14 @@
     <body>
         <div id="overlay"></div>
         <div id="live-quiz">
-            <button id="live-quiz-button" onclick="toggleLiveQuiz()" class="delete-button">&#10006;</button>
+            <button onclick="toggleLiveQuiz()" class="delete-button">&#10006;</button>
             <p id="live-question-msg">Live question has ended.</p>
             <div id="live-question" class="question"></div>
         </div>
 
         <div id="main-container">
             <div id="header-panel">
-                <img id="logo" src="../active_learning_logo_white.png" width="175" height="75" />
+                <img id="logo" src="../active_learning_logo_white.png" width="175" height="75" alt="logo"/>
                 <button id="settings-button">Settings</button>
                 <button id="statistics-button">Statistics</button>
                 <select id="course-select">
@@ -228,13 +231,13 @@
             </div>
 
             <div id="quiz-panel">
-                <button id="live-quiz-button" class="option-button" onclick="toggleLiveQuiz()">Live Quiz</button>
+                <button class="option-button" onclick="toggleLiveQuiz()">Live Quiz</button>
                 <ol id="quiz-list"></ol>
             </div>
             <div id="question-panel">
-                <h2 id="quiz-title"></h2>
+                <h2 id="quiz-title">Quiz</h2>
+                <p id="choose-quiz-msg">Choose a quiz from the left side!</p>
                 <ol id="question-list">
-                    <p id="choose-quiz-msg">Choose a quiz from the left side!</p>
                 </ol>
             </div>
         </div>

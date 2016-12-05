@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <meta charset="UTF-8">
+
         <title>Active Learning Tool - Login</title>
         <link rel="icon" type="image/png" href="active_learning_logo_icon.png" />
         <style  type="text/css">
@@ -21,14 +23,14 @@
                 margin: 10px;
             }
 
-            #login-wrapper {
+            .login-wrapper {
                 min-width: 250px;
                 min-height: 100px;
                 line-height: 100px;
                 text-align: center;
             }
             
-            #login {
+            .login {
                 background-color: #2C2C2B;
                 border: none;
                 color: white;
@@ -42,26 +44,26 @@
                 line-height: normal;
             }
 
-            #login:hover {
+            .login:hover {
                 background-color: #3c6668;
                 color: white;
             }
 
-            #login:link {
+            .login:link {
                 color: white;
                 text-decoration: none;
             }
 
-            #login:visited {
+            .login:visited {
                 color: white;
                 text-decoration: none;
             }
         </style>
     </head>
     <body>
-        <img id="logo" src="active_learning_logo_black.png" />
+        <img id="logo" src="active_learning_logo_black.png" alt="logo"/>
         <h1>Active Learning Tool</h1>
-        <div id="login-wrapper"><a id="login" href="professor/home.html">Professor Login</a></div>
-        <div id="login-wrapper"><a id="login" href="student/home.html">Student Login</a></div>
+        <div class="login-wrapper"><a class="login" href="professor/home.html">Professor Login</a></div>
+        <div class="login-wrapper"><a class="login" href="student/home.html">Student Login</a></div>
     </body>
 </html>

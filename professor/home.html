@@ -4,7 +4,6 @@
         <meta charset="UTF-8">
 
         <title>Active Learning Tool - Professor Home</title>
-
         <link rel="icon" type="image/png" href="../active_learning_logo_icon.png" />
         <link rel="stylesheet" type="text/css" href="../common.css">
         <style type="text/css">
@@ -545,7 +544,7 @@
 
         <div id="main-container">
             <div id="header-panel">
-                <img id="logo" src="../active_learning_logo_white.png" width="175" height="75" />
+                <img id="logo" src="../active_learning_logo_white.png" width="175" height="75" alt="logo"/>
                 <button id="settings-button">Settings</button>
                 <button id="statistics-button">Statistics</button>
                 <select id="course-select">
@@ -573,24 +572,24 @@
                 <ol id="question-list"></ol>
                 <div id="question-creator">
                     <form>
-                        <label for="question">Question:</label><br>
-                        <input type="text" id="question" name="question" value="" size="75"><br>
-                        <label for="answer1">Answer 1:</label><br>
-                        <input type="text" id="answer1" name="answer1" value="" size="35">
-                        <input type="radio" name="correct" value="0" checked>Correct</input><br>
-                        <label for="answer2">Answer 2:</label><br>
-                        <input type="text" id="answer2" name="answer2" value="" size="35">
-                        <input type="radio" name="correct" value="1">Correct</input><br>
-                        <label for="answer3">Answer 3:</label><br>
-                        <input type="text" id="answer3" name="answer3" value="" size="35">
-                        <input type="radio" name="correct" value="2">Correct</input><br>
-                        <label for="answer4">Answer 4:</label><br>
-                        <input type="text" id="answer4" name="answer4" value="" size="35">
-                        <input type="radio" name="correct" value="3">Correct</input><br>
+                        <label for="question">Question:</label><br/>
+                        <input type="text" id="question" name="question" value="" size="75"/><br/>
+                        <label for="answer1">Answer 1:</label><br/>
+                        <input type="text" id="answer1" name="answer1" value="" size="35"/>
+                        <input type="radio" name="correct" value="0" checked>Correct<br/>
+                        <label for="answer2">Answer 2:</label><br/>
+                        <input type="text" id="answer2" name="answer2" value="" size="35"/>
+                        <input type="radio" name="correct" value="1"/>Correct<br/>
+                        <label for="answer3">Answer 3:</label><br/>
+                        <input type="text" id="answer3" name="answer3" value="" size="35"/>
+                        <input type="radio" name="correct" value="2"/>Correct<br/>
+                        <label for="answer4">Answer 4:</label><br/>
+                        <input type="text" id="answer4" name="answer4" value="" size="35"/>
+                        <input type="radio" name="correct" value="3"/>Correct<br/>
                         <br>
                         <input id="file-input" type="file" onchange="readURL(this);"/>
                         <div>
-                           <br><img id="image-input" src="" alt="Please choose an image"/>
+                           <br><img id="image-input" src="invalid" alt="Please choose an image"/>
                         </div>
                         <br>
                         <button type="button" onclick="createQuestion(question.value, [answer1.value, answer2.value, answer3.value, answer4.value], correct.value,
