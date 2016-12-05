@@ -506,7 +506,7 @@
             var socket = null;
             function connect() {
                 console.log('Connecting...');
-                var s = new WebSocket('ws://www.roiatalla.com:1337');
+                var s = new WebSocket('wss://www.roiatalla.com/active-learning/server');
                 s.onopen = function() {
                     socket = s;
                     console.log('Connected to server!');
