@@ -7,6 +7,19 @@
         <link rel="icon" type="image/png" href="../active_learning_logo_icon.png" />
         <link rel="stylesheet" type="text/css" href="../common.css">
         <style type="text/css">
+            #live-quiz {
+                position: fixed;
+                top: 8px;
+                bottom: 8px;
+                overflow: auto;
+            }
+
+            #live-quiz-delete-button {
+                position: fixed;
+                top: 8px;
+                right: 20%;
+            }
+
             .draggable {
                 border: dashed 1px red;
                 border-radius: 10px;
@@ -262,7 +275,12 @@
                 element.setAttribute('id', 'question-' + id);
                 element.setAttribute('class', 'question');
                 if(in_question_list) {
-                    element.setAttribute('draggable', $('#create-quiz').html() == 'Cancel');
+                    var draggable = $('#create-quiz').html() == 'Cancel';
+
+                    element.setAttribute('draggable', draggable);
+                    if(draggable) {
+                        element.classList.add('draggable');
+                    }
                 }
                 element.setAttribute('ondragstart', 'drag(event)');
 
@@ -538,7 +556,7 @@
     <body>
         <div id="overlay"></div>
         <div id="live-quiz">
-            <button id="live-quiz-button" onclick="toggleLiveQuiz()" class="delete-button">&#10006;</button>
+            <button id="live-quiz-delete-button" onclick="toggleLiveQuiz()" class="delete-button">&#10006;</button>
             <ol id="live-questions-list"></ol>
         </div>
 
@@ -589,7 +607,7 @@
                         <br>
                         <input id="file-input" type="file" onchange="readURL(this);"/>
                         <div>
-                           <br><img id="image-input" src="invalid" alt="Please choose an image"/>
+                           <br><img id="image-input" src="" alt="Please choose an image"/>
                         </div>
                         <br>
                         <button type="button" onclick="createQuestion(question.value, [answer1.value, answer2.value, answer3.value, answer4.value], correct.value,
