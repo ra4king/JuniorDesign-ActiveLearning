@@ -32,7 +32,33 @@
             }
 
             #live-question .question-image {
-                width: 40%;
+                width: 25%;
+            }
+
+            .submit-div {
+                float: right;
+                vertical-align: top;
+                width: 13%;
+            }
+
+            .submit-button {
+                text-align: center;
+                float: right;
+                color: white;
+                background-color: #176d18;
+                border: none;
+                font-size: 18px;
+            }
+
+            .submit-all-button {
+                text-align: center;
+                color: white;
+                background-color: #176d18;
+                border: none;
+                font-size: 24px;
+                margin-left: 41%;
+                margin-bottom: 10px;
+                display: none;
             }
         </style>
         <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
@@ -65,16 +91,28 @@
                     });
                     body += '</ol>';
 
-                    element.innerHTML += '<div class="question-body"' + (question.image ? '' : ' style="width: 90%"') + '>' + body + '</div>';
+                    element.innerHTML += '<div class="question-body"' + (question.image ? '' : ' style="width: 70%"') + '>' + body + '</div>';
 
                     if(question.image) {
                         element.innerHTML += '<img class="question-image" src="' + question.image + '" />';
                     }
 
+                    var submit_div = document.createElement('div');
+                    submit_div.setAttribute('id', 'submit-div-' + question_id);
+                    submit_div.setAttribute('class', 'submit-div');
+                    var submit_button = document.createElement('button');
+                    submit_button.setAttribute('id', 'submit-' + question_id);
+                    submit_button.setAttribute('class', 'submit-button')
+                    submit_button.innerHTML += 'Submit';
+                    submit_div.innerHTML = submit_button.outerHTML;
+                    element.innerHTML += submit_div.outerHTML;
+
                     html += element.outerHTML;
                 });
 
                 $('#question-list').html(html);
+
+                $('#submit-all').css('display', 'block');
             }
 
             function updateQuizzes() {
@@ -198,7 +236,7 @@
             }
 
             function populateLiveQuestion(question) {
-                var html = '<div class="question-body"' + (question.image ? '' : ' style="width: 100%"') + '>';
+                var html = '<div class="question-body"' + (question.image ? '' : ' style="width: 80%"') + '>';
                 html += '<p class="question-name"> ' + question.name + '</p>'
                 html += '<ol class="answer-list">';
                 question.answers.forEach(function(answer, idx) {
@@ -210,6 +248,16 @@
                 if(question.image) {
                     html += '<img class="question-image" src="' + question.image + '" />';
                 }
+
+                var submit_div = document.createElement('div');
+                submit_div.setAttribute('id', 'submit-div-live');
+                submit_div.setAttribute('class', 'submit-div');
+                var submit_button = document.createElement('button');
+                submit_button.setAttribute('id', 'submit-live');
+                submit_button.setAttribute('class', 'submit-button')
+                submit_button.innerHTML += 'Submit';
+                submit_div.innerHTML = submit_button.outerHTML;
+                html += submit_div.outerHTML;
 
                 $('#live-question-msg').css('display', 'none');
                 $('#live-question').css('display', 'block').css('text-align', 'left').html(html);
@@ -245,6 +293,7 @@
                 <p id="choose-quiz-msg">Choose a quiz from the left side!</p>
                 <ol id="question-list">
                 </ol>
+                <button id="submit-all" class="submit-all-button">Submit All</button>
             </div>
         </div>
     </body>
