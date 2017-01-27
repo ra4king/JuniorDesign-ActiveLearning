@@ -104,7 +104,7 @@
                     submit_button.setAttribute('id', 'submit-' + question_id);
                     submit_button.setAttribute('class', 'submit-button')
                     submit_button.innerHTML += 'Submit';
-                    submit_button.setAttribute('onClick', 'checkQuestion('+question_id+')');
+                    submit_button.setAttribute('onClick', 'checkQuestion('+question_id+', \'answers-\')');
                     submit_div.innerHTML = submit_button.outerHTML;
                     element.innerHTML += submit_div.outerHTML;
 
@@ -248,7 +248,7 @@
                 html += '<p class="question-name"> ' + question.name + '</p>'
                 html += '<ol class="answer-list">';
                 question.answers.forEach(function(answer, idx) {
-                    html += '<li id="live-question-' + idx + '" class="answer"><input type="radio" name="live-answers">' + answer + '</input></li>';
+                    html += '<li id="live-question-' + idx + '" class="answer"><input type="radio" name="live-answers-' + question.id + '">' + answer + '</input></li>';
                 });
                 html += '</ol>';
                 html += '</div>';
@@ -264,16 +264,16 @@
                 submit_button.setAttribute('id', 'submit-live');
                 submit_button.setAttribute('class', 'submit-button')
                 submit_button.innerHTML += 'Submit';
-                //submit_button.onclick = checkQuestion(); //<----------------
+                submit_button.setAttribute('onClick', 'checkQuestion('+question.id+', \'live-answers-\')'); 
                 submit_div.innerHTML = submit_button.outerHTML;
                 html += submit_div.outerHTML;
 
                 $('#live-question-msg').css('display', 'none');
                 $('#live-question').css('display', 'block').css('text-align', 'left').html(html);
             }
-            function checkQuestion(id) {
+            function checkQuestion(id, prefix) {
                 var answer = null;
-                var answers_list = document.getElementsByName('answers-' + id);
+                var answers_list = document.getElementsByName(prefix + id);
                 for(var i = 0; i < answers_list.length; i++) {
                     if (answers_list[i].checked) {
                         answer = i;
@@ -282,6 +282,14 @@
                 }
                 if(isSocketAvailable()){
                     socket.send(JSON.stringify({ check_question: {id: id, answer: answer}}));
+                }
+            }
+
+            function checkQuiz() {
+                if(current_quiz_id != null) {
+                    quizzes[current_quiz_id].questions.forEach(function(question_id) {
+                        checkQuestion(question_id, 'answers-');
+                    });
                 }
             }
         </script>
@@ -315,7 +323,7 @@
                 <p id="choose-quiz-msg">Choose a quiz from the left side!</p>
                 <ol id="question-list">
                 </ol>
-                <button id="submit-all" class="submit-all-button">Submit All</button>
+                <button id="submit-all" class="submit-all-button" onclick="checkQuiz()">Submit All</button>
             </div>
         </div>
     </body>
