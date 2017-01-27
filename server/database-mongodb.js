@@ -85,10 +85,10 @@ function get_question_by_id(question_id, callback) {
 
         callback(null, {
             id: question._id.toHexString(),
-            name: result.name,
-            answers: result.answers,
-            correct: result.correct,
-            image: result.image
+            name: question.name,
+            answers: question.answers,
+            correct: question.correct,
+            image: question.image
         });
     });
 }
@@ -121,7 +121,7 @@ function get_questions(callback) {
 function create_quiz(quiz, callback) {
     quiz.name = escape(quiz.name);
 
-    quizzes.insertOne(quizzes, function(err, result) {
+    quizzes.insertOne(quiz, function(err, result) {
         if(err) {
             console.error('Error when creating quiz: ' + quiz);
             console.error(err);
