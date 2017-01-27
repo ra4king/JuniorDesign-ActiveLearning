@@ -83,7 +83,13 @@ function get_question_by_id(question_id, callback) {
             return callback(err);
         }
 
-        callback(null, question);
+        callback(null, {
+            id: question._id.toHexString(),
+            name: result.name,
+            answers: result.answers,
+            correct: result.correct,
+            image: result.image
+        });
     });
 }
 
@@ -103,7 +109,7 @@ function get_questions(callback) {
                 id: id,
                 name: result.name,
                 answers: result.answers,
-                correct: result.correct,
+                correct: result.correct, // TODO depending on role, send back
                 image: result.image
             };
         });
@@ -113,13 +119,60 @@ function get_questions(callback) {
 }
 
 function create_quiz(quiz, callback) {
+    quiz.name = escape(quiz.name);
+
+    quizzes.insertOne(quizzes, function(err, result) {
+        if(err) {
+            console.error('Error when creating quiz: ' + quiz);
+            console.error(err);
+        }
+
+        callback(err);
+    });
 }
 
 function update_quiz(quiz, callback) {
+    quiz.name = escape(quiz.name);
+
+    delete_quiz(quiz.id, function(err) {
+        if(err) {
+            return callback(err);
+        }
+        create_quiz(quiz, callback);
+    });
 }
 
 function delete_quiz(quiz_id, callback) {
+    quizzes.findOneAndDelete({ _id: new ObjectID(quiz_id) }, function(err, result) {
+        if(err) {
+            console.error('Error when deleting quiz: ' + quiz_id);
+            console.error(err);
+            return callback(err);
+        }
+
+        callback(result.ok ? null : 'An unspecified error occurred.');
+    });
 }
 
 function get_quizzes(callback) {
+    quizzes.find({}).toArray(function(err, results) {
+        if(err) {
+            console.error('Error when getting all quizzes');
+            console.error(err);
+            return callback(err);
+        }
+
+        var cleaned = {};
+        results.forEach(function(result) {
+            var id = result._id.toHexString();
+
+            cleaned[id] = {
+                id: id,
+                name: result.name,
+                questions: result.questions
+            };
+        });
+
+        callback(null, cleaned);
+    });
 }
