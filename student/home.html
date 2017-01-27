@@ -104,6 +104,7 @@
                     submit_button.setAttribute('id', 'submit-' + question_id);
                     submit_button.setAttribute('class', 'submit-button')
                     submit_button.innerHTML += 'Submit';
+                    submit_button.setAttribute('onClick', 'checkQuestion('+question_id+')');
                     submit_div.innerHTML = submit_button.outerHTML;
                     element.innerHTML += submit_div.outerHTML;
 
@@ -175,6 +176,13 @@
                     } else if(data.live_question === null) {
                         $('#live-question-msg').css('display', 'block');
                         $('#live-question').css('display', 'none');
+                    }
+                    if(data.answer_question) {
+                        if(data.answer_question.responce) {
+                            window.alert("Correct answer!");
+                        } else {
+                            window.alert("Incorrect");
+                        }
                     }
                 };
                 s.onclose = function() {
@@ -256,11 +264,25 @@
                 submit_button.setAttribute('id', 'submit-live');
                 submit_button.setAttribute('class', 'submit-button')
                 submit_button.innerHTML += 'Submit';
+                //submit_button.onclick = checkQuestion(); //<----------------
                 submit_div.innerHTML = submit_button.outerHTML;
                 html += submit_div.outerHTML;
 
                 $('#live-question-msg').css('display', 'none');
                 $('#live-question').css('display', 'block').css('text-align', 'left').html(html);
+            }
+            function checkQuestion(id) {
+                var answer = null;
+                var answers_list = document.getElementsByName('answers-' + id);
+                for(var i = 0; i < answers_list.length; i++) {
+                    if (answers_list[i].checked) {
+                        answer = i;
+                        break;
+                    }
+                }
+                if(isSocketAvailable()){
+                    socket.send(JSON.stringify({ check_question: {id: id, answer: answer}}));
+                }
             }
         </script>
     </head>

@@ -154,6 +154,11 @@ server.on('connection', function(socket) {
         if(data.end_live_question) {
             set_live_question_id(0);
         }
+        if(data.check_question) {
+            var student_answer = data.check_question.answer;
+            var answer = questions[data.check_question.id].correct;
+            socket.send(JSON.stringify({answer_question: {responce: student_answer == null ? false : student_answer == answer}}));
+        }
     });
 
     socket.on('error', function(error) {
