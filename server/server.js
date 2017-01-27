@@ -1,7 +1,7 @@
 var ws = require('ws');
 var database = require('./database-mongodb.js');
 
-var server = new ws.Server({ port: 1337 }, function() {
+var server = new ws.Server({ port: 1337, perMessageDeflate: false }, function() {
     console.log('Websockets server up on port 1337...');
 });
 
@@ -58,7 +58,14 @@ server.on('connection', function(socket) {
     }
 
     socket.on('message', function(msg) {
-        var data = JSON.parse(msg);
+        var data;
+        try {
+            data = JSON.parse(msg);
+        } catch(e) {
+            console.error('Could not parse: ' + msg);
+            return;
+        }
+
         console.log('Received: ' + JSON.stringify(data, null, 4));
 
         if(username == null && data.username) {
