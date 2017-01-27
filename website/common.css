@@ -46,6 +46,12 @@ body {
     float: left;
 }
 
+#name {
+    float: left;
+    color: white;
+    margin-left: 200px;
+}
+
 #course-select {
     display: none;
     float: right;
