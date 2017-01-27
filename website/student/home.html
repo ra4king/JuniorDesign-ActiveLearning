@@ -104,7 +104,7 @@
                     submit_button.setAttribute('id', 'submit-' + question_id);
                     submit_button.setAttribute('class', 'submit-button')
                     submit_button.innerHTML += 'Submit';
-                    submit_button.setAttribute('onClick', 'checkQuestion('+question_id+', \'answers-\')');
+                    submit_button.setAttribute('onClick', 'checkQuestion("'+question_id+'", \'answers-\')');
                     submit_div.innerHTML = submit_button.outerHTML;
                     element.innerHTML += submit_div.outerHTML;
 
@@ -264,7 +264,7 @@
                 submit_button.setAttribute('id', 'submit-live');
                 submit_button.setAttribute('class', 'submit-button')
                 submit_button.innerHTML += 'Submit';
-                submit_button.setAttribute('onClick', 'checkQuestion('+question.id+', \'live-answers-\')'); 
+                submit_button.setAttribute('onClick', 'checkQuestion("'+question.id+'", \'live-answers-\')'); 
                 submit_div.innerHTML = submit_button.outerHTML;
                 html += submit_div.outerHTML;
 
