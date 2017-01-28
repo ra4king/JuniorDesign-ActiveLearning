@@ -71,7 +71,15 @@ function delete_question(question_id, callback) {
             return callback(err);
         }
 
-        callback(result.ok ? null : 'An unspecified error occurred.');
+        quizzes.updateMany({ questions: { $elemMatch: { $eq: question_id }}}, { $pull: { questions: question_id }}, function(err, result) {
+            if(err) {
+                console.error('Error when deleting question from quizzes: ' + question_id);
+                console.error(err);
+                return callback(err);
+            }
+
+            callback(null, result.modifiedCount > 0);
+        });
     });
 }
 
@@ -134,11 +142,13 @@ function create_quiz(quiz, callback) {
 function update_quiz(quiz, callback) {
     quiz.name = escape(quiz.name);
 
-    delete_quiz(quiz.id, function(err) {
+    quizzes.updateOne({ _id: new ObjectID(quiz.id) }, { $set: quiz }, function(err, result) {
         if(err) {
-            return callback(err);
+            console.error('Error when updating quiz: ' + quiz);
+            console.error(err);
         }
-        create_quiz(quiz, callback);
+
+        callback(err);
     });
 }
 

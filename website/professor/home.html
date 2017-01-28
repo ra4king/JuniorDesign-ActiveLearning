@@ -203,7 +203,7 @@
             }
 
             function drag(ev) {
-                if(ev.target.id.startsWith('question-')) {
+                if(ev.target.id && ev.target.id.startsWith('question-')) {
                     ev.dataTransfer.setData('question-id', ev.target.id);
                 }
             }
