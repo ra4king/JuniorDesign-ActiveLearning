@@ -4,7 +4,7 @@
         <meta charset="UTF-8">
 
         <title>Active Learning Tool - Login</title>
-        <link rel="icon" type="image/png" href="active_learning_logo_icon.png" />
+        <link rel="icon" type="image/png" href="images/active_learning_logo_icon.png" />
         <style  type="text/css">
             body {
                 background-color: #DDEEFF;
@@ -29,15 +29,27 @@
                 line-height: 100px;
                 text-align: center;
             }
+
+            .login-wrapper .text {
+                display: block;
+                margin-left: auto;
+                margin-right: auto;
+                margin-top: 20px;
+                font-size: 40px;
+                text-align: center;
+            }
             
-            .login {
+            .login-wrapper .login {
                 background-color: #2C2C2B;
                 border: none;
                 color: white;
                 padding: 15px 30px;
-                margin: auto;
+                margin-right: 10px;
+                margin-left: 10px;
+                margin-top: 20px;
                 text-align: center;
                 font-size: 40px;
+                width: 200px;
                 transition-duration: .6s;
                 display: inline-block;
                 vertical-align: middle;
@@ -61,9 +73,15 @@
         </style>
     </head>
     <body>
-        <img id="logo" src="active_learning_logo_black.png" alt="logo"/>
+        <img id="logo" src="images/active_learning_logo_black.png" alt="logo"/>
         <h1>Active Learning Tool</h1>
-        <div class="login-wrapper"><a class="login" href="professor/home.html">Professor Login</a></div>
-        <div class="login-wrapper"><a class="login" href="student/home.html">Student Login</a></div>
+        <div class="login-wrapper">
+            <form method="post">
+                <input type="text" class="text" name="username" placeholder="Username" />
+                <input type="password" class="text" name="password" placeholder="Password" />
+                <input type="submit" class="login" value="Login" formaction="api/login?redirect=true" />
+                <input type="submit" class="login" value="Register" formaction="api/register" />
+            </form>
+        </div>
     </body>
 </html>

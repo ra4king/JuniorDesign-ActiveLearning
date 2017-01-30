@@ -4,8 +4,8 @@
         <meta charset="UTF-8">
 
         <title>Active Learning Tool - Professor Home</title>
-        <link rel="icon" type="image/png" href="../active_learning_logo_icon.png" />
-        <link rel="stylesheet" type="text/css" href="../common.css">
+        <link rel="icon" type="image/png" href="images/active_learning_logo_icon.png" />
+        <link rel="stylesheet" type="text/css" href="css/common.css">
         <style type="text/css">
             #live-quiz {
                 position: fixed;
@@ -368,7 +368,7 @@
 
             function connect() {
                 console.log('Connecting...');
-                var s = new WebSocket('wss://www.roiatalla.com/active-learning/server');
+                var s = new WebSocket('wss://www.roiatalla.com/active-learning/api');
                 s.onopen = function() {
                     socket = s;
                     console.log('Connected to server!');
@@ -562,7 +562,7 @@
 
         <div id="main-container">
             <div id="header-panel">
-                <img id="logo" src="../active_learning_logo_white.png" width="175" height="75" alt="logo"/>
+                <img id="logo" src="images/active_learning_logo_white.png" width="175" height="75" alt="logo"/>
                 <h2 id="name">Professor</h2>
                 <button id="settings-button">Settings</button>
                 <button id="statistics-button">Statistics</button>

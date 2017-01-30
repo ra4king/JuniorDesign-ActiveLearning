@@ -1,4 +1,11 @@
 module.exports = {
+    create_user: create_user,
+    create_session: create_session,
+    validate_session: validate_session,
+    destroy_session: destroy_session,
+
+    get_user: get_user,
+
     create_question: create_question,
     check_question: check_question,
     delete_question: delete_question,
@@ -12,25 +19,169 @@ module.exports = {
 };
 
 var escape = require('escape-html');
+var crypto = require('crypto');
 
 var MongoClient = require('mongodb').MongoClient;
 var ObjectID = require('mongodb').ObjectID;
 
 var database;
+var users;
+var sessions;
 var questions;
 var quizzes;
 
 MongoClient.connect('mongodb://localhost:27017', function(err, db) {
     if(err) {
-        console.log(err);
+        console.error(err);
         return;
     }
 
     console.log('Successully connected to mongodb.');
     database = db;
+    users = db.collection('users');
+    sessions = db.collection('sessions');
     questions = db.collection('questions');
     quizzes = db.collection('quizzes');
+
+    users.createIndex({ username: 1 }, { unique: true });
+    sessions.createIndex({ createdAt: 1 }, { expireAfterSeconds: 30 * 24 * 60 * 60 }); // 30 days
 });
+
+function create_user(username, password, callback) {
+    if(!username || !password) {
+        return callback('Username and password cannot be empty.');
+    }
+
+    users.findOne({ username: username }, function(err, result) {
+        if(err) {
+            console.error('Error when checking if username exists before creating it: ' + username);
+            console.error(err);
+            return callback(err);
+        }
+
+        if(result) {
+            return callback('This username is already taken.');
+        }
+
+        crypto.randomBytes(128, function(err, buf) {
+            if(err) {
+                console.error('Error when generating salt when creating user: ' + username);
+                console.error(err);
+                return callback(err);
+            }
+
+            var salt = buf.toString('base64');
+            var iterations = 100000;
+            crypto.pbkdf2(password, salt, iterations, 512, 'sha512', function(err, buf) {
+                var hash = buf.toString('base64');
+
+                var user = {
+                    username: username,
+                    hash: hash,
+                    salt: salt,
+                    iterations: iterations,
+
+                    admin: username == 'admin'
+                };
+
+                users.insertOne(user, function(err, result) {
+                    if(err) {
+                        console.error('Error when inserting new user: ' + username);
+                        console.error(err);
+                    }
+
+                    callback(err);
+                });
+            });
+        });
+    });
+}
+
+function create_session(username, password, callback) {
+    if(!username || !password) {
+        return callback('Username and password cannot be empty.');
+    }
+    
+    users.findOne({ username: username }, function(err, result) {
+        if(err) {
+            console.error('Error when creating session: ' + username);
+            console.error(err);
+            return callback(err);
+        }
+
+        if(result) {
+            crypto.pbkdf2(password, result.salt, result.iterations, 512, 'sha512', function(err, buf) {
+                var hash = buf.toString('base64');
+
+                if(hash == result.hash) {
+                    crypto.randomBytes(128, function(err, buf) {
+                        if(err) {
+                            console.error('Error when generating session id: ' + username);
+                            console.error(err);
+                            return callback(err);
+                        }
+
+                        var id = buf.toString('base64');
+
+                        sessions.insert({ _id: id, username: username, createdAt: new Date() });
+
+                        callback(null, id);
+                    });
+                } else {
+                    callback('Username not found or password incorrect.');
+                }
+            });
+        } else {
+            callback('Username not found or password incorrect.');
+        }
+    });
+}
+
+function validate_session(session_id, callback) {
+    sessions.findOne({ _id: session_id }, function(err, result) {
+        if(err) {
+            console.error('Error when validating session');
+            console.error(err);
+            return callback(err);
+        }
+
+        if(result) {
+            get_user(result.username, callback);
+        } else {
+            callback();
+        }
+    });
+}
+
+function destroy_session(session_id, callback) {
+    sessions.findOneAndDelete({ _id: session_id }, function(err, result) {
+        if(err) {
+            console.error('Error when destroying session');
+            console.error(err);
+        }
+
+        callback(err);
+    });
+}
+
+function get_user(username, callback) {
+    users.findOne({ username: username }, function(err, user) {
+        if(err) {
+            console.error('Error when getting user: ' + username);
+            console.error(err);
+            return callback(err);
+        }
+
+        if(user) {
+            callback(null, {
+                username: user.username,
+                admin: user.admin,
+            });
+        } else {
+            callback();
+        }
+    });
+}
 
 function create_question(question, callback) {
     question.name = escape(question.name);
@@ -102,7 +253,7 @@ function get_question_by_id(question_id, callback) {
 }
 
 function get_questions(callback) {
-    questions.find({}).toArray(function(err, results) {
+    questions.find().toArray(function(err, results) {
         if(err) {
             console.error('Error when getting all questions');
             console.error(err);
@@ -165,7 +316,7 @@ function delete_quiz(quiz_id, callback) {
 }
 
 function get_quizzes(callback) {
-    quizzes.find({}).toArray(function(err, results) {
+    quizzes.find().toArray(function(err, results) {
         if(err) {
             console.error('Error when getting all quizzes');
             console.error(err);
