@@ -21,11 +21,9 @@ require('./api.js')(base_url, server, database);
 app.use(require('cookie-parser')('A very important secret'));
 app.use(require('body-parser').urlencoded({ extended: false }));
 
-app.use(require('csurf')({ cookie: true }));
-
-app.use(function(err, req, res, next) {
+app.use('/login', require('csurf')({ cookie: true }));
+app.use('/login', function(err, req, res, next) {
     if(err.code != 'EBADCSRFTOKEN') return next(err);
-
     res.status(403).send('Form tampered with.');
 });
 
