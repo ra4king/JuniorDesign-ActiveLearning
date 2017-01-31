@@ -21,8 +21,9 @@ module.exports = {
 var escape = require('escape-html');
 var crypto = require('crypto');
 
-var MongoClient = require('mongodb').MongoClient;
-var ObjectID = require('mongodb').ObjectID;
+var mongodb = require('mongodb');
+var MongoClient = mongodb.MongoClient;
+var ObjectID = mongodb.ObjectID;
 
 var database;
 var users;

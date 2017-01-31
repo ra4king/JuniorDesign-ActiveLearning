@@ -306,8 +306,11 @@
             <div id="header-panel">
                 <img id="logo" src="images/active_learning_logo_white.png" width="175" height="75" alt="logo"/>
                 <h2 id="name">Student</h2>
-                <button id="settings-button">Settings</button>
-                <button id="statistics-button">Statistics</button>
+                <form method="post">
+                    <button class="header-button" formaction="api/logout">Logout</button>
+                </form>
+                <button class="header-button">Settings</button>
+                <button class="header-button">Statistics</button>
                 <select id="course-select">
                     <option value="CS 2110">CS 2110</option>
                     <option value="CS 2200">CS 2200</option>

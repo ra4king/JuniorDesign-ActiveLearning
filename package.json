@@ -1,0 +1,11 @@
+{
+  "name": "Active-Learning",
+  "dependencies": {
+    "body-parser": "^1.16.0",
+    "cookie-parser": "^1.4.3",
+    "csurf": "^1.9.0",
+    "express": "^4.14.1",
+    "express-handlebars": "^3.0.0",
+    "mongodb": "^2.2.22"
+  }
+}

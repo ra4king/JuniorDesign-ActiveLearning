@@ -23,6 +23,12 @@
                 margin: 10px;
             }
 
+            #message {
+                color: #FF3333;
+                margin: auto;
+                text-align: center;
+            }
+
             .login-wrapper {
                 min-width: 250px;
                 min-height: 100px;
@@ -75,11 +81,15 @@
     <body>
         <img id="logo" src="images/active_learning_logo_black.png" alt="logo"/>
         <h1>Active Learning Tool</h1>
+        {{#if message}}
+            <p id="message">{{message}}</p>
+        {{/if}}
         <div class="login-wrapper">
             <form method="post">
+                <input type="hidden" name="_csrf" value="{{csurf}}" />
                 <input type="text" class="text" name="username" placeholder="Username" />
                 <input type="password" class="text" name="password" placeholder="Password" />
-                <input type="submit" class="login" value="Login" formaction="api/login?redirect=true" />
+                <input type="submit" class="login" value="Login" formaction="api/login?redirect={{redirect}}" />
                 <input type="submit" class="login" value="Register" formaction="api/register" />
             </form>
         </div>
