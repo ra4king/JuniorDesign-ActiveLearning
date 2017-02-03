@@ -366,24 +366,44 @@
 
             var curr_live_id = null;
 
+            function readCookie(name) {
+                var nameEQ = name + "=";
+                var ca = document.cookie.split(';');
+                for(var i=0;i < ca.length;i++) {
+                    var c = ca[i].trim();
+                    if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+                }
+                return null;
+            }
+
             function connect() {
+                var session_id = readCookie('session_id');
+                if(session_id == null) {
+                    console.error('Could not find session_id cookie?!');
+                    return;
+                }
+
                 console.log('Connecting...');
                 var s = new WebSocket('wss://www.roiatalla.com/active-learning/api');
                 s.onopen = function() {
                     socket = s;
                     console.log('Connected to server!');
                     socket.send(JSON.stringify({
-                        username: 'Professor'
+                        session_id: session_id
                     }));
-                    socket.send(JSON.stringify({ get_quizzes: true }));
-                    socket.send(JSON.stringify({ get_questions: true }));
-
-                    if(curr_live_id != null) {
-                        socket.send(JSON.stringify({ broadcast_live_question: curr_live_id }));
-                    }
                 };
                 s.onmessage = function(msg) {
                     var data = JSON.parse(msg.data);
+                    if(data.login_success) {
+                        socket.send(JSON.stringify({ get_quizzes: true }));
+                        socket.send(JSON.stringify({ get_questions: true }));
+                        if(curr_live_id != null) {
+                            socket.send(JSON.stringify({ broadcast_live_question: curr_live_id }));
+                        }
+                    } else if(data.login_success === false) {
+                        console.error('Failed to authenticate to API.');
+                    }
+
                     if(data.questions) {
                         updateQuestions(data.questions);
                     }

@@ -21,12 +21,6 @@ require('./api.js')(base_url, server, database);
 app.use(require('cookie-parser')('A very important secret'));
 app.use(require('body-parser').urlencoded({ extended: false }));
 
-app.use('/login', require('csurf')({ cookie: true }));
-app.use('/login', function(err, req, res, next) {
-    if(err.code != 'EBADCSRFTOKEN') return next(err);
-    res.status(403).send('Form tampered with.');
-});
-
 app.use(express.static('public'));
 
 var check_login = function(req, res, next) {
@@ -59,6 +53,12 @@ app.get('/', check_login, function(req, res) {
     }
 });
 
+app.use('/login', require('csurf')({ cookie: true }));
+app.use('/login', function(err, req, res, next) {
+    if(err.code != 'EBADCSRFTOKEN') return next(err);
+    res.status(403).send('Form tampered with.');
+});
+
 app.get('/login', function(req, res) {
     res.render('login', { message: req.query.message, redirect: req.query.redirect, csurf: req.csrfToken() });
 });
@@ -70,7 +70,7 @@ app.post('/api/login', function(req, res) {
             var redirect = req.query.redirect ? '&redirect=' + req.query.redirect : '';
             res.redirect(req.baseUrl + '/login?' + message + redirect);
         } else {
-            res.cookie('session_id', session_id, { expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), signed: true });
+            res.cookie('session_id', session_id, { expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), signed: true, secure: true });
             res.redirect(req.query.redirect || req.baseUrl);
         }
     });

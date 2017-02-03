@@ -3,10 +3,6 @@ module.exports = function(base_url, server, database) {
 
     var websocket = new ws.Server({ server: server, path: base_url + '/api', perMessageDeflate: false });
 
-    var admin_username = 'Professor';
-
-    var current_connection_id = 0;
-
     var connections = {};
     var live_question_id = null;
 
@@ -49,19 +45,8 @@ module.exports = function(base_url, server, database) {
     websocket.on('connection', function(socket) {
         console.log('Accepted connection.');
 
-        var username = null;
-        var conn_id = -1;
-
-        function verifyAdmin() {
-            if(username != admin_username) {
-                if(is_open(socket)) {
-                    socket.send(JSON.stringify({ error: 'Permission denied.' }));
-                }
-                return false;
-            }
-
-            return true;
-        }
+        var session_id = null;
+        var user_data = null;
 
         socket.on('message', function(msg) {
             var data;
@@ -74,25 +59,19 @@ module.exports = function(base_url, server, database) {
 
             console.log('Received: ' + JSON.stringify(data, null, 4));
 
-            if(username == null && data.username) {
-                if(data.username == admin_username || data.username == 'Student') {
-                    username = data.username;
-                    conn_id = current_connection_id++;
-                    connections[conn_id] = { connection: socket, username: username };
-                    return;
-                }
-
-                database.validate_user(data.username, data.password, function(err) {
+            if(session_id == null && data.session_id) {
+                database.validate_session(data.session_id, function(err, user) {
                     if(!is_open(socket))
                         return;
 
                     if(err) {
-                        return socket.send(JSON.stringify({ login_success: false, error: err }));
+                        return socket.send(JSON.stringify({ request: data, error: err }));
                     }
 
-                    username = data.username;
-                    conn_id = current_connection_id++;
-                    connections[conn_id] = { connection: socket, username: username };
+                    session_id = data.session_id;
+                    user_data = user;
+
+                    connections[session_id] = { connection: socket, session_id: session_id, user: user };
 
                     socket.send(JSON.stringify({ login_success: true }));
                 });
@@ -100,23 +79,18 @@ module.exports = function(base_url, server, database) {
                 return;
             }
 
-            if(username == null && data.register) {
-                database.create_user(data.register, data.password, function(err) {
-                    if(!is_open(socket))
-                        return;
-
-                    if(err) {
-                        return socket.send(JSON.stringify({ register_success: false, error: err }));
-                    }
-
-                    socket.send(JSON.stringify({ register_success: true }));
-                });
-
+            if(session_id == null) {
+                socket.send(JSON.stringify({ request: data, error: 'Not logged in.' }));
                 return;
             }
 
-            if(!username) {
-                return is_open(socket) && socket.send(JSON.stringify({ error: 'Not logged in.' }));
+            function verifyAdmin() {
+                if(!user_data || !user_data.admin) {
+                    socket.send(JSON.stringify({ request: data, error: 'Permission denied.' }));
+                    return false;
+                }
+
+                return true;
             }
 
             if(data.create_question) {
@@ -198,11 +172,11 @@ module.exports = function(base_url, server, database) {
         socket.on('close', function() {
             console.log('Connection closed.');
 
-            if(conn_id != -1) {
-                delete connections[conn_id];
+            if(session_id != null) {
+                delete connections[session_id];
             }
 
-            if(username == admin_username) {
+            if(user_data && user_data.admin) {
                 set_live_question_id(null);
             }
         });
