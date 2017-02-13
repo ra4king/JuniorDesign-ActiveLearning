@@ -2,6 +2,7 @@
   "name": "Active-Learning",
   "dependencies": {
     "body-parser": "^1.16.0",
+    "chart.js": "^2.5.0",
     "cookie-parser": "^1.4.3",
     "csurf": "^1.9.0",
     "express": "^4.14.1",
