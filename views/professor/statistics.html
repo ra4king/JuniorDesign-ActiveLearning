@@ -19,7 +19,7 @@
             #statistics-chart {
             	position: absolute;
 			    overflow: auto;
-			    background-color: #F0F0F0;
+			    background-color: #2C2C2C;
 			    width: 98.5%;
 			    height: 97%;
 			    margin: 10px
@@ -37,7 +37,10 @@
         			labels: ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q9", "Q10"],
         			datasets: [{
         				label: '% correct answers',
-        				data: [50, 90, 75, 10, 80, 14, 60, 79, 30, 100]
+        				data: [50, 90, 75, 10, 80, 14, 60, 79, 30, 100],
+        				backgroundColor: 'rgba(225, 225, 225, 0.2)',
+        				borderColor: 'rgba(200, 200, 200, 1)',
+        				borderWidth: 2
         			}]
         		}
 
