@@ -1,3 +1,5 @@
+'use strict';
+
 module.exports = function(base_url, server, database) {
     var ws = require('ws');
 
@@ -27,7 +29,7 @@ module.exports = function(base_url, server, database) {
     }
 
     function broadcast_questions() {
-        database.get_questions(function(err, questions) {
+        database.get_questions(true, function(err, questions) {
             broadcast(JSON.stringify({ questions: questions }));
         });
     }
@@ -119,7 +121,7 @@ module.exports = function(base_url, server, database) {
             }
 
             if(data.get_questions) {
-                database.get_questions(function(err, questions) {
+                database.get_questions(user_data.admin, function(err, questions) {
                     if(is_open(socket)) {
                         socket.send(JSON.stringify({ questions: questions }));
                     }

@@ -1,13 +1,17 @@
+'use strict';
+
 module.exports = {
     create_user: create_user,
+
+    get_user: get_user,
+    get_all_users: get_all_users, // TODO
+
     create_session: create_session,
     validate_session: validate_session,
     destroy_session: destroy_session,
 
-    get_user: get_user,
-
     create_question: create_question,
-    check_question: check_question,
+    update_question: update_question, // TODO
     delete_question: delete_question,
     get_question_by_id: get_question_by_id,
     get_questions: get_questions,
@@ -15,7 +19,10 @@ module.exports = {
     create_quiz: create_quiz,
     update_quiz: update_quiz,
     delete_quiz: delete_quiz,
+    get_quiz_by_id: get_quiz_by_id, // TODO
     get_quizzes: get_quizzes,
+
+    submit_quiz: submit_quiz, // TODO
 };
 
 var escape = require('escape-html');
@@ -253,7 +260,7 @@ function get_question_by_id(question_id, callback) {
     });
 }
 
-function get_questions(callback) {
+function get_questions(include_correct, callback) {
     questions.find().toArray(function(err, results) {
         if(err) {
             console.error('Error when getting all questions');
@@ -269,7 +276,7 @@ function get_questions(callback) {
                 id: id,
                 name: result.name,
                 answers: result.answers,
-                correct: result.correct, // TODO depending on role, send back
+                correct: include_correct ? result.correct : undefined,
                 image: result.image
             };
         });

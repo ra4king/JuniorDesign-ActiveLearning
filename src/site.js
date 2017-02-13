@@ -1,3 +1,5 @@
+'use strict';
+
 var port = 1337;
 var base_url = '/active-learning';
 
@@ -46,10 +48,10 @@ app.get('/', check_login, function(req, res) {
 
     if(user.admin) {
         console.log('Validated as admin');
-        res.render('professor/home');
+        res.render('professor/home', { username: user.username });
     } else {
         console.log('Validated as student');
-        res.render('student/home');
+        res.render('student/home', { username: user.username });
     }
 });
 
