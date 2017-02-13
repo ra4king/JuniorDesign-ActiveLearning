@@ -79,6 +79,14 @@ body {
     color: white;
 }
 
+#header-panel #selected {
+    background-color: #0055AA
+}
+
+#home-button {
+    background-color: #0033EE;
+}
+
 .header-button {
     float: right;
     margin-right: 25px;

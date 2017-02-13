@@ -5,7 +5,7 @@
 
         <title>Active Learning Tool - Home</title>
         <link rel="icon" type="image/png" href="images/active_learning_logo_icon.png" />
-        <link rel="stylesheet" type="text/css" href="css/common.css">
+        <link rel="stylesheet" type="text/css" href="../../public/css/common.css">
         <style type="text/css">
             #live-quiz {
                 position: fixed;
@@ -588,12 +588,14 @@
                     <button class="header-button" formaction="api/logout">Logout</button>
                 </form>
                 <button class="header-button">Settings</button>
+                <a href="students.html"><button class="header-button">Students</button></a>
                 <button class="header-button">Statistics</button>
                 <select id="course-select">
                     <option value="CS 2110">CS 2110</option>
                     <option value="CS 2200">CS 2200</option>
                     <option value="CS 3600">CS 2200</option>
                 </select>
+                <button class="header-button" id="selected">Home</button>
             </div>
 
             <div id="quiz-panel">

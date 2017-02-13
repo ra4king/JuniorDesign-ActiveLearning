@@ -15,6 +15,7 @@ module.exports = {
     delete_question: delete_question,
     get_question_by_id: get_question_by_id,
     get_questions: get_questions,
+    get_students: get_students,
 
     create_quiz: create_quiz,
     update_quiz: update_quiz,
@@ -282,6 +283,29 @@ function get_questions(include_correct, callback) {
         });
 
         callback(null, cleaned);
+    });
+}
+
+function get_students(callback) {
+    users.find().toArray(function(err, results) {
+        if(err) {
+            console.error('Error when getting all users');
+            console.error(err);
+            return callback(err);
+        }
+
+        results.sort(function(a, b) {
+            return a.username - b.username;
+        });
+
+        var students = []
+        results.forEach(function(result) {
+            if(result.admin == false) {
+                students.push(result);
+            }
+        });
+        callback(null, students);
+
     });
 }
 
