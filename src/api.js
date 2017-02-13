@@ -101,13 +101,13 @@ module.exports = function(base_url, server, database) {
                 database.create_question(data.create_question, broadcast_questions);
             }
 
-            if(data.check_question) {
-                database.check_question(data.check_question, function(err, is_correct) {
-                    if(is_open(socket)) {
-                        socket.send(JSON.stringify({answer_question: {responce: is_correct}}));
-                    }
-                });
-            }
+            // if(data.check_question) {
+            //     database.check_question(data.check_question, function(err, is_correct) {
+            //         if(is_open(socket)) {
+            //             socket.send(JSON.stringify({answer_question: {responce: is_correct}}));
+            //         }
+            //     });
+            // }
 
             if(data.delete_question) {
                 if(!verifyAdmin()) return;

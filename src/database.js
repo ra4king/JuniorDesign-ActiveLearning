@@ -11,7 +11,7 @@ module.exports = {
     destroy_session: destroy_session,
 
     create_question: create_question,
-    update_question: update_question, // TODO
+    //update_question: update_question, // TODO
     delete_question: delete_question,
     get_question_by_id: get_question_by_id,
     get_questions: get_questions,
@@ -19,10 +19,10 @@ module.exports = {
     create_quiz: create_quiz,
     update_quiz: update_quiz,
     delete_quiz: delete_quiz,
-    get_quiz_by_id: get_quiz_by_id, // TODO
+    //get_quiz_by_id: get_quiz_by_id, // TODO
     get_quizzes: get_quizzes,
 
-    submit_quiz: submit_quiz, // TODO
+    //submit_quiz: submit_quiz, // TODO
 };
 
 var escape = require('escape-html');
