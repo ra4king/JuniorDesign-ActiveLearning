@@ -1,2 +1,6 @@
 config.json
+<<<<<<< HEAD
 node_modules/
+=======
+upload.sh
+>>>>>>> 7290487a75e49feb6dd587018d69e827523a8141

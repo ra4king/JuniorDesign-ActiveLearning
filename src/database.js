@@ -1,22 +1,28 @@
+'use strict';
+
 module.exports = {
     create_user: create_user,
+
+    get_user: get_user,
+    get_all_users: get_all_users,
+
     create_session: create_session,
     validate_session: validate_session,
     destroy_session: destroy_session,
 
-    get_user: get_user,
-
     create_question: create_question,
-    check_question: check_question,
+    //update_question: update_question, // TODO
     delete_question: delete_question,
     get_question_by_id: get_question_by_id,
     get_questions: get_questions,
-    get_students: get_students,
 
     create_quiz: create_quiz,
     update_quiz: update_quiz,
     delete_quiz: delete_quiz,
+    //get_quiz_by_id: get_quiz_by_id, // TODO
     get_quizzes: get_quizzes,
+
+    //submit_quiz: submit_quiz, // TODO
 };
 
 var escape = require('escape-html');
@@ -166,6 +172,13 @@ function destroy_session(session_id, callback) {
     });
 }
 
+function cleanup_user(user) {
+    return {
+        username: user.username,
+        admin: user.admin,
+    };
+}
+
 function get_user(username, callback) {
     users.findOne({ username: username }, function(err, user) {
         if(err) {
@@ -175,13 +188,37 @@ function get_user(username, callback) {
         }
 
         if(user) {
-            callback(null, {
-                username: user.username,
-                admin: user.admin,
-            });
+            callback(null, cleanup_user(user));
         } else {
             callback();
         }
+    });
+}
+
+function get_all_users(callback) {
+    users.find({ admin: false }).toArray(function(err, results) {
+        if(err) {
+            console.error('Error when getting all users');
+            console.error(err);
+            return callback(err);
+        }
+
+        results.sort(function(a, b) {
+            if(a.username < b.username) {
+                return -1;
+            }
+            if(a.username > b.username) {
+                return 1;
+            }
+            return 0;
+        });
+
+        var students = []
+        results.forEach(function(user) {
+            students.push(cleanup_user(user))
+        });
+
+        callback(null, students);
     });
 }
 
@@ -254,7 +291,7 @@ function get_question_by_id(question_id, callback) {
     });
 }
 
-function get_questions(callback) {
+function get_questions(include_correct, callback) {
     questions.find().toArray(function(err, results) {
         if(err) {
             console.error('Error when getting all questions');
@@ -270,35 +307,12 @@ function get_questions(callback) {
                 id: id,
                 name: result.name,
                 answers: result.answers,
-                correct: result.correct, // TODO depending on role, send back
+                correct: include_correct ? result.correct : undefined,
                 image: result.image
             };
         });
 
         callback(null, cleaned);
-    });
-}
-
-function get_students(callback) {
-    users.find().toArray(function(err, results) {
-        if(err) {
-            console.error('Error when getting all users');
-            console.error(err);
-            return callback(err);
-        }
-
-        results.sort(function(a, b) {
-            return a.username - b.username;
-        });
-
-        var students = []
-        results.forEach(function(result) {
-            if(result.admin == false) {
-                students.push(result);
-            }
-        });
-        callback(null, students);
-
     });
 }
 
