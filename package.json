@@ -1,5 +1,21 @@
 {
-  "name": "Active-Learning",
+  "name": "active-learning",
+  "version": "1.0.0",
+  "description": "The Active Learning site for Junior Design 2016-2017.",
+  "main": "src/site.js",
+  "scripts": {
+    "build": "babel public/js/ -d public/js/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ra4king/JuniorDesign-ActiveLearning.git"
+  },
+  "author": "Team 172 - Black Mamba",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ra4king/JuniorDesign-ActiveLearning/issues"
+  },
+  "homepage": "https://github.com/ra4king/JuniorDesign-ActiveLearning#readme",
   "dependencies": {
     "body-parser": "^1.16.0",
     "chart.js": "^2.5.0",
@@ -8,5 +24,12 @@
     "express": "^4.14.1",
     "express-handlebars": "^3.0.0",
     "mongodb": "^2.2.22"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.22.2",
+    "babel-preset-env": "^1.1.8"
+  },
+  "babel": {
+    "presets": ["env", "react"]
   }
 }
