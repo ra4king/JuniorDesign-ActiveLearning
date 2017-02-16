@@ -50,6 +50,13 @@ module.exports = function(base_url, server, database) {
         var session_id = null;
         var user_data = null;
 
+        (function ping() {
+            if(is_open(socket)) {
+                socket.ping();
+                setTimeout(ping, 1000);
+            }
+        })();
+
         socket.on('message', function(msg) {
             var data;
             try {
@@ -62,12 +69,12 @@ module.exports = function(base_url, server, database) {
             console.log('Received: ' + JSON.stringify(data, null, 4));
 
             if(session_id == null && data.session_id) {
-                database.validate_session(data.session_id, function(err, user) {
+                return database.validate_session(data.session_id, function(err, user) {
                     if(!is_open(socket))
                         return;
 
-                    if(err) {
-                        return socket.send(JSON.stringify({ request: data, error: err }));
+                    if(err || !user) {
+                        return socket.send(JSON.stringify({ request: data, error: err || 'Not validated' }));
                     }
 
                     session_id = data.session_id;
@@ -77,8 +84,6 @@ module.exports = function(base_url, server, database) {
 
                     socket.send(JSON.stringify({ login_success: true }));
                 });
-
-                return;
             }
 
             if(session_id == null) {
@@ -100,14 +105,6 @@ module.exports = function(base_url, server, database) {
 
                 database.create_question(data.create_question, broadcast_questions);
             }
-
-            // if(data.check_question) {
-            //     database.check_question(data.check_question, function(err, is_correct) {
-            //         if(is_open(socket)) {
-            //             socket.send(JSON.stringify({answer_question: {responce: is_correct}}));
-            //         }
-            //     });
-            // }
 
             if(data.delete_question) {
                 if(!verifyAdmin()) return;
@@ -150,6 +147,14 @@ module.exports = function(base_url, server, database) {
                 database.get_quizzes(function(err, quizzes) {
                     if(is_open(socket)) {
                         socket.send(JSON.stringify({ quizzes: quizzes }));
+                    }
+                });
+            }
+
+            if(data.submit_quiz) {
+                database.submit_quiz(user_data, data.submit_quiz, function(err) {
+                    if(is_open(socket)) {
+                        socket.send(JSON.stringify({ submit_quiz: !err, error: err }));
                     }
                 });
             }
