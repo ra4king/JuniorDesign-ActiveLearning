@@ -59,6 +59,16 @@ app.get('/statistics', check_login, function(req, res) {
     }
 });
 
+app.get('/settings', check_login, function(req, res) {
+    var user = req.user;
+
+    if(user.admin) {
+        res.render('professor/settings', { username: user.username });
+    } else {
+        res.status(404).send('Not found');
+    }
+});
+
 app.use('/login', require('csurf')({ cookie: true }));
 app.use('/login', function(err, req, res, next) {
     if(err.code != 'EBADCSRFTOKEN') return next(err);

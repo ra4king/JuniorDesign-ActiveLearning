@@ -3,9 +3,9 @@
   <head>
         <meta charset="UTF-8">
 
-        <title>Active Learning Tool - Professor Home</title>
+        <title>Active Learning Tool - Professor Settings</title>
         <link rel="icon" type="image/png" href="images/active_learning_logo_icon.png" />
-        <link rel="stylesheet" type="text/css" href="../../public/css/common.css">
+        <link rel="stylesheet" type="text/css" href="css/common.css">
         <style type="text/css">
             .draggable {
                 border: dashed 1px red;
@@ -101,7 +101,7 @@
             }
         </style>
         <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
-        <script src="../../public/js/sorttable.js"></script>
+        <script src="js/sorttable.js"></script>
         <script>
             function openTab(evt, tabName) {
                 var i, tabcontent, tablinks;
@@ -128,18 +128,13 @@
         <div id="main-container">
             <div id="header-panel">
                 <img id="logo" src="images/active_learning_logo_white.png" width="175" height="75" alt="logo"/>
-                <h2 id="name">Professor</h2>
+                <h2 id="name">{{username}}</h2>
                 <form method="post">
                     <button class="header-button" formaction="api/logout">Logout</button>
                 </form>
                 <button class="header-button" id="selected">Settings</button>
-                <a href="statistics.html"><button class="header-button">Statistics</button></a>
-                <select id="course-select">
-                    <option value="CS 2110">CS 2110</option>
-                    <option value="CS 2200">CS 2200</option>
-                    <option value="CS 3600">CS 2200</option>
-                </select>
-                <a href="home.html"><button class="header-button">Home</button></a>
+                <a href="statistics"><button class="header-button">Statistics</button></a>
+                <a href="./"><button class="header-button">Home</button></a>
             </div>
 
             <div class="panel" id="student-panel">

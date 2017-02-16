@@ -65,21 +65,13 @@
         <div id="main-container">
             <div id="header-panel">
                 <img id="logo" src="images/active_learning_logo_white.png" width="175" height="75" alt="logo"/>
-                <h2 id="name">Professor</h2>
-                
+                <h2 id="name">{{username}}</h2>
                 <form method="post">
                     <button class="header-button" formaction="api/logout">Logout</button>
                 </form>
-                <button class="header-button">Settings</button>
-                <a href="students.html"><button class="header-button">Students</button></a>
-                <a href="statistics.html"><button class="header-button" id="selected">Statistics</button></a>
-                <select id="course-select">
-                    <option value="CS 2110">CS 2110</option>
-                    <option value="CS 2200">CS 2200</option>
-                    <option value="CS 3600">CS 2200</option>
-                </select>
-                <a href="home.html"><button class="header-button">Home</button></a>
-
+                <a href="settings"><button class="header-button">Settings</button></a>
+                <button class="header-button" id="selected">Statistics</button>
+                <a href="./"><button class="header-button">Home</button></a>
             </div>
 
             <div id="statistics-panel">
