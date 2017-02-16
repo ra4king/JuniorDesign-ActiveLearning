@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+  <head>
+        <meta charset="UTF-8">
+
+        <title>Active Learning Tool - Professor Home</title>
+        <link rel="icon" type="image/png" href="images/active_learning_logo_icon.png" />
+        <link rel="stylesheet" type="text/css" href="../../public/css/common.css">
+        <style type="text/css">
+            .draggable {
+                border: dashed 1px red;
+                border-radius: 10px;
+            }
+
+            .panel {
+                position: absolute;
+                overflow: auto;
+                background-color: #2C2C2C;
+                color: white;
+                top: 100px;
+                bottom: 8px;
+            }
+
+            #student-panel {
+                width: 30%;
+                left: 10px;
+            }
+
+            #permission-panel {
+                width: 65%;
+                right: 10px;
+            }
+
+            table.sortable thead {
+                background-color:#eee;
+                color:#000000;
+                font-weight: bold;
+                cursor: default;
+            }
+
+            #student-list, #ta-list{
+                width: 100%;
+                text-align: center;
+            }
+
+            #student-list {
+                display: table;
+            }
+
+            #make-ta-button {
+                margin-left: 45%;
+                width: 10%;
+            }
+
+            .list-button {
+                width: 100%;
+                text-align: center;
+                color: white;
+                background-color: #222222;
+                border: 1px solid #111111;
+            }
+
+            .list-button:hover {
+                background-color: #333333;
+            }
+
+            ul.tab {
+                list-style-type: none;
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+                border: 1px solid #000000;
+                background-color: #444444;
+            }
+
+            ul.tab li {
+                float: left;
+                width: 50%;
+            }
+
+            ul.tab li a {
+                display: block;
+                color: black;
+                text-align: center;
+                padding: 14px 16px;
+                text-decoration: none;
+                transition: 0.3s;
+                font-size: 17px;
+            }
+
+            ul.tab li a:hover {
+                background-color: #DDDDDD;
+            }
+
+            ul.tab li a:focus, .active {
+                background-color: #CCCCCC;
+            }
+
+            .tabcontent {
+                display: none;
+            }
+        </style>
+        <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+        <script src="../../public/js/sorttable.js"></script>
+        <script>
+            function openTab(evt, tabName) {
+                var i, tabcontent, tablinks;
+                tabcontent = document.getElementsByClassName("tabcontent");
+                console.log(tabcontent.length);
+                for (i = 0; i < tabcontent.length; i++) {
+                    tabcontent[i].style.display = "none";
+                }
+                tablinks = document.getElementsByClassName("tablinks");
+                for (i = 0; i < tablinks.length; i++) {
+                    tablinks[i].className = tablinks[i].className.replace(" active", "");
+                }
+                document.getElementById(tabName).style.display = "table";
+                evt.currentTarget.className += " active";
+            }
+
+            function displayPermissions(str) {
+                document.getElementById('permission-panel').innerHTML += "<p>Clicked " + str + "'s name."
+            }
+        </script>
+    </head>
+    <body>
+        <div id="overlay"></div>
+        <div id="main-container">
+            <div id="header-panel">
+                <img id="logo" src="images/active_learning_logo_white.png" width="175" height="75" alt="logo"/>
+                <h2 id="name">Professor</h2>
+                <form method="post">
+                    <button class="header-button" formaction="api/logout">Logout</button>
+                </form>
+                <button class="header-button" id="selected">Settings</button>
+                <a href="statistics.html"><button class="header-button">Statistics</button></a>
+                <select id="course-select">
+                    <option value="CS 2110">CS 2110</option>
+                    <option value="CS 2200">CS 2200</option>
+                    <option value="CS 3600">CS 2200</option>
+                </select>
+                <a href="home.html"><button class="header-button">Home</button></a>
+            </div>
+
+            <div class="panel" id="student-panel">
+                <ul class="tab">
+                  <li><a href="javascript:void(0)" class="tablinks active" onclick="openTab(event, 'student-list')">Students</a></li>
+                  <li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'ta-list')">TAs</a></li>
+                </ul>
+                    <table class="sortable tabcontent" id="student-list">
+                        <thead>
+                            <tr><th>Students</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><button class="list-button" onclick="displayPermissions('Roi')">Roi</button></td></tr>
+                            <tr><td><button class="list-button" onclick="displayPermissions('Ian')">Ian</button></td></tr>
+                            <tr><td><button class="list-button" onclick="displayPermissions('Chad')">Chad</button></td></tr>
+                            <tr><td><button class="list-button" onclick="displayPermissions('Joseph')">Joseph</button></td></tr>
+                            <tr><td><button class="list-button" onclick="displayPermissions('Raymond')">Raymond</button></td></tr>
+                        </tbody>
+                    </table>
+                    <table class="sortable tabcontent" id="ta-list">
+                        <thead>
+                            <tr><th>Teaching Assistants</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><button class="list-button" onclick="displayPermissions('1')">TA 1</button></td></tr>
+                            <tr><td><button class="list-button" onclick="displayPermissions('2')">TA 2</button></td></tr>
+                            <tr><td><button class="list-button" onclick="displayPermissions('3')">TA 3</button></td></tr>
+                            <tr><td><button class="list-button" onclick="displayPermissions('4')">TA 4</button></td></tr>
+                        </tbody>
+                    </table>
+            </div>
+
+            <div class="panel" id="permission-panel">
+                <p>What else are we going to put here?</p>
+                <button id="make-ta-button">Make a TA</button>
+            </div>
+        </div>
+    </body>
+</html>
