@@ -214,39 +214,43 @@ function populateLiveQuestion(question) {
         html += '<img class="question-image" src="' + question.image + '" />';
     }
 
-    var submit_div = document.createElement('div');
-    submit_div.setAttribute('id', 'submit-div-live');
-    submit_div.setAttribute('class', 'submit-div');
-    var submit_button = document.createElement('button');
-    submit_button.setAttribute('id', 'submit-live');
-    submit_button.setAttribute('class', 'submit-button')
-    submit_button.innerHTML += 'Submit';
-    submit_button.setAttribute('onClick', 'checkQuestion("'+question.id+'", \'live-answers-\')'); 
-    submit_div.innerHTML = submit_button.outerHTML;
-    html += submit_div.outerHTML;
+    // var submit_div = document.createElement('div');
+    // submit_div.setAttribute('id', 'submit-div-live');
+    // submit_div.setAttribute('class', 'submit-div');
+    // var submit_button = document.createElement('button');
+    // submit_button.setAttribute('id', 'submit-live');
+    // submit_button.setAttribute('class', 'submit-button')
+    // submit_button.innerHTML += 'Submit';
+    // submit_button.setAttribute('onClick', 'checkQuestion("'+question.id+'", \'live-answers-\')'); 
+    // submit_div.innerHTML = submit_button.outerHTML;
+    // html += submit_div.outerHTML;
 
     $('#live-question-msg').css('display', 'none');
     $('#live-question').css('display', 'block').css('text-align', 'left').html(html);
 }
 
-function checkQuestion(id, prefix) {
-    var answer = null;
-    var answers_list = document.getElementsByName(prefix + id);
-    for(var i = 0; i < answers_list.length; i++) {
-        if (answers_list[i].checked) {
-            answer = i;
-            break;
-        }
-    }
-    if(isSocketAvailable()){
-        socket.send(JSON.stringify({ check_question: {id: id, answer: answer}}));
-    }
-}
-
-function checkQuiz() {
+function submitQuiz() {
     if(current_quiz_id != null) {
+        var submission = {
+            quiz_id: current_quiz_id,
+            answers: {}
+        };
+
         quizzes[current_quiz_id].questions.forEach(function(question_id) {
-            checkQuestion(question_id, 'answers-');
+            var answer = null;
+            var answers_list = document.getElementsByName('answers-' + question_id);
+            for(var i = 0; i < answers_list.length; i++) {
+                if (answers_list[i].checked) {
+                    answer = i;
+                    break;
+                }
+            }
+
+            submission.answers[question_id] = answer;
         });
+
+        if(isSocketAvailable()) {
+            socket.send(JSON.stringify({ submit_quiz: submission }));
+        }
     }
 }

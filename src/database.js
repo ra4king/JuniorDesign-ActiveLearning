@@ -19,10 +19,10 @@ module.exports = {
     create_quiz: create_quiz,
     update_quiz: update_quiz,
     delete_quiz: delete_quiz,
-    //get_quiz_by_id: get_quiz_by_id, // TODO
+    get_quiz_by_id: get_quiz_by_id,
     get_quizzes: get_quizzes,
 
-    //submit_quiz: submit_quiz, // TODO
+    submit_quiz: submit_quiz,
 };
 
 var escape = require('escape-html');
@@ -33,10 +33,12 @@ var MongoClient = mongodb.MongoClient;
 var ObjectID = mongodb.ObjectID;
 
 var database;
+
 var users;
 var sessions;
 var questions;
 var quizzes;
+var submissions;
 
 MongoClient.connect('mongodb://localhost:27017', function(err, db) {
     if(err) {
@@ -50,9 +52,11 @@ MongoClient.connect('mongodb://localhost:27017', function(err, db) {
     sessions = db.collection('sessions');
     questions = db.collection('questions');
     quizzes = db.collection('quizzes');
+    submissions = db.collection('submissions');
 
     users.createIndex({ username: 1 }, { unique: true });
     sessions.createIndex({ createdAt: 1 }, { expireAfterSeconds: 30 * 24 * 60 * 60 }); // 30 days
+    submissions.createIndex({ username: 1, timestamp: 1 }, { unique: true });
 });
 
 function create_user(username, password, callback) {
@@ -317,9 +321,12 @@ function get_questions(include_correct, callback) {
 }
 
 function create_quiz(quiz, callback) {
-    quiz.name = escape(quiz.name);
+    var to_insert = {
+        name: escape(quiz.name),
+        questions: quiz.questions
+    };
 
-    quizzes.insertOne(quiz, function(err, result) {
+    quizzes.insertOne(to_insert, function(err, result) {
         if(err) {
             console.error('Error when creating quiz: ' + quiz);
             console.error(err);
@@ -330,9 +337,12 @@ function create_quiz(quiz, callback) {
 }
 
 function update_quiz(quiz, callback) {
-    quiz.name = escape(quiz.name);
+    var to_update = {
+        name: escape(quiz.name),
+        questions: quiz.questions
+    };
 
-    quizzes.updateOne({ _id: new ObjectID(quiz.id) }, { $set: quiz }, function(err, result) {
+    quizzes.updateOne({ _id: new ObjectID(quiz.id) }, { $set: to_update }, function(err, result) {
         if(err) {
             console.error('Error when updating quiz: ' + quiz);
             console.error(err);
@@ -351,6 +361,22 @@ function delete_quiz(quiz_id, callback) {
         }
 
         callback(result.ok ? null : 'An unspecified error occurred.');
+    });
+}
+
+function get_quiz_by_id(quiz_id, callback) {
+    quizzes.findOne({ _id: new ObjectID(quiz_id) }, function(err, quiz) {
+        if(err) {
+            console.error('Error when getting quiz by id: ' + quiz_id);
+            console.error(err);
+            return callback(err);
+        }
+
+        callback(null, {
+            id: quiz._id.toHexString(),
+            name: quiz.name,
+            questions: quiz.questions,
+        });
     });
 }
 
@@ -374,5 +400,54 @@ function get_quizzes(callback) {
         });
 
         callback(null, cleaned);
+    });
+}
+
+function submit_quiz(user, submission, callback) {
+    var doc = {
+        timestamp: new Date(),
+        username: user.username,
+        quiz_id: submission.quiz_id,
+        answers: submission.answers
+    };
+
+    get_quiz_by_id(submission.quiz_id, function(err, quiz) {
+        if(err) {
+            return callback(err);
+        }
+
+        var ids = quiz.questions.map(function(id) {
+            return new ObjectID(id);
+        });
+
+        questions.find({ _id: { $in: ids }}).toArray(function(err, results) {
+            if(err) {
+                console.error('Error when getting all questions in quiz ' + submission.quiz_id);
+                console.error(err);
+                return callback(err);
+            }
+
+            results.forEach(function(question) {
+                var id = question._id.toHexString();
+                if(doc.answers[id] !== undefined) {
+                    doc.answers[id] = {
+                        answer: doc.answers[id],
+                        correct: doc.answers[id] == question.correct
+                    }
+                }
+            });
+
+            console.log('Inserting:');
+            console.log(JSON.stringify(doc, null, 4));
+            
+            submissions.insertOne(doc, function(err, result) {
+                if(err) {
+                    console.error('Error when creating submission: ' + doc);
+                    console.error(err);
+                }
+
+                callback(err);
+            });
+        });
     });
 }

@@ -167,7 +167,8 @@ function createQuestionElement(id, in_question_list) {
     html += '<p class="question-name"> ' + question.name + '</p>'
     html += '<ol class="answer-list">';
     question.answers.forEach(function(answer, idx) {
-        html += '<li class="answer"><input type="radio" name="answers-' + id + '">' + answer + '</input></li>';
+        var checked = idx == question.correct ? 'checked' : '';
+        html += '<li class="answer"><input type="radio" name="answers-' + id + '" ' + checked + '>' + answer + '</input></li>';
     });
     html += '</ol>';
     html += '</div>';
