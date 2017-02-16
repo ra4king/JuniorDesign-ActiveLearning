@@ -12,31 +12,12 @@
                 border-radius: 10px;
             }
 
-            .panel {
-                position: absolute;
-                overflow: auto;
-                background-color: #2C2C2C;
-                color: white;
-                top: 100px;
-                bottom: 8px;
-            }
-
-            #student-panel {
-                width: 30%;
-                left: 10px;
-            }
 
             #permission-panel {
                 width: 65%;
                 right: 10px;
             }
 
-            table.sortable thead {
-                background-color:#eee;
-                color:#000000;
-                font-weight: bold;
-                cursor: default;
-            }
 
             #student-list, #ta-list{
                 width: 100%;
@@ -52,72 +33,12 @@
                 width: 10%;
             }
 
-            .list-button {
-                width: 100%;
-                text-align: center;
-                color: white;
-                background-color: #222222;
-                border: 1px solid #111111;
-            }
-
-            .list-button:hover {
-                background-color: #333333;
-            }
-
-            ul.tab {
-                list-style-type: none;
-                margin: 0;
-                padding: 0;
-                overflow: hidden;
-                border: 1px solid #000000;
-                background-color: #444444;
-            }
-
-            ul.tab li {
-                float: left;
-                width: 50%;
-            }
-
-            ul.tab li a {
-                display: block;
-                color: black;
-                text-align: center;
-                padding: 14px 16px;
-                text-decoration: none;
-                transition: 0.3s;
-                font-size: 17px;
-            }
-
-            ul.tab li a:hover {
-                background-color: #DDDDDD;
-            }
-
-            ul.tab li a:focus, .active {
-                background-color: #CCCCCC;
-            }
-
-            .tabcontent {
-                display: none;
-            }
+            
         </style>
         <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
         <script src="js/sorttable.js"></script>
+        <script src="js/utils.js"></script>
         <script>
-            function openTab(evt, tabName) {
-                var i, tabcontent, tablinks;
-                tabcontent = document.getElementsByClassName("tabcontent");
-                console.log(tabcontent.length);
-                for (i = 0; i < tabcontent.length; i++) {
-                    tabcontent[i].style.display = "none";
-                }
-                tablinks = document.getElementsByClassName("tablinks");
-                for (i = 0; i < tablinks.length; i++) {
-                    tablinks[i].className = tablinks[i].className.replace(" active", "");
-                }
-                document.getElementById(tabName).style.display = "table";
-                evt.currentTarget.className += " active";
-            }
-
             function displayPermissions(str) {
                 document.getElementById('permission-panel').innerHTML += "<p>Clicked " + str + "'s name."
             }

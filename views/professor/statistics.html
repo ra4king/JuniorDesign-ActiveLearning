@@ -12,53 +12,90 @@
                 overflow: auto;
                 background-color: #2C2C2C;
                 color: white;
-                width: 98.5%;
+                width: 65%;
                 top: 100px;
                 bottom: 8px;
+                right: 10px;
             }
             
             #statistics-chart {
                 position: absolute;
                 overflow: auto;
                 background-color: #2C2C2C;
-                width: 98.5%;
-                height: 97%;
-                margin: 10px
+                width: 65%;
+                height: 100%;
+                margin: 10px;
+            }
+
+            #student-list, #quiz-list{
+                width: 100%;
+                text-align: center;
+            }
+
+            #student-list {
+                display: table;
             }
         </style>
         <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
         <script src="js/Chart.bundle.min.js"></script> 
         <script src="chart.js"></script>
+        <script src="js/sorttable.js"></script>
+        <script src="js/utils.js"></script>
+
+        <!--<script src="../../public/js/utils.js"></script>
+        <script src="../../public/js/sorttable.js"></script>
+        <script src="../../public/js/chart.js"></script>
+        <script src="../../public/js/Chart.bundle.min.js"></script> -->
+
+
 
         <script type="text/javascript">
-            $(window).bind("load", function() {
-                //Send chart request for information from server
-                //Recieve chart data from server
-                var info = {
-                    labels: ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q9", "Q10"],
-                    datasets: [{
-                        label: '% correct answers',
-                        data: [50, 90, 75, 10, 80, 14, 60, 79, 30, 100],
-                        backgroundColor: 'rgba(225, 225, 225, 0.2)',
-                        borderColor: 'rgba(200, 200, 200, 1)',
-                        borderWidth: 2
-                    }]
-                }
 
-                var chart = new Chart(document.getElementById("statistics-chart"), {
-                    type: 'bar', 
-                    data: info,
-                    options: {
-                        scales: {
-                            yAxes: [{
-                                ticks: {
-                                    beginAtZero:true
-                                }
-                            }]
-                        }
-                    }
-                });
-            });
+        	/* JSON Object I want
+        	statistics = {
+        		students: [{
+        			name: name, 
+        			quizes: [
+        			questions: [{
+        				questionId: questionId,
+        				questionName: questionName,
+        				score: #,
+        				total: #
+        				}, ...]
+        			}, ...], ...]
+        	}
+
+
+        	*/
+        	$(window).bind("load", function() {
+				//Send chart request for information from server
+        		//Recieve chart data from server
+        		var info = {
+        			labels: ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q9", "Q10"],
+        			datasets: [{
+        				label: '% correct answers',
+        				data: [50, 90, 75, 10, 80, 14, 60, 79, 30, 100],
+        				backgroundColor: 'rgba(225, 225, 225, 0.2)',
+        				borderColor: 'rgba(200, 200, 200, 1)',
+        				borderWidth: 2
+        			}]
+        		}
+
+        		var chart = new Chart(document.getElementById("statistics-chart"), {
+        			type: 'bar', 
+        			data: info,
+        			options: {
+				        scales: {
+				            yAxes: [{
+				                ticks: {
+				                    beginAtZero:true
+				                }
+				            }]
+				        }
+    				}
+        		});
+			});    
+ 
         </script>
     </head>
     <body>
@@ -73,7 +110,35 @@
                 <button class="header-button" id="selected">Statistics</button>
                 <a href="./"><button class="header-button">Home</button></a>
             </div>
-
+            <div class="panel" id="student-panel">
+                <ul class="tab">
+                  <li><a href="javascript:void(0)" class="tablinks active" onclick="openTab(event, 'student-list')">Students</a></li>
+                  <li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'quiz-list')">Quizzes</a></li>
+                </ul>
+                    <table class="sortable tabcontent" id="student-list">
+                        <thead>
+                            <tr><th>Students</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><button class="list-button" onclick="displayStatistics('Roi')">Roi</button></td></tr>
+                            <tr><td><button class="list-button" onclick="displayStatistics('Ian')">Ian</button></td></tr>
+                            <tr><td><button class="list-button" onclick="displayStatistics('Chad')">Chad</button></td></tr>
+                            <tr><td><button class="list-button" onclick="displayStatistics('Joseph')">Joseph</button></td></tr>
+                            <tr><td><button class="list-button" onclick="displayStatistics('Raymond')">Raymond</button></td></tr>
+                        </tbody>
+                    </table>
+                    <table class="sortable tabcontent" id="quiz-list">
+                        <thead>
+                            <tr><th>Quizzes</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><button class="list-button" onclick="displayStatistics('1')">Quiz 1</button></td></tr>
+                            <tr><td><button class="list-button" onclick="displayStatistics('2')">Quiz 2</button></td></tr>
+                            <tr><td><button class="list-button" onclick="displayStatistics('3')">Quiz 3</button></td></tr>
+                            <tr><td><button class="list-button" onclick="displayStatistics('4')">Quiz 4</button></td></tr>
+                        </tbody>
+                    </table>
+            </div>
             <div id="statistics-panel">
                 <canvas id="statistics-chart"></canvas>
             </div>
