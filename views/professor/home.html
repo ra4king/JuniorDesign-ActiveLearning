@@ -371,7 +371,7 @@
                 var ca = document.cookie.split(';');
                 for(var i=0;i < ca.length;i++) {
                     var c = ca[i].trim();
-                    if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+                    if (c.indexOf(nameEQ) == 0) return decodeURIComponent(c.substring(nameEQ.length,c.length));
                 }
                 return null;
             }
@@ -588,13 +588,12 @@
                     <button class="header-button" formaction="api/logout">Logout</button>
                 </form>
                 <button class="header-button">Settings</button>
-                <a href="students.html"><button class="header-button">Students</button></a>
-                <a href="statistics.html"><button class="header-button">Statistics</button></a>
-                <select id="course-select">
+                <a href="statistics"><button class="header-button">Statistics</button></a>
+                <!-- <select id="course-select">
                     <option value="CS 2110">CS 2110</option>
                     <option value="CS 2200">CS 2200</option>
                     <option value="CS 3600">CS 2200</option>
-                </select>
+                </select> -->
                 <button class="header-button" id="selected">Home</button>
             </div>
 

@@ -97,16 +97,16 @@
                         element.innerHTML += '<img class="question-image" src="' + question.image + '" />';
                     }
 
-                    var submit_div = document.createElement('div');
-                    submit_div.setAttribute('id', 'submit-div-' + question_id);
-                    submit_div.setAttribute('class', 'submit-div');
-                    var submit_button = document.createElement('button');
-                    submit_button.setAttribute('id', 'submit-' + question_id);
-                    submit_button.setAttribute('class', 'submit-button')
-                    submit_button.innerHTML += 'Submit';
-                    submit_button.setAttribute('onClick', 'checkQuestion("'+question_id+'", \'answers-\')');
-                    submit_div.innerHTML = submit_button.outerHTML;
-                    element.innerHTML += submit_div.outerHTML;
+                    // var submit_div = document.createElement('div');
+                    // submit_div.setAttribute('id', 'submit-div-' + question_id);
+                    // submit_div.setAttribute('class', 'submit-div');
+                    // var submit_button = document.createElement('button');
+                    // submit_button.setAttribute('id', 'submit-' + question_id);
+                    // submit_button.setAttribute('class', 'submit-button')
+                    // submit_button.innerHTML += 'Submit';
+                    // submit_button.setAttribute('onClick', 'checkQuestion("'+question_id+'", \'answers-\')');
+                    // submit_div.innerHTML = submit_button.outerHTML;
+                    // element.innerHTML += submit_div.outerHTML;
 
                     html += element.outerHTML;
                 });
@@ -140,7 +140,7 @@
                 var ca = document.cookie.split(';');
                 for(var i=0;i < ca.length;i++) {
                     var c = ca[i].trim();
-                    if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+                    if (c.indexOf(nameEQ) == 0) return decodeURIComponent(c.substring(nameEQ.length,c.length));
                 }
                 return null;
             }
@@ -293,6 +293,7 @@
                 $('#live-question-msg').css('display', 'none');
                 $('#live-question').css('display', 'block').css('text-align', 'left').html(html);
             }
+            
             function checkQuestion(id, prefix) {
                 var answer = null;
                 var answers_list = document.getElementsByName(prefix + id);
@@ -333,11 +334,11 @@
                 </form>
                 <button class="header-button">Settings</button>
                 <button class="header-button">Statistics</button>
-                <select id="course-select">
+                <!-- <select id="course-select">
                     <option value="CS 2110">CS 2110</option>
                     <option value="CS 2200">CS 2200</option>
                     <option value="CS 3600">CS 2200</option>
-                </select>
+                </select> -->
             </div>
 
             <div id="quiz-panel">

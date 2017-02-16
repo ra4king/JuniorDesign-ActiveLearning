@@ -26,7 +26,7 @@ app.use(require('body-parser').urlencoded({ extended: false }));
 app.use(express.static('public'));
 
 var check_login = function(req, res, next) {
-    var session_id = req.signedCookies['session_id']
+    var session_id = req.cookies['session_id'];
     if(session_id) {
         database.validate_session(session_id, function(err, user) {
             if(err || !user) {
@@ -46,12 +46,16 @@ var check_login = function(req, res, next) {
 app.get('/', check_login, function(req, res) {
     var user = req.user;
 
+    res.render((user.admin ? 'professor' : 'student') + '/home', { username: user.username });
+});
+
+app.get('/statistics', check_login, function(req, res) {
+    var user = req.user;
+
     if(user.admin) {
-        console.log('Validated as admin');
-        res.render('professor/home', { username: user.username });
+        res.render('professor/statistics', { username: user.username });
     } else {
-        console.log('Validated as student');
-        res.render('student/home', { username: user.username });
+        res.status(404).send('Not found');
     }
 });
 
@@ -72,14 +76,14 @@ app.post('/api/login', function(req, res) {
             var redirect = req.query.redirect ? '&redirect=' + req.query.redirect : '';
             res.redirect(req.baseUrl + '/login?' + message + redirect);
         } else {
-            res.cookie('session_id', session_id, { expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), signed: true, secure: true });
+            res.cookie('session_id', session_id, { expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), secure: true });
             res.redirect(req.query.redirect || req.baseUrl);
         }
     });
 });
 
 app.post('/api/logout', function(req, res) {
-    var session_id = req.signedCookies['session_id']
+    var session_id = req.cookies['session_id']
     if(session_id) {
         database.destroy_session(session_id, function(err) {
             res.clearCookie('session_id');

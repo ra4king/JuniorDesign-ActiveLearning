@@ -3,74 +3,65 @@
   <head>
         <meta charset="UTF-8">
 
-        <title>Active Learning Tool - Professor Home</title>
+        <title>Active Learning Tool - Statistics</title>
         <link rel="icon" type="image/png" href="images/active_learning_logo_icon.png" />
-        <link rel="stylesheet" type="text/css" href="../../public/css/common.css">
+        <link rel="stylesheet" type="text/css" href="css/common.css">
         <style type="text/css">
             #statistics-panel {
-            	position: absolute;
-			    overflow: auto;
-			    background-color: #2C2C2C;
-			    color: white;
-			    width: 98.5%;
-			    top: 100px;
-			    bottom: 8px;
+                position: absolute;
+                overflow: auto;
+                background-color: #2C2C2C;
+                color: white;
+                width: 98.5%;
+                top: 100px;
+                bottom: 8px;
             }
+            
             #statistics-chart {
-            	position: absolute;
-			    overflow: auto;
-			    background-color: #2C2C2C;
-			    width: 98.5%;
-			    height: 97%;
-			    margin: 10px
+                position: absolute;
+                overflow: auto;
+                background-color: #2C2C2C;
+                width: 98.5%;
+                height: 97%;
+                margin: 10px
             }
-                
         </style>
         <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
         <script src="js/Chart.bundle.min.js"></script> 
         <script src="chart.js"></script>
 
         <script type="text/javascript">
-        	$(window).bind("load", function() {
-				//Send chart request for information from server
-        		//Recieve chart data from server
-        		var info = {
-        			labels: ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q9", "Q10"],
-        			datasets: [{
-        				label: '% correct answers',
-        				data: [50, 90, 75, 10, 80, 14, 60, 79, 30, 100],
-        				backgroundColor: 'rgba(225, 225, 225, 0.2)',
-        				borderColor: 'rgba(200, 200, 200, 1)',
-        				borderWidth: 2
-        			}]
-        		}
+            $(window).bind("load", function() {
+                //Send chart request for information from server
+                //Recieve chart data from server
+                var info = {
+                    labels: ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q9", "Q10"],
+                    datasets: [{
+                        label: '% correct answers',
+                        data: [50, 90, 75, 10, 80, 14, 60, 79, 30, 100],
+                        backgroundColor: 'rgba(225, 225, 225, 0.2)',
+                        borderColor: 'rgba(200, 200, 200, 1)',
+                        borderWidth: 2
+                    }]
+                }
 
-        		var chart = new Chart(document.getElementById("statistics-chart"), {
-        			type: 'bar', 
-        			data: info,
-        			options: {
-				        scales: {
-				            yAxes: [{
-				                ticks: {
-				                    beginAtZero:true
-				                }
-				            }]
-				        }
-    				}
-        		});
-			});    
- 
-
-
+                var chart = new Chart(document.getElementById("statistics-chart"), {
+                    type: 'bar', 
+                    data: info,
+                    options: {
+                        scales: {
+                            yAxes: [{
+                                ticks: {
+                                    beginAtZero:true
+                                }
+                            }]
+                        }
+                    }
+                });
+            });
         </script>
     </head>
-<body>
-        <div id="overlay"></div>
-        <div id="live-quiz">
-            <button id="live-quiz-delete-button" onclick="toggleLiveQuiz()" class="delete-button">&#10006;</button>
-            <ol id="live-questions-list"></ol>
-        </div>
-
+    <body>
         <div id="main-container">
             <div id="header-panel">
                 <img id="logo" src="images/active_learning_logo_white.png" width="175" height="75" alt="logo"/>
@@ -92,14 +83,8 @@
             </div>
 
             <div id="statistics-panel">
-            	
-            	<canvas id="statistics-chart"></canvas>
-
-                
-                
+                <canvas id="statistics-chart"></canvas>
             </div>
-
-            
         </div>
     </body>
 </html>
