@@ -52,7 +52,7 @@ function displayAllQuizStatistics() {
             datasets: [{
                 label: '% correct answers',
                 data: data,
-                backgroundColor: 'rgba(225, 225, 225, 0.2)',
+                backgroundColor: 'rgba(100, 129, 237, 0.5)',
                 borderColor: 'rgba(200, 200, 200, 1)',
                 borderWidth: 2
             }]
@@ -83,7 +83,7 @@ function displayStudentStatistics(username){
             datasets: [{
                 label: '% correct answers',
                 data: quizScores,
-                backgroundColor: 'rgba(225, 225, 225, 0.2)',
+                backgroundColor: 'rgba(100, 129, 237, 0.5)',
                 borderColor: 'rgba(200, 200, 200, 1)',
                 borderWidth: 2
             }]
@@ -111,7 +111,7 @@ function displayQuizStatistics(name) {
             datasets: [{
                 label: '% correct answers',
                 data: [100.0 * (score / total)],
-                backgroundColor: 'rgba(225, 225, 225, 0.2)',
+                backgroundColor: 'rgba(100, 129, 237, 0.5)',
                 borderColor: 'rgba(200, 200, 200, 1)',
                 borderWidth: 2
             }]
@@ -199,7 +199,7 @@ function loadStatistics(firstLoad) {
         datasets: [{
             label: '% correct answers',
             data: data,
-            backgroundColor: 'rgba(225, 225, 225, 0.2)',
+            backgroundColor: 'rgba(100, 129, 237, 0.5)',
             borderColor: 'rgba(200, 200, 200, 1)',
             borderWidth: 2
         }]
