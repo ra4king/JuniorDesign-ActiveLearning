@@ -38,13 +38,10 @@
         <script src="js/Chart.bundle.min.js"></script>
         <script src="js/sorttable.js"></script>
         <script src="js/utils.js"></script>
-
-        <!--<script src="../../public/js/utils.js"></script>
+        
+<!--    <script src="../../public/js/utils.js"></script>
         <script src="../../public/js/sorttable.js"></script>
-        <script src="../../public/js/chart.js"></script>
         <script src="../../public/js/Chart.bundle.min.js"></script> -->
-
-
 
         <script type="text/javascript">
 
@@ -71,14 +68,34 @@
         	*/
         	$(window).bind("load", function() {
                 var statistics = {{{statistics}}};
+                var questions = {};
+                for (username in statistics){
+                	for (quiz_id in username){
+                		for (question_id in quiz_id[questions]){
+                			var prevScore = 0;
+                			var prevTotal = 0;
+                			if (questions[question_id[name]] != null){
+                				prevScore = questions[question_id[name]][score];
+                				prevTotal = questions[question_id[name]][total];
+                			}
 
-                //Send chart request for information from server
-        		//Recieve chart data from server
+                			questions[question_id[name]] = {score: prevScore + question_id[score], total: prevTotal + question_id[total]};
+                		}
+                	}
+                }
+               	var labels = [];
+               	var data = [];
+               	for(question in questions) {
+               		labels.push(question);
+               		data.push((question[score] / question[total]));
+               	}
+               	console.log(labels);
+               	console.log(data);
         		var info = {
-        			labels: ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q9", "Q10"],
+        			labels: labels,
         			datasets: [{
         				label: '% correct answers',
-        				data: [50, 90, 75, 10, 80, 14, 60, 79, 30, 100],
+        				data: data,
         				backgroundColor: 'rgba(225, 225, 225, 0.2)',
         				borderColor: 'rgba(200, 200, 200, 1)',
         				borderWidth: 2
