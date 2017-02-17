@@ -49,7 +49,7 @@
     	var chart = null;
     	var statistics = {{{statistics}}};
 	        
-		function createChart(info) {
+		function createChart(info, displayX) {
 			return new Chart(document.getElementById("statistics-chart"), {
         			type: 'bar', 
         			data: info,
@@ -60,6 +60,9 @@
 				                    beginAtZero:true,
 				                    max: 100
 				                }
+				            }],
+				            xAxis: [{
+				            	display: displayX
 				            }]
 				        }
     				}
@@ -90,8 +93,8 @@
 	        labels = []
 	        data = []
 	        for (var quizName in quizzes) {
-	        	labels.push(quizName);
-	        	data.push((quizzes[quizName]["score"] / quizzes[quizName]["total"]) * 100);
+	        	labels.push(decodeURIComponent(quizName));
+	        	data.push(100.0 * (quizzes[quizName]["score"] / quizzes[quizName]["total"]));
 	        }
 	        var info = {
         			labels: labels,
@@ -104,7 +107,7 @@
         			}]
         		}
         	chart.destroy();
-        	chart = createChart(info);
+        	chart = createChart(info, true);
 
 		}
 
@@ -120,8 +123,8 @@
         			score += question["score"];
         			total += question["total"];
         		}
-        		quizNames.push(statistics[username][quiz_id]["name"]);
-        		quizScores.push((score / total) * 100);
+        		quizNames.push(decodeURIComponent(statistics[username][quiz_id]["name"]));
+        		quizScores.push(100.0 * (score / total));
         	}
 
         	var info = {
@@ -135,7 +138,7 @@
         			}]
         		}
         	chart.destroy();
-        	chart = createChart(info);
+        	chart = createChart(info, true);
         }
 
         function displayQuizStatistics(name) {
@@ -153,17 +156,17 @@
         		}
         	}
         	var info = {
-        			labels: [name],
+        			labels: [decodeURIComponent(name)],
         			datasets: [{
         				label: '% correct answers',
-        				data: [(score / total) * 100],
+        				data: [100.0 * (score / total)],
         				backgroundColor: 'rgba(225, 225, 225, 0.2)',
         				borderColor: 'rgba(200, 200, 200, 1)',
         				borderWidth: 2
         			}]
         		}
         	chart.destroy();
-        	chart = createChart(info);
+        	chart = createChart(info, true);
 
         }
 
@@ -229,8 +232,8 @@
                	var data = [];
                	
                	for(question in questions) {
-               		labels.push(question);
-               		data.push((questions[question]["score"] / questions[question]["total"]) * 100.0);
+               		labels.push(decodeURIComponent(question));
+               		data.push(100.0 * (questions[question]["score"] / questions[question]["total"]));
                	}
                
         		var info = {
@@ -246,7 +249,7 @@
         		if (chart != null) {
         			chart.destroy();
         		}
-        		chart = createChart(info);
+        		chart = createChart(info, false);
 
         	}
         	$(window).bind("load", function() {
