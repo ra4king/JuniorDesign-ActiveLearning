@@ -24,13 +24,17 @@
     "csurf": "^1.9.0",
     "express": "^4.14.1",
     "express-handlebars": "^3.0.0",
-    "mongodb": "^2.2.22"
+    "mongodb": "^2.2.22",
+    "ws": "^2.0.3"
   },
   "devDependencies": {
     "babel-cli": "^6.22.2",
     "babel-preset-env": "^1.1.8"
   },
   "babel": {
-    "presets": ["env", "react"]
+    "presets": [
+      "env",
+      "react"
+    ]
   }
 }
