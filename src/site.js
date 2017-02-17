@@ -92,7 +92,7 @@ app.post('/api/login', function(req, res) {
             var redirect = req.query.redirect ? '&redirect=' + req.query.redirect : '';
             res.redirect(req.baseUrl + '/login?' + message + redirect);
         } else {
-            res.cookie('session_id', session_id, { expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), secure: true });
+            res.cookie('session_id', session_id, { expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) });
             res.redirect(req.query.redirect || req.baseUrl);
         }
     });
