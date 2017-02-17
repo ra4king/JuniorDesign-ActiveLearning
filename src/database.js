@@ -33,6 +33,8 @@ var mongodb = require('mongodb');
 var MongoClient = mongodb.MongoClient;
 var ObjectID = mongodb.ObjectID;
 
+var config = require('./config.json');
+
 var database;
 
 var users;
@@ -41,7 +43,7 @@ var questions;
 var quizzes;
 var submissions;
 
-MongoClient.connect('mongodb://localhost:27017', function(err, db) {
+MongoClient.connect('mongodb://roiatalla.com:27017', function(err, db) {
     if(err) {
         console.error(err);
         return;
@@ -49,15 +51,18 @@ MongoClient.connect('mongodb://localhost:27017', function(err, db) {
 
     console.log('Successully connected to mongodb.');
     database = db;
-    users = db.collection('users');
-    sessions = db.collection('sessions');
-    questions = db.collection('questions');
-    quizzes = db.collection('quizzes');
-    submissions = db.collection('submissions');
 
-    users.createIndex({ username: 1 }, { unique: true });
-    sessions.createIndex({ createdAt: 1 }, { expireAfterSeconds: 30 * 24 * 60 * 60 }); // 30 days
-    submissions.createIndex({ username: 1, timestamp: 1 }, { unique: true });
+    db.authenticate(config.user, config.pwd, function(err, result) {
+        users = db.collection('users');
+        sessions = db.collection('sessions');
+        questions = db.collection('questions');
+        quizzes = db.collection('quizzes');
+        submissions = db.collection('submissions');
+
+        users.createIndex({ username: 1 }, { unique: true });
+        sessions.createIndex({ createdAt: 1 }, { expireAfterSeconds: 30 * 24 * 60 * 60 }); // 30 days
+        submissions.createIndex({ username: 1, timestamp: 1 }, { unique: true });
+    });
 });
 
 function create_user(username, password, callback) {
@@ -458,7 +463,7 @@ function submit_quiz(user, submission, callback) {
 }
 
 function get_stats(callback) {
-    submissions.find().sort({ username: 1, timestamp: -1 }).toArray(function(err, results) {
+    submissions.find().sort({ username: 1, timestamp: 1 }).toArray(function(err, results) {
         if(err) {
             console.error('Error whne getting statistics');
             console.error(err);
