@@ -70,7 +70,7 @@ function create_user(username, password, callback) {
         return callback('Username and password cannot be empty.');
     }
 
-    users.findOne({ username: username }, function(err, result) {
+users.findOne({ username: username }, function(err, result) {
         if(err) {
             console.error('Error when checking if username exists before creating it: ' + username);
             console.error(err);
@@ -184,7 +184,7 @@ function destroy_session(session_id, callback) {
 
 function cleanup_user(user) {
     return {
-        username: user.username,
+        username: escape(user.username),
         admin: user.admin,
     };
 }
@@ -206,7 +206,7 @@ function get_user(username, callback) {
 }
 
 function get_all_users(callback) {
-    users.find({ admin: false }).toArray(function(err, results) {
+    users.find().toArray(function(err, results) {
         if(err) {
             console.error('Error when getting all users');
             console.error(err);

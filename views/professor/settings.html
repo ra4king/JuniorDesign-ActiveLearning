@@ -12,7 +12,6 @@
                 border-radius: 10px;
             }
 
-
             #permission-panel {
                 width: 65%;
                 right: 10px;
@@ -32,17 +31,14 @@
                 margin-left: 45%;
                 width: 10%;
             }
-
-            
         </style>
         <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
         <script src="js/sorttable.js"></script>
         <script src="js/utils.js"></script>
-        <script>
-            function displayPermissions(str) {
-                document.getElementById('permission-panel').innerHTML += "<p>Clicked " + str + "'s name."
-            }
+        <script type="text/javascript">
+            var users = {{{users}}};
         </script>
+        <script src="js/professor-settings.js"></script>
     </head>
     <body>
         <div id="overlay"></div>
@@ -60,32 +56,21 @@
 
             <div class="panel" id="student-panel">
                 <ul class="tab">
-                  <li><a href="javascript:void(0)" class="tablinks active" onclick="openTab(event, 'student-list')">Students</a></li>
-                  <li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'ta-list')">TAs</a></li>
+                    <li><a href="javascript:void(0)" class="tablinks active" onclick="openTab(event, 'student-list')">Students</a></li>
+                    <li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'ta-list')">TAs</a></li>
                 </ul>
-                    <table class="sortable tabcontent" id="student-list">
-                        <thead>
-                            <tr><th>Students</th></tr>
-                        </thead>
-                        <tbody>
-                            <tr><td><button class="list-button" onclick="displayPermissions('Roi')">Roi</button></td></tr>
-                            <tr><td><button class="list-button" onclick="displayPermissions('Ian')">Ian</button></td></tr>
-                            <tr><td><button class="list-button" onclick="displayPermissions('Chad')">Chad</button></td></tr>
-                            <tr><td><button class="list-button" onclick="displayPermissions('Joseph')">Joseph</button></td></tr>
-                            <tr><td><button class="list-button" onclick="displayPermissions('Raymond')">Raymond</button></td></tr>
-                        </tbody>
-                    </table>
-                    <table class="sortable tabcontent" id="ta-list">
-                        <thead>
-                            <tr><th>Teaching Assistants</th></tr>
-                        </thead>
-                        <tbody>
-                            <tr><td><button class="list-button" onclick="displayPermissions('1')">TA 1</button></td></tr>
-                            <tr><td><button class="list-button" onclick="displayPermissions('2')">TA 2</button></td></tr>
-                            <tr><td><button class="list-button" onclick="displayPermissions('3')">TA 3</button></td></tr>
-                            <tr><td><button class="list-button" onclick="displayPermissions('4')">TA 4</button></td></tr>
-                        </tbody>
-                    </table>
+                <table class="sortable tabcontent" id="student-list">
+                    <thead>
+                        <tr><th>Users</th></tr>
+                    </thead>
+                    <tbody id="student-buttons"></tbody>
+                </table>
+                <table class="sortable tabcontent" id="ta-list">
+                    <thead>
+                        <tr><th>Teaching Assistants</th></tr>
+                    </thead>
+                    <tbody id="ta-buttons"></tbody>
+                </table>
             </div>
 
             <div class="panel" id="permission-panel">

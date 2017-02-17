@@ -57,7 +57,7 @@ app.get('/statistics', check_login, function(req, res) {
             if(err) {
                 res.status(500).send(err);
             } else {
-                res.render('professor/statistics', { username: user.username, statistics: JSON.stringify(stats, null, 4) });
+                res.render('professor/statistics', { username: user.username, statistics: JSON.stringify(stats) });
             }
         });
     } else {
@@ -69,7 +69,13 @@ app.get('/settings', check_login, function(req, res) {
     var user = req.user;
 
     if(user.admin) {
-        res.render('professor/settings', { username: user.username });
+        database.get_all_users(function(err, users) {
+            if(err) {
+                res.status(500).send(err);
+            } else {
+                res.render('professor/settings', { username: user.username, users: JSON.stringify(users) });
+            }
+        });
     } else {
         res.status(404).send('Not found');
     }
