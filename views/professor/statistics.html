@@ -5,7 +5,7 @@
 
         <title>Active Learning Tool - Statistics</title>
         <link rel="icon" type="image/png" href="images/active_learning_logo_icon.png" />
-        <link rel="stylesheet" type="text/css" href="css/common.css">
+        <link rel="stylesheet" type="text/css" href="/css/common.css">
         <style type="text/css">
             #statistics-panel {
                 position: absolute;
@@ -35,15 +35,148 @@
             }
         </style>
         <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+         
         <script src="js/Chart.bundle.min.js"></script>
         <script src="js/sorttable.js"></script>
         <script src="js/utils.js"></script>
-        
-<!--    <script src="../../public/js/utils.js"></script>
+       
+<!-- 
+   		<script src="../../public/js/utils.js"></script>
         <script src="../../public/js/sorttable.js"></script>
-        <script src="../../public/js/Chart.bundle.min.js"></script> -->
-
+        <script src="../../public/js/Chart.bundle.min.js"></script>
+ -->
         <script type="text/javascript">
+    	var chart = null;
+    	var statistics = {{{statistics}}};
+	        
+		function createChart(info) {
+			return new Chart(document.getElementById("statistics-chart"), {
+        			type: 'bar', 
+        			data: info,
+        			options: {
+				        scales: {
+				            yAxes: [{
+				                ticks: {
+				                    beginAtZero:true,
+				                    max: 100
+				                }
+				            }]
+				        }
+    				}
+        		});
+		}
+
+		function displayAllQuizStatistics() {
+			quizzes = {}
+
+			for (var username in statistics){
+	        	for (var quiz_id in statistics[username]){
+	        		var quizName = statistics[username][quiz_id]["name"];
+	        		var score = 0;
+		    		var total = 0;
+	        		for (var question_id in statistics[username][quiz_id]["questions"]){
+	        			var question = statistics[username][quiz_id]["questions"][question_id];
+	        			score += question["score"];
+        				total += question["total"];
+	        		}
+	        		if(quizzes[quizName] != null) {
+	        			quizzes[quizName]["score"] += score; 
+	        			quizzes[quizName]["total"] += total; 
+	        		} else {
+	        			quizzes[quizName] = {score: score, total: total};
+	        		}
+	        	}
+	        }
+	        labels = []
+	        data = []
+	        for (var quizName in quizzes) {
+	        	labels.push(quizName);
+	        	data.push((quizzes[quizName]["score"] / quizzes[quizName]["total"]) * 100);
+	        }
+	        var info = {
+        			labels: labels,
+        			datasets: [{
+        				label: '% correct answers',
+        				data: data,
+        				backgroundColor: 'rgba(225, 225, 225, 0.2)',
+        				borderColor: 'rgba(200, 200, 200, 1)',
+        				borderWidth: 2
+        			}]
+        		}
+        	chart.destroy();
+        	chart = createChart(info);
+
+		}
+
+        function displayStudentStatistics(username){
+        	var quizNames = [];
+        	var quizScores = [];
+
+        	for (var quiz_id in statistics[username]) {
+        		var score = 0;
+        		var total = 0;
+        		for (var question_id in statistics[username][quiz_id]["questions"]){
+        			var question = statistics[username][quiz_id]["questions"][question_id];
+        			score += question["score"];
+        			total += question["total"];
+        		}
+        		quizNames.push(statistics[username][quiz_id]["name"]);
+        		quizScores.push((score / total) * 100);
+        	}
+
+        	var info = {
+        			labels: quizNames,
+        			datasets: [{
+        				label: '% correct answers',
+        				data: quizScores,
+        				backgroundColor: 'rgba(225, 225, 225, 0.2)',
+        				borderColor: 'rgba(200, 200, 200, 1)',
+        				borderWidth: 2
+        			}]
+        		}
+        	chart.destroy();
+        	chart = createChart(info);
+        }
+
+        function displayQuizStatistics(name) {
+        	var score = 0;
+		    var total = 0;
+        	for (var username in statistics){
+        		for (var quiz_id in statistics[username]) {
+        			if (statistics[username][quiz_id]["name"] == name) {
+		        		for (var question_id in statistics[username][quiz_id]["questions"]){
+		        			var question = statistics[username][quiz_id]["questions"][question_id];
+		        			score += question["score"];
+		        			total += question["total"];
+		        		}
+        			}
+        		}
+        	}
+        	var info = {
+        			labels: [name],
+        			datasets: [{
+        				label: '% correct answers',
+        				data: [(score / total) * 100],
+        				backgroundColor: 'rgba(225, 225, 225, 0.2)',
+        				borderColor: 'rgba(200, 200, 200, 1)',
+        				borderWidth: 2
+        			}]
+        		}
+        	chart.destroy();
+        	chart = createChart(info);
+
+        }
+
+        function createButton(name, functionName, id) {
+        	parent = document.getElementById(id);
+        	button = document.createElement("BUTTON");
+        	button.setAttribute('onclick', functionName +'(\'' + name +'\')');
+        	button.setAttribute('class', 'list-button');
+        	text = document.createTextNode(name);
+        	button.appendChild(text);
+        	parent.appendChild(button);
+
+        }
 
         	/* JSON Object I want
         	statistics = {
@@ -64,33 +197,42 @@
                 },
         	}
 
-
         	*/
-        	$(window).bind("load", function() {
-                var statistics = {{{statistics}}};
-                var questions = {};
-                for (username in statistics){
-                	for (quiz_id in username){
-                		for (question_id in quiz_id[questions]){
+        	function loadStatistics(firstLoad) {
+        		var questions = {};
+        		var quizNames = [];
+                for (var username in statistics){
+                	if(firstLoad){
+	                	createButton(username, 'displayStudentStatistics', "student_buttons");
+	                }
+                	for (var quiz_id in statistics[username]){
+                		var quizName = statistics[username][quiz_id]["name"];
+                		if(firstLoad && quizNames.indexOf(quizName) == -1) {
+                			quizNames.push(quizName);
+                			createButton(quizName, 'displayQuizStatistics', 'quiz_buttons');
+                		}
+                		for (var question_id in statistics[username][quiz_id]["questions"]){
                 			var prevScore = 0;
                 			var prevTotal = 0;
-                			if (questions[question_id[name]] != null){
-                				prevScore = questions[question_id[name]][score];
-                				prevTotal = questions[question_id[name]][total];
+                			var name = statistics[username][quiz_id]["questions"][question_id]["name"];
+                			var question = statistics[username][quiz_id]["questions"][question_id];
+                			if (questions[name] != null){
+                				prevScore = questions[name]["score"];
+                				prevTotal = questions[name]["total"];
                 			}
 
-                			questions[question_id[name]] = {score: prevScore + question_id[score], total: prevTotal + question_id[total]};
+                			questions[name] = {score: prevScore + question["score"], total: prevTotal + question["total"]};
                 		}
                 	}
                 }
                	var labels = [];
                	var data = [];
+               	
                	for(question in questions) {
                		labels.push(question);
-               		data.push((question[score] / question[total]));
+               		data.push((questions[question]["score"] / questions[question]["total"]) * 100.0);
                	}
-               	console.log(labels);
-               	console.log(data);
+               
         		var info = {
         			labels: labels,
         			datasets: [{
@@ -101,21 +243,16 @@
         				borderWidth: 2
         			}]
         		}
+        		if (chart != null) {
+        			chart.destroy();
+        		}
+        		chart = createChart(info);
 
-        		var chart = new Chart(document.getElementById("statistics-chart"), {
-        			type: 'bar', 
-        			data: info,
-        			options: {
-				        scales: {
-				            yAxes: [{
-				                ticks: {
-				                    beginAtZero:true
-				                }
-				            }]
-				        }
-    				}
-        		});
-			});    
+        	}
+        	$(window).bind("load", function() {
+        		loadStatistics(true);
+        	});    
+	
  
         </script>
     </head>
@@ -134,33 +271,23 @@
             <div class="panel" id="student-panel">
                 <ul class="tab">
                   <li><a href="javascript:void(0)" class="tablinks active" onclick="openTab(event, 'student-list')">Students</a></li>
-                  <li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'quiz-list')">Quizzes</a></li>
+                  <li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'quiz-list'); displayAllQuizStatistics();">Quizzes</a></li>
                 </ul>
                     <table class="sortable tabcontent" id="student-list">
                         <thead>
                             <tr><th>Students</th></tr>
                         </thead>
-                        <tbody>
-                            <tr><td><button class="list-button" onclick="displayStatistics('Roi')">Roi</button></td></tr>
-                            <tr><td><button class="list-button" onclick="displayStatistics('Ian')">Ian</button></td></tr>
-                            <tr><td><button class="list-button" onclick="displayStatistics('Chad')">Chad</button></td></tr>
-                            <tr><td><button class="list-button" onclick="displayStatistics('Joseph')">Joseph</button></td></tr>
-                            <tr><td><button class="list-button" onclick="displayStatistics('Raymond')">Raymond</button></td></tr>
-                        </tbody>
+                        <tbody id="student_buttons"></tbody>
                     </table>
                     <table class="sortable tabcontent" id="quiz-list">
                         <thead>
                             <tr><th>Quizzes</th></tr>
                         </thead>
-                        <tbody>
-                            <tr><td><button class="list-button" onclick="displayStatistics('1')">Quiz 1</button></td></tr>
-                            <tr><td><button class="list-button" onclick="displayStatistics('2')">Quiz 2</button></td></tr>
-                            <tr><td><button class="list-button" onclick="displayStatistics('3')">Quiz 3</button></td></tr>
-                            <tr><td><button class="list-button" onclick="displayStatistics('4')">Quiz 4</button></td></tr>
-                        </tbody>
+                        <tbody id="quiz_buttons"></tbody>
                     </table>
             </div>
             <div id="statistics-panel">
+            	<button class="list-button" onclick="loadStatistics(false)">Load Question Statistics</button>
                 <canvas id="statistics-chart"></canvas>
             </div>
         </div>
