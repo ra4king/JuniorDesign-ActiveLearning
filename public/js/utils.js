@@ -12,3 +12,23 @@ function openTab(evt, tabName) {
     document.getElementById(tabName).style.display = "table";
     evt.currentTarget.className += " active";
 }
+
+var chars = {
+    '&apos;': '\'',
+    '&#39;': '\'',
+    '&amp;': '&',
+    '&gt;': '>',
+    '&lt;': '<',
+    '&quot;': '"'
+};
+
+var __unescape_regex = new RegExp('(' + Object.keys(chars).join('|') + ')', 'g');
+
+function unescapeHTML(str) {
+    if(str == null)
+        return '';
+
+    return decodeURIComponent(str).replace(__unescape_regex, function(match) {
+        return chars[match];
+    });
+};

@@ -93,7 +93,7 @@
 	        labels = []
 	        data = []
 	        for (var quizName in quizzes) {
-	        	labels.push(decodeURIComponent(quizName));
+	        	labels.push(unescapeHTML(quizName));
 	        	data.push(100.0 * (quizzes[quizName]["score"] / quizzes[quizName]["total"]));
 	        }
 	        var info = {
@@ -123,7 +123,7 @@
         			score += question["score"];
         			total += question["total"];
         		}
-        		quizNames.push(decodeURIComponent(statistics[username][quiz_id]["name"]));
+        		quizNames.push(unescapeHTML(statistics[username][quiz_id]["name"]));
         		quizScores.push(100.0 * (score / total));
         	}
 
@@ -156,7 +156,7 @@
         		}
         	}
         	var info = {
-        			labels: [decodeURIComponent(name)],
+        			labels: [unescapeHTML(name)],
         			datasets: [{
         				label: '% correct answers',
         				data: [100.0 * (score / total)],
@@ -232,7 +232,7 @@
                	var data = [];
                	
                	for(question in questions) {
-               		labels.push(decodeURIComponent(question));
+               		labels.push(unescapeHTML(question));
                		data.push(100.0 * (questions[question]["score"] / questions[question]["total"]));
                	}
                
