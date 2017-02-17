@@ -53,7 +53,13 @@ app.get('/statistics', check_login, function(req, res) {
     var user = req.user;
 
     if(user.admin) {
-        res.render('professor/statistics', { username: user.username });
+        database.get_stats(function(err, stats) {
+            if(err) {
+                res.status(500).send(err);
+            } else {
+                res.render('professor/statistics', { username: user.username, statistics: JSON.stringify(stats, null, 4) });
+            }
+        });
     } else {
         res.status(404).send('Not found');
     }

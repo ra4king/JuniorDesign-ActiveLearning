@@ -23,6 +23,7 @@ module.exports = {
     get_quizzes: get_quizzes,
 
     submit_quiz: submit_quiz,
+    get_stats: get_stats
 };
 
 var escape = require('escape-html');
@@ -416,6 +417,8 @@ function submit_quiz(user, submission, callback) {
             return callback(err);
         }
 
+        doc.quiz_name = quiz.name;
+
         var ids = quiz.questions.map(function(id) {
             return new ObjectID(id);
         });
@@ -431,8 +434,10 @@ function submit_quiz(user, submission, callback) {
                 var id = question._id.toHexString();
                 if(doc.answers[id] !== undefined) {
                     doc.answers[id] = {
+                        name: question.name,
                         answer: doc.answers[id],
-                        correct: doc.answers[id] == question.correct
+                        score: doc.answers[id] == question.correct ? 1 : 0,
+                        total: 1
                     }
                 }
             });
@@ -449,5 +454,30 @@ function submit_quiz(user, submission, callback) {
                 callback(err);
             });
         });
+    });
+}
+
+function get_stats(callback) {
+    submissions.find().sort({ username: 1, timestamp: -1 }).toArray(function(err, results) {
+        if(err) {
+            console.error('Error whne getting statistics');
+            console.error(err);
+            return callback(err);
+        }
+
+        var stats = {};
+
+        results.forEach(function(result) {
+            if(!stats[result.username]) {
+                stats[result.username] = {};
+            }
+
+            stats[result.username][result.quiz_id] = {
+                name: result.quiz_name,
+                questions: result.answers
+            };
+        });
+
+        callback(null, stats);
     });
 }

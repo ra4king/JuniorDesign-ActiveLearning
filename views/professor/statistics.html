@@ -17,13 +17,11 @@
                 bottom: 8px;
                 right: 10px;
             }
-            
+
             #statistics-chart {
                 position: absolute;
                 overflow: auto;
                 background-color: #2C2C2C;
-                width: 65%;
-                height: 100%;
                 margin: 10px;
             }
 
@@ -37,8 +35,7 @@
             }
         </style>
         <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
-        <script src="js/Chart.bundle.min.js"></script> 
-        <script src="chart.js"></script>
+        <script src="js/Chart.bundle.min.js"></script>
         <script src="js/sorttable.js"></script>
         <script src="js/utils.js"></script>
 
@@ -53,22 +50,29 @@
 
         	/* JSON Object I want
         	statistics = {
-        		students: [{
-        			name: name, 
-        			quizes: [
-        			questions: [{
-        				questionId: questionId,
-        				questionName: questionName,
-        				score: #,
-        				total: #
-        				}, ...]
-        			}, ...], ...]
+                ...
+        		"username": {
+                    ...
+        			"quiz_id": {
+                        name,
+                        questions: {
+                			"questions_id": {
+                			    name,
+                                answer,
+                				score,
+                				total
+                			},
+                        },
+        			},
+                },
         	}
 
 
         	*/
         	$(window).bind("load", function() {
-				//Send chart request for information from server
+                var statistics = {{{statistics}}};
+
+                //Send chart request for information from server
         		//Recieve chart data from server
         		var info = {
         			labels: ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q9", "Q10"],
