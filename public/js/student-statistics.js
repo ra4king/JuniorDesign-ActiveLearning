@@ -22,8 +22,8 @@ function createChart(info, displayX) {
 
 
 function displayStudentStatistics(username){
-    var quizNames = [];
-    var quizScores = [];
+    var quizNames = ["a", "b", "c"];
+    var quizScores = [100,70, 90];
 
     for (var quiz_id in statistics[username]) {
         var score = 0;
@@ -92,6 +92,7 @@ statistics = {
 function loadStatistics(firstLoad, username) {
     var questions = {};
     var quizNames = [];
+    console.log("eyyy");
     for (var username in statistics){
         if(firstLoad){
             createButton(username, 'displayStudentStatistics', 'student-buttons');
