@@ -49,6 +49,16 @@ app.get('/', check_login, function(req, res) {
     res.render((user.admin ? 'professor' : 'student') + '/home', { username: user.username });
 });
 
+app.get('/admin', check_login, function(req, res) {
+    var user = req.user;
+
+    if(user.admin) {
+        res.render('admin');
+    } else {
+        res.status(404).send('Not found');
+    }
+});
+
 app.get('/statistics', check_login, function(req, res) {
     var user = req.user;
 

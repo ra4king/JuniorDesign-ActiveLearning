@@ -182,10 +182,11 @@ function destroy_session(session_id, callback) {
     });
 }
 
-function cleanup_user(user) {
+function cleanup_user(user, noadmin) {
     return {
         username: escape(user.username),
-        admin: user.admin,
+        permissions: user.permissions,
+        admin: (noadmin ? undefined : user.admin)
     };
 }
 
@@ -206,7 +207,7 @@ function get_user(username, callback) {
 }
 
 function get_all_users(callback) {
-    users.find().toArray(function(err, results) {
+    users.find({ admin: false }).toArray(function(err, results) {
         if(err) {
             console.error('Error when getting all users');
             console.error(err);
@@ -225,7 +226,7 @@ function get_all_users(callback) {
 
         var students = []
         results.forEach(function(user) {
-            students.push(cleanup_user(user))
+            students.push(cleanup_user(user, true))
         });
 
         callback(null, students);
