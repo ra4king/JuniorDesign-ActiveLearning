@@ -58,7 +58,7 @@ var Question = function (_React$Component2) {
                     React.createElement(
                         'p',
                         { className: 'question-name' },
-                        question.name
+                        unescapeHTML(question.name)
                     ),
                     React.createElement(
                         'ol',
@@ -68,7 +68,7 @@ var Question = function (_React$Component2) {
                                 'li',
                                 { key: idx, className: 'answer' },
                                 React.createElement('input', { type: 'radio', name: 'answers-' + this.props.id }),
-                                React.createElement('span', { dangerouslySetInnerHTML: { __html: answer } })
+                                unescapeHTML(answer)
                             );
                         }, this)
                     )
@@ -81,6 +81,54 @@ var Question = function (_React$Component2) {
     return Question;
 }(React.Component);
 
-function renderQuestionList(quiz, parent) {
-    ReactDOM.render(React.createElement(QuestionList, { quiz: quiz }), parent);
+function chooseQuiz(id) {
+    current_quiz_id = id;
+
+    var quiz = quizzes[id];
+
+    $('#choose-quiz-msg').css('display', 'none');
+    $('#question-list').css('text-align', 'left');
+    $('#quiz-title').html(quiz.name);
+    $('#submit-all').css('display', 'block');
+
+    ReactDOM.render(React.createElement(QuestionList, { quiz: quiz }), document.getElementById('questions-root'));
+}
+
+var QuizList = function (_React$Component3) {
+    _inherits(QuizList, _React$Component3);
+
+    function QuizList() {
+        _classCallCheck(this, QuizList);
+
+        return _possibleConstructorReturn(this, (QuizList.__proto__ || Object.getPrototypeOf(QuizList)).apply(this, arguments));
+    }
+
+    _createClass(QuizList, [{
+        key: 'render',
+        value: function render() {
+            return React.createElement(
+                'ol',
+                { id: 'quiz-list' },
+                Object.keys(quizzes).map(function (id) {
+                    var quiz = quizzes[id];
+                    var chooseQuizId = chooseQuiz.bind(null, id);
+                    return React.createElement(
+                        'li',
+                        { key: id, id: 'quiz-' + id, className: 'quiz' },
+                        React.createElement(
+                            'button',
+                            { className: 'quiz-body', onClick: chooseQuizId },
+                            unescapeHTML(quiz.name)
+                        )
+                    );
+                })
+            );
+        }
+    }]);
+
+    return QuizList;
+}(React.Component);
+
+function updateQuizzes() {
+    ReactDOM.render(React.createElement(QuizList, null), document.getElementById('quizzes-root'));
 }
