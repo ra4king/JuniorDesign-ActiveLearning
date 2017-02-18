@@ -3,7 +3,7 @@ body {
     font-family: "Noto Sans", sans-serif;
 }
 
-#live-quiz {
+#live-quiz, #confirm-box{
     position: absolute;
     display: none;
     background-color: #2C2C2C;

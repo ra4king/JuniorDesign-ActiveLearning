@@ -103,21 +103,85 @@ function refresh() {
     }
 }
 
-var state = true;
+var liveState = true;
 
 function toggleLiveQuiz() {
     var e1 = document.getElementById('live-quiz');
     e1.style.display = e1.style.display == 'block' ? 'none' : 'block';
-    if(state) {
+    if(liveState) {
         myBlurFunction(1);
-        state = false;
+        liveState = false;
 
         if(isSocketAvailable()) {
             socket.send(JSON.stringify({ get_live_question: true }));
         }
     } else {
         myBlurFunction(0);
-        state = true;
+        liveState = true;
+    }
+}
+
+var confirmState = true;
+function toggleConfirmBox(submitState) {
+    var e1 = document.getElementById('confirm-box');
+    e1.style.display = e1.style.display == 'block' ? 'none' : 'block';
+    if(confirmState) {
+        myBlurFunction(1);
+        confirmState = false;
+        getConfirmMessage();
+    } else {
+        myBlurFunction(0);
+        confirmState = true;
+        if (!submitState) {
+            toggleConfirmationButtons(false);
+        }
+    }
+}
+
+function getConfirmMessage() {
+    if(current_quiz_id != null) {
+        var numNulls = 0;
+        quizzes[current_quiz_id].questions.forEach(function(question_id) {
+            var answer = null;
+            var answers_list = document.getElementsByName('answers-' + question_id);
+            for(var i = 0; i < answers_list.length; i++) {
+                if (answers_list[i].checked) {
+                    answer = i;
+                    break;
+                }
+            }
+            if (answer == null) {
+                numNulls++;
+            }
+        });
+        var numQuestions = quizzes[current_quiz_id].questions.length;
+        var numAnswers = numQuestions - numNulls;
+        var confirmed = false;
+        var confirmMsg = "";
+        if (numAnswers < numQuestions) {
+            confirmMsg = "Are you sure you want to submit this quiz? You only answered " 
+                + numAnswers + " of the " + numQuestions + " questions. All unanswered questions will be marked as incorrect.";
+        } else {
+            confirmMsg = "Are you sure you want to submit this quiz? Your answers will be recorded.";
+        }
+        document.getElementById('confirm-msg').innerHTML = confirmMsg;
+    }
+}
+
+function toggleConfirmationButtons(submitState) {
+    document.getElementById('confirm-msg').innerHTML = "Your answers have been submitted.";
+    var ok = document.getElementById('ok-button');
+    var sub = document.getElementById('submit-confirm');
+    var cancel = document.getElementById('cancel-confirm');
+
+    if (submitState) {
+        ok.style.display = 'block';
+        sub.style.display = 'none';
+        cancel.style.display = 'none';
+    } else {
+        ok.style.display = 'none';
+        sub.style.display = 'block';
+        cancel.style.display = 'block';
     }
 }
 
@@ -170,7 +234,6 @@ function submitQuiz() {
             quiz_id: current_quiz_id,
             answers: {}
         };
-
         quizzes[current_quiz_id].questions.forEach(function(question_id) {
             var answer = null;
             var answers_list = document.getElementsByName('answers-' + question_id);
@@ -180,12 +243,12 @@ function submitQuiz() {
                     break;
                 }
             }
-
             submission.answers[question_id] = answer;
         });
-
+        
         if(isSocketAvailable()) {
             socket.send(JSON.stringify({ submit_quiz: submission }));
+            toggleConfirmationButtons(true);
         }
     }
 }
