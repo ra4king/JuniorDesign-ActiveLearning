@@ -12,10 +12,11 @@
                 overflow: auto;
                 background-color: #2C2C2C;
                 color: white;
-                width: 80%;
+                width: 98.5%;
                 top: 100px;
                 bottom: 8px;
-                right: 10px;
+                
+                left: 10px;
             }
             #statistics-chart {
                 position: absolute;
@@ -68,8 +69,8 @@
         <script src="js/Chart.bundle.min.js"></script>
         <script src="js/sorttable.js"></script>
         <script src="js/utils.js"></script>
-        <script type="text/javascript">
-            var statistics = {{{statistics}}};
+        <script type="text/javascript">   
+            var statistics = {{{statistics}}}{{username}};
         </script>
         <script src="js/student-statistics.js"></script>
     </head>
@@ -84,19 +85,7 @@
                 <button class="header-button" id="selected">Statistics</button>
                 <a href="./"><button class="header-button">Home</button></a>
             </div>
-            <div class="panel" id="student-panel">
-                <ul class="tab">
-                  <li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'quiz-list');">Quizzes</a></li>
-                </ul>
-                    <table class="sortable tabcontent" id="quiz-list">
-                        <thead>
-                            <tr><th>Quizzes</th></tr>
-                        </thead>
-                        <tbody id="quiz-buttons"></tbody>
-                    </table>
-            </div>
             <div id="statistics-panel">
-                <button class="list-button" onclick="loadStatistics(false, '{{username}}')">Load Question Statistics</button>
                 <canvas id="statistics-chart"></canvas>
             </div>
         </div>
