@@ -463,8 +463,18 @@ function submit_quiz(user, submission, callback) {
     });
 }
 
-function get_stats(callback) {
-    submissions.find().sort({ username: 1, timestamp: 1 }).toArray(function(err, results) {
+function get_stats(username, callback) {
+    var find = {};
+
+    if(typeof username == 'function') {
+        callback = username;
+    } else {
+        find = {
+            username: username
+        };
+    }
+
+    submissions.find(find).sort({ username: 1, timestamp: 1 }).toArray(function(err, results) {
         if(err) {
             console.error('Error whne getting statistics');
             console.error(err);

@@ -92,7 +92,7 @@ statistics = {
 function loadStatistics(firstLoad, username) {
     var questions = {};
     var quizNames = [];
-    console.log("eyyy");
+    
     for (var username in statistics){
         if(firstLoad){
             createButton(username, 'displayStudentStatistics', 'student-buttons');

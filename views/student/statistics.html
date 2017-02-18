@@ -5,7 +5,7 @@
 
         <title>Active Learning Tool - Statistics</title>
         <link rel="icon" type="image/png" href="images/active_learning_logo_icon.png" />
-        <link rel="stylesheet" type="text/css" href="../../public/css/common.css">
+        <link rel="stylesheet" type="text/css" href="css/common.css">
         <style type="text/css">
             #statistics-panel {
                 position: absolute;
@@ -71,7 +71,7 @@
         <script type="text/javascript">
             var statistics = {{{statistics}}};
         </script>
-        <script src="js/professor-statistics.js"></script>
+        <script src="js/student-statistics.js"></script>
     </head>
     <body>
         <div id="main-container">
@@ -82,11 +82,11 @@
                     <button class="header-button" formaction="api/logout">Logout</button>
                 </form>
                 <button class="header-button" id="selected">Statistics</button>
-                <a href="home.html"><button class="header-button">Home</button></a>
+                <a href="./"><button class="header-button">Home</button></a>
             </div>
             <div class="panel" id="student-panel">
                 <ul class="tab">
-                  <li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'quiz-list'); displayAllQuizStatistics();">Quizzes</a></li>
+                  <li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'quiz-list');">Quizzes</a></li>
                 </ul>
                     <table class="sortable tabcontent" id="quiz-list">
                         <thead>
@@ -96,7 +96,7 @@
                     </table>
             </div>
             <div id="statistics-panel">
-                <button class="list-button" onclick="loadStatistics(false, {{username}})">Load Question Statistics</button>
+                <button class="list-button" onclick="loadStatistics(false, '{{username}}')">Load Question Statistics</button>
                 <canvas id="statistics-chart"></canvas>
             </div>
         </div>

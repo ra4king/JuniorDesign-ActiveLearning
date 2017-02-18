@@ -71,7 +71,13 @@ app.get('/statistics', check_login, function(req, res) {
             }
         });
     } else {
-        res.status(404).send('Not found');
+        database.get_stats(user.username, function(err, stats) {
+            if(err) {
+                res.status(500).send(err);
+            } else {
+                res.render('student/statistics', { username: user.username, statistics: JSON.stringify(stats) });
+            }
+        });
     }
 });
 
