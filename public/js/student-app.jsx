@@ -23,12 +23,12 @@ class Question extends React.Component {
         return (
             <li id={'question-' + this.props.id} className='question'>
                 <div className='question-body' style={question.image ? {width: '70%'} : {}}>
-                    <p className='question-name'>{question.name}</p>
+                    <p className='question-name'>{unescapeHTML(question.name)}</p>
                     <ol className='answer-list'>
                         {question.answers.map(function(answer, idx) {
                             return (
                                 <li key={idx} className='answer'>
-                                    <input type='radio' name={'answers-' + this.props.id} /><span dangerouslySetInnerHTML={ {__html: answer} }></span>
+                                    <input type='radio' name={'answers-' + this.props.id} />{unescapeHTML(answer)}
                                 </li>
                             );
                         }, this)}
@@ -40,6 +40,37 @@ class Question extends React.Component {
     }
 }
 
-function renderQuestionList(quiz, parent) {
-    ReactDOM.render(<QuestionList quiz={quiz}/>, parent);
+function chooseQuiz(id) {
+    current_quiz_id = id;
+
+    var quiz = quizzes[id];
+
+    $('#choose-quiz-msg').css('display', 'none');
+    $('#question-list').css('text-align', 'left');
+    $('#quiz-title').html(quiz.name);
+    $('#submit-all').css('display', 'block');
+
+    ReactDOM.render(<QuestionList quiz={quiz}/>, document.getElementById('questions-root'));
+}
+
+class QuizList extends React.Component {
+    render() {
+        return (
+            <ol id="quiz-list">
+                {Object.keys(quizzes).map(function(id) {
+                    var quiz = quizzes[id];
+                    var chooseQuizId = chooseQuiz.bind(null, id);
+                    return (
+                        <li key={id} id={'quiz-' + id} className='quiz'>
+                            <button className='quiz-body' onClick={chooseQuizId}>{unescapeHTML(quiz.name)}</button>
+                        </li>
+                    );
+                })}
+            </ol>
+        );
+    }
+}
+
+function updateQuizzes() {
+    ReactDOM.render(<QuizList />, document.getElementById('quizzes-root'));
 }
