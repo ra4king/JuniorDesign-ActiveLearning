@@ -35,19 +35,56 @@
                 width: 25%;
             }
 
+            #confirm-box {
+                text-align: center;
+                font-size: 32px;
+            }
+
             .submit-div {
                 float: right;
                 vertical-align: top;
                 width: 13%;
             }
 
-            .submit-button {
+            .submit-button, .submit-confirm-button {
                 text-align: center;
                 float: right;
                 color: white;
                 background-color: #176d18;
                 border: none;
                 font-size: 18px;
+            }
+
+            .submit-confirm-button {
+                font-size: 24px;
+                padding: 10px;
+                margin-right: 25%;
+                margin-bottom: 5%;
+            }
+
+            .cancel-button {
+                text-align: center;
+                color: white;
+                background-color: #FF0000;
+                border: none;
+                font-size: 24px;
+                float: left;
+                padding: 10px;
+                margin-left: 25%;
+                margin-bottom: 5%;
+            }
+
+            #ok-button {
+                text-align: center;
+                color: black;
+                background-color: #DDEEFF;
+                border: none;
+                font-size: 24px;
+                margin-left: 45%;
+                padding: 10px;
+                margin-bottom: 5%;
+                display: none;
+
             }
 
             .submit-all-button {
@@ -60,6 +97,8 @@
                 margin-bottom: 10px;
                 display: none;
             }
+
+
         </style>
         <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
         <script src="https://unpkg.com/react@15/dist/react.js"></script>
@@ -73,6 +112,12 @@
             <button onclick="toggleLiveQuiz()" class="delete-button">&#10006;</button>
             <p id="live-question-msg">Live question has ended.</p>
             <div id="live-question" class="question"></div>
+        </div>
+        <div id="confirm-box">
+            <p id="confirm-msg">Are you sure you want to submit this quiz?</p>
+            <button onclick="toggleConfirmBox(true)" id="cancel-confirm" class="cancel-button">Cancel</button>
+            <button onclick="submitQuiz()" id="submit-confirm" class="submit-confirm-button">Submit</button>
+            <button onclick="toggleConfirmBox(false)" id="ok-button">OK</button>
         </div>
 
         <div id="main-container">
@@ -94,7 +139,7 @@
                 <h2 id="quiz-title">Quiz</h2>
                 <p id="choose-quiz-msg">Choose a quiz from the left side!</p>
                 <div id='questions-root'></div>
-                <button id="submit-all" class="submit-all-button" onclick="submitQuiz()">Submit All</button>
+                <button id="submit-all" class="submit-all-button" onclick="toggleConfirmBox()">Submit All</button>
             </div>
         </div>
     </body>
