@@ -52,7 +52,7 @@ function displayAllQuizStatistics() {
             datasets: [{
                 label: '% correct answers',
                 data: data,
-                backgroundColor: 'rgba(225, 225, 225, 0.2)',
+                backgroundColor: 'rgba(100, 129, 237, 0.5)',
                 borderColor: 'rgba(200, 200, 200, 1)',
                 borderWidth: 2
             }]
@@ -83,7 +83,7 @@ function displayStudentStatistics(username){
             datasets: [{
                 label: '% correct answers',
                 data: quizScores,
-                backgroundColor: 'rgba(225, 225, 225, 0.2)',
+                backgroundColor: 'rgba(100, 129, 237, 0.5)',
                 borderColor: 'rgba(200, 200, 200, 1)',
                 borderWidth: 2
             }]
@@ -111,7 +111,7 @@ function displayQuizStatistics(name) {
             datasets: [{
                 label: '% correct answers',
                 data: [100.0 * (score / total)],
-                backgroundColor: 'rgba(225, 225, 225, 0.2)',
+                backgroundColor: 'rgba(100, 129, 237, 0.5)',
                 borderColor: 'rgba(200, 200, 200, 1)',
                 borderWidth: 2
             }]
@@ -174,14 +174,43 @@ function loadStatistics(firstLoad) {
             for (var question_id in statistics[username][quiz_id]['questions']){
                 var prevScore = 0;
                 var prevTotal = 0;
+                var prevA = 0;
+                var prevB = 0;
+                var prevC = 0;
+                var prevD = 0
                 var name = statistics[username][quiz_id]['questions'][question_id]['name'];
                 var question = statistics[username][quiz_id]['questions'][question_id];
                 if (questions[name] != null){
                     prevScore = questions[name]['score'];
                     prevTotal = questions[name]['total'];
+                    prevA = questions[name]['A'];
+                    prevB = questions[name]['B'];
+                    prevC = questions[name]['C'];
+                    prevD = questions[name]['D'];
+                }
+                if (question['answer'] == 0){
+                    prevA += question['total'];
+                }
+                if (question['answer'] == 1){
+                    prevB += question['total'];
+                }
+                if (question['answer'] == 2){
+                    prevC += question['total'];
+                }
+                if (question['answer'] == 3){
+                    prevD += question['total'];
                 }
 
-                questions[name] = {score: prevScore + question['score'], total: prevTotal + question['total']};
+
+
+                questions[name] = {
+                    score: prevScore + question['score'], 
+                    total: prevTotal + question['total'],
+                    A: prevA,
+                    B: prevB,
+                    C: prevC,
+                    D: prevD
+                };
             }
         }
     }
@@ -190,8 +219,25 @@ function loadStatistics(firstLoad) {
     var data = [];
 
     for(question in questions) {
-       labels.push(unescapeHTML(question));
-       data.push(100.0 * (questions[question]['score'] / questions[question]['total']));
+        var str = unescapeHTML(question);
+        var perA = (100 * (questions[question]['A'] / questions[question]['total'])).toFixed(2);
+        var perB = (100 * (questions[question]['B'] / questions[question]['total'])).toFixed(2);
+        var perC = (100 * (questions[question]['C'] / questions[question]['total'])).toFixed(2);
+        var perD = (100 * (questions[question]['D'] / questions[question]['total'])).toFixed(2);
+        if (perA > 0) {
+            str += " A: " + perA + "%";
+        }
+        if (perB > 0) {
+            str += " B: " + perB + "%";
+        }
+        if (perC > 0) {
+            str += " C: " + perC + "%";
+        }
+        if (perD > 0) {
+            str += " D: " + perD + "%";
+        }
+        labels.push(str);
+        data.push(100.0 * (questions[question]['score'] / questions[question]['total']));
     }
    
     var info = {
@@ -199,7 +245,7 @@ function loadStatistics(firstLoad) {
         datasets: [{
             label: '% correct answers',
             data: data,
-            backgroundColor: 'rgba(225, 225, 225, 0.2)',
+            backgroundColor: 'rgba(100, 129, 237, 0.5)',
             borderColor: 'rgba(200, 200, 200, 1)',
             borderWidth: 2
         }]
