@@ -7,22 +7,29 @@
         <link rel="icon" type="image/png" href="images/active_learning_logo_icon.png" />
         <link rel="stylesheet" type="text/css" href="css/common.css">
         <style type="text/css">
-            #statistics-panel {
+            #button-chart-panel {
                 position: absolute;
-                overflow: auto;
+                overflow: hidden;
                 background-color: #2C2C2C;
-                color: white;
                 width: 65%;
                 top: 100px;
                 bottom: 8px;
                 right: 10px;
             }
 
+            #statistics-panel {
+                position: relative;
+                overflow: hidden;
+                background-color: #2C2C2C;
+                color: white;
+                width: 100%;
+                height: 100%;
+            }
+
             #statistics-chart {
                 position: absolute;
                 overflow: auto;
                 background-color: #2C2C2C;
-                margin: 10px;
             }
 
             #student-list, #quiz-list{
@@ -74,9 +81,11 @@
                         <tbody id="quiz-buttons"></tbody>
                     </table>
             </div>
-            <div id="statistics-panel">
+            <div id="button-chart-panel">
                 <button class="list-button" onclick="loadStatistics(false)">Load Question Statistics</button>
-                <canvas id="statistics-chart"></canvas>
+                <div id="statistics-panel">
+                    <canvas id="statistics-chart"></canvas>
+                </div>
             </div>
         </div>
     </body>

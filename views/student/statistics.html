@@ -9,20 +9,18 @@
         <style type="text/css">
             #statistics-panel {
                 position: absolute;
-                overflow: auto;
+                overflow: hidden;
                 background-color: #2C2C2C;
                 color: white;
                 width: 98.5%;
                 top: 100px;
                 bottom: 8px;
-                
                 left: 10px;
             }
             #statistics-chart {
                 position: absolute;
-                overflow: auto;
+                overflow: hidden;
                 background-color: #2C2C2C;
-                margin: 10px;
             }
             #student-panel {
                 width: 15%;
@@ -70,7 +68,7 @@
         <script src="js/sorttable.js"></script>
         <script src="js/utils.js"></script>
         <script type="text/javascript">   
-            var statistics = {{{statistics}}}{{username}};
+            var statistics = {{{statistics}}}['{{username}}'];
         </script>
         <script src="js/student-statistics.js"></script>
     </head>

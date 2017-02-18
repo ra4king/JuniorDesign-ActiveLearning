@@ -5,6 +5,7 @@ function createChart(info, displayX) {
             type: 'bar', 
             data: info,
             options: {
+                maintainAspectRatio: false,
                 scales: {
                     yAxes: [{
                         ticks: {
