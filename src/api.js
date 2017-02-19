@@ -12,31 +12,33 @@ module.exports = function(base_url, server, database) {
         live_question_id = id;
         if(live_question_id) {
             database.get_question_by_id(live_question_id, function(err, question) {
-                broadcast(JSON.stringify({ live_question: question }));
+                if(!err && question) {
+                    broadcast('live_question', question);
+                }
             });
         } else {
-            broadcast(JSON.stringify({ live_question: null }));
+            broadcast('live_question', null);
         }
     }
 
-    function broadcast(msg) {
+    function broadcast(command, data) {
         for(var conn_id in connections) {
             var conn = connections[conn_id];
-            if(is_open(conn.connection)) {
-                conn.connection.send(msg);
+            if(is_open(conn.socket)) {
+                conn.send(command, null, data);
             }
         }
     }
 
     function broadcast_questions() {
         database.get_questions(true, function(err, questions) {
-            broadcast(JSON.stringify({ questions: questions }));
+            broadcast('questions', questions);
         });
     }
 
     function broadcast_quizzes() {
         database.get_quizzes(function(err, quizzes) {
-            broadcast(JSON.stringify({ quizzes: quizzes }));
+            broadcast('quizzes', quizzes);
         });
     }
 
@@ -45,7 +47,7 @@ module.exports = function(base_url, server, database) {
     }
 
     websocket.on('connection', function(socket) {
-        console.log('Accepted connection.');
+        console.log('Accepted connection');
 
         var session_id = null;
         var user_data = null;
@@ -57,6 +59,14 @@ module.exports = function(base_url, server, database) {
             }
         })();
 
+        var send = function(command, err, data) {
+            if(is_open(socket)) {
+                var to_send = JSON.stringify({id: command, err: err || undefined, data: data}, null, 4);
+                console.log('Sending: ' + to_send);
+                socket.send(to_send);
+            }
+        };
+
         socket.on('message', function(msg) {
             var data;
             try {
@@ -66,109 +76,145 @@ module.exports = function(base_url, server, database) {
                 return;
             }
 
+            var reply = function(err, args) {
+                send(data.id, err, args);
+            };
+
             console.log('Received: ' + JSON.stringify(data, null, 4));
 
-            if(session_id == null && data.session_id) {
-                return database.validate_session(data.session_id, function(err, user) {
+            if(session_id == null && data.command === 'login') {
+                return database.validate_session(data.data, function(err, user) {
                     if(!is_open(socket))
                         return;
 
                     if(err || !user) {
-                        return socket.send(JSON.stringify({ request: data, error: err || 'Not validated' }));
+                        return reply(err || 'Not validated');
                     }
 
-                    session_id = data.session_id;
+                    session_id = data.data;
                     user_data = user;
 
-                    connections[session_id] = { connection: socket, session_id: session_id, user: user };
+                    connections[session_id] = { send: send, socket: socket, session_id: session_id, user: user };
 
-                    socket.send(JSON.stringify({ login_success: true }));
+                    reply();
                 });
             }
 
             if(session_id == null) {
-                socket.send(JSON.stringify({ request: data, error: 'Not logged in.' }));
+                reply('Not logged in.');
                 return;
             }
 
             function verifyAdmin() {
                 if(!user_data || !user_data.admin) {
-                    socket.send(JSON.stringify({ request: data, error: 'Permission denied.' }));
+                    reply('Permission denied.');
                     return false;
                 }
 
                 return true;
             }
 
-            if(data.create_question) {
-                if(!verifyAdmin()) return;
+            switch(data.command) {
+                case 'create_question':
+                    if(!verifyAdmin()) return;
 
-                database.create_question(data.create_question, broadcast_questions);
-            }
+                    database.create_question(data.data, function(err) {
+                        reply(err);
 
-            if(data.delete_question) {
-                if(!verifyAdmin()) return;
+                        if(!err) {
+                            broadcast_questions();
+                        }
+                    });
+                    break;
 
-                database.delete_question(data.delete_question, function(err, quiz_modified) {
-                    broadcast_questions();
-                    if(quiz_modified) {
-                        broadcast_quizzes();
-                    }
-                });
-            }
+                case 'delete_question':
+                    if(!verifyAdmin()) return;
 
-            if(data.get_questions) {
-                database.get_questions(user_data.admin, function(err, questions) {
-                    if(is_open(socket)) {
-                        socket.send(JSON.stringify({ questions: questions }));
-                    }
-                });
-            }
+                    database.delete_question(data.data, function(err, quiz_modified) {
+                        reply(err);
 
-            if(data.create_quiz) {
-                if(!verifyAdmin()) return;
+                        broadcast_questions();
+                        if(quiz_modified) {
+                            broadcast_quizzes();
+                        }
+                    });
+                    break;
 
-                database.create_quiz(data.create_quiz, broadcast_quizzes);
-            }
+                case 'get_questions':
+                    database.get_questions(user_data.admin, function(err, questions) {
+                        if(is_open(socket)) {
+                            reply(null, questions);
+                        } else {
+                            reply(err);
+                        }
+                    });
+                    break;
 
-            if(data.update_quiz) {
-                if(!verifyAdmin()) return;
+                case 'create_quiz':
+                    if(!verifyAdmin()) return;
 
-                database.update_quiz(data.update_quiz, broadcast_quizzes);
-            }
+                    database.create_quiz(data.data, function(err) {
+                        reply(err);
 
-            if(data.delete_quiz) {
-                if(!verifyAdmin()) return;
+                        if(!err) {
+                            broadcast_quizzes()
+                        }
+                    });
+                    break;
 
-                database.delete_quiz(data.delete_quiz, broadcast_quizzes);
-            }
+                case 'update_quiz':
+                    if(!verifyAdmin()) return;
 
-            if(data.get_quizzes) {
-                database.get_quizzes(function(err, quizzes) {
-                    if(is_open(socket)) {
-                        socket.send(JSON.stringify({ quizzes: quizzes }));
-                    }
-                });
-            }
+                    database.update_quiz(data.data, function(err) {
+                        reply(err);
 
-            if(data.submit_quiz) {
-                database.submit_quiz(user_data, data.submit_quiz, function(err) {
-                    if(is_open(socket)) {
-                        socket.send(JSON.stringify({ submit_quiz: !err, error: err }));
-                    }
-                });
-            }
+                        if(!err) {
+                            broadcast_quizzes();
+                        }
+                    });
+                    break;
 
-            if(data.get_live_question) {
-                set_live_question_id(live_question_id);
-            }
+                case 'delete_quiz':
+                    if(!verifyAdmin()) return;
 
-            if(data.broadcast_live_question) {
-                set_live_question_id(data.broadcast_live_question);
-            }
+                    database.delete_quiz(data.data, function(err) {
+                        reply(err);
 
-            if(data.end_live_question) {
-                set_live_question_id(null);
+                        if(!err) {
+                            broadcast_quizzes();
+                        }
+                    });
+                    break;
+
+                case 'get_quizzes':
+                    database.get_quizzes(function(err, quizzes) {
+                        reply(null, quizzes);
+                    });
+                    break;
+
+                case 'submit_quiz':
+                    database.submit_quiz(user_data, data.data, function(err) {
+                        reply(err);
+                    });
+                    break;
+
+                case 'get_live_question':
+                    reply(null, live_question_id);
+                    break;
+
+                case 'broadcast_live_question':
+                    if(!verifyAdmin()) return;
+
+                    reply();
+                    set_live_question_id(data.data);
+                    break;
+
+                case 'end_live_question':
+                    if(!verifyAdmin()) return;
+
+                    reply();
+                    set_live_question_id(null);
+                    break;
             }
         });
 

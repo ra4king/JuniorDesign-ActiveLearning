@@ -11,12 +11,10 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 var QuestionList = function (_React$Component) {
     _inherits(QuestionList, _React$Component);
 
-    function QuestionList(props) {
+    function QuestionList() {
         _classCallCheck(this, QuestionList);
 
-        return _possibleConstructorReturn(this, (QuestionList.__proto__ || Object.getPrototypeOf(QuestionList)).call(this, props));
-
-        //this.markAnswer = this.markAnswer.bind(this);
+        return _possibleConstructorReturn(this, (QuestionList.__proto__ || Object.getPrototypeOf(QuestionList)).apply(this, arguments));
     }
 
     _createClass(QuestionList, [{

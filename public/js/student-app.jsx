@@ -1,10 +1,4 @@
 class QuestionList extends React.Component {
-    constructor(props) {
-        super(props);
-
-        //this.markAnswer = this.markAnswer.bind(this);
-    }
-
     render() {
         return (
             <ol>

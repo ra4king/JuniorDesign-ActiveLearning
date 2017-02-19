@@ -240,72 +240,31 @@ function updateQuizzes(new_quizzes) {
     $('#quiz-list').html(html);
 }
 
-var socket = null;
-
 var curr_live_id = null;
 
-function readCookie(name) {
-    var nameEQ = name + "=";
-    var ca = document.cookie.split(';');
-    for(var i=0;i < ca.length;i++) {
-        var c = ca[i].trim();
-        if (c.indexOf(nameEQ) == 0) return decodeURIComponent(c.substring(nameEQ.length,c.length));
-    }
-    return null;
-}
-
-function connect() {
-    var session_id = readCookie('session_id');
-    if(session_id == null) {
-        console.error('Could not find session_id cookie?!');
-        return;
-    }
-
-    console.log('Connecting...');
-    var s = new WebSocket('wss://www.roiatalla.com/active-learning/api');
-    s.onopen = function() {
-        socket = s;
-        console.log('Connected to server!');
-        socket.send(JSON.stringify({
-            session_id: session_id
-        }));
-    };
-    s.onmessage = function(msg) {
-        var data = JSON.parse(msg.data);
-        if(data.login_success) {
-            socket.send(JSON.stringify({ get_quizzes: true }));
-            socket.send(JSON.stringify({ get_questions: true }));
-            if(curr_live_id != null) {
-                socket.send(JSON.stringify({ broadcast_live_question: curr_live_id }));
+socket.on('login', function(success) {
+    if(success) {
+        socket.send('get_questions', function(err, questions) {
+            if(!err) {
+                updateQuestions(questions);
             }
-        } else if(data.login_success === false) {
-            console.error('Failed to authenticate to API.');
-        }
+        });
 
-        if(data.questions) {
-            updateQuestions(data.questions);
-        }
-        if(data.quizzes) {
-            updateQuizzes(data.quizzes);
-        }
-    };
-    s.onclose = function() {
-        socket = null;
-        console.log('Connection closed.');
-        setTimeout(connect, 1000);
-    };
-}
+        socket.send('get_quizzes', function(err, quizzes) {
+            if(!err) {
+                updateQuizzes(quizzes);
+            }
+        });
 
-function isSocketAvailable() {
-    if(socket == null) {
-        alert('No connection to the server. Attemping to reconnect.');
-        return false;
+        if(curr_live_id != null) {
+            socket.send('broadcast_live_question', curr_live_id);
+        }
     }
+});
 
-    return true;
-}
+socket.on('questions', updateQuestions);
+socket.on('quizzes', updateQuizzes);
 
-connect();
 
 function createQuestion(name, answers, correct, image) {
     var cleaned_answers = [];
@@ -326,53 +285,35 @@ function createQuestion(name, answers, correct, image) {
         return;
     }
 
-    if(isSocketAvailable()) {
-        socket.send(JSON.stringify({ create_question: { name: name, answers: cleaned_answers, correct: correct, image: image }}));
-        toggleQuestionForm();
-    }
+    socket.send('create_question', { name: name, answers: cleaned_answers, correct: correct, image: image });
+    toggleQuestionForm();
 }
 
 function deleteQuestion(id) {
     if (confirm("Are you sure you want to delete this question?")) {
-        if(isSocketAvailable()) {
-            socket.send(JSON.stringify({ delete_question: id }));
-        }
+        socket.send('delete_question', id);
 
         removeQuizQuestion(id, true);
     }
 }
 
-function getQuestions() {
-    if(isSocketAvailable()) {
-        socket.send(JSON.stringify({ get_questions: true }));
-    }
-}
-
 function createQuiz() {
-    if(isSocketAvailable()) {
-        var name = $('#quiz-name-field').val();
-        var quiz = { name: name, questions: current_quiz.questions };
+    var name = $('#quiz-name-field').val();
+    var quiz = { name: name, questions: current_quiz.questions };
 
-        if($('#submit-quiz-button').html() == 'Submit') {
-            socket.send(JSON.stringify({ create_quiz: quiz}));
-        } else {
-            quiz.id = current_quiz_id;
-            socket.send(JSON.stringify({ update_quiz: quiz}));
-        }
-
-        toggleQuizForm();
+    if($('#submit-quiz-button').html() == 'Submit') {
+        socket.send('create_quiz', quiz);
+    } else {
+        quiz.id = current_quiz_id;
+        socket.send('update_quiz', quiz);
     }
+
+    toggleQuizForm();
 }
 
 function deleteQuiz(id) {
-    if (confirm("Are you sure you want to delete this quiz?") && isSocketAvailable()) {
-        socket.send(JSON.stringify({ delete_quiz: id }));
-    }
-}
-
-function getQuizzes() {
-    if(isSocketAvailable()) {
-        socket.send(JSON.stringify({ get_quizzes: true }));
+    if (confirm("Are you sure you want to delete this quiz?")) {
+        socket.send('delete_quiz', id);
     }
 }
 
@@ -407,12 +348,10 @@ function presentLiveQuestion(id) {
         $('#presenting-live-button-' + curr_live_id).removeClass('presenting-live-button-selected');
     }
 
-    if(isSocketAvailable()) {
-        $('#presenting-live-button-' + id).addClass('presenting-live-button-selected');
+    $('#presenting-live-button-' + id).addClass('presenting-live-button-selected');
 
-        if(curr_live_id != id) {
-            socket.send(JSON.stringify({ broadcast_live_question: id }));
-        }
+    if(curr_live_id != id) {
+        socket.send('broadcast_live_question', id);
     }
 
     curr_live_id = id;
@@ -431,9 +370,7 @@ function toggleLiveQuiz() {
         myBlurFunction(0);
         state = true;
 
-        if(isSocketAvailable()) {
-            socket.send(JSON.stringify({ end_live_question: true }));
-        }
+        socket.send('end_live_question');
     }
 }
 

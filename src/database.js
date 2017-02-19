@@ -38,10 +38,62 @@ var config = require('./config.json');
 var database;
 
 var users;
+/*
+{
+    username,
+    hash,
+    salt,
+    iterations,
+    admin: bool
+}
+*/
+
 var sessions;
+/*
+{
+    _id: String session_id,
+    username,
+    createAt
+}
+*/
+
 var questions;
+/*
+{
+    _id: ObjectID question_id,
+    name,
+    answers: [String],
+    correct: int index into answers array,
+    image: String base64-encoded image
+}
+*/
+
 var quizzes;
+/*
+{
+    _id: ObjectID quiz_id,
+    name,
+    questions: [question_id]
+}
+*/
+
 var submissions;
+/*
+{
+    timestamp,
+    username,
+    quiz_id,
+    quiz_name,
+    answers: [
+        {
+            name,
+            answer: int,
+            score,
+            total
+        }
+    ]
+}
+*/
 
 MongoClient.connect('mongodb://roiatalla.com:27017', function(err, db) {
     if(err) {
@@ -66,11 +118,16 @@ MongoClient.connect('mongodb://roiatalla.com:27017', function(err, db) {
 });
 
 function create_user(username, password, callback) {
+    if(!database) {
+        return callback('Not connected to database.');
+    }
+
+    // TODO: Make passwords stronger....
     if(!username || !password) {
         return callback('Username and password cannot be empty.');
     }
 
-users.findOne({ username: username }, function(err, result) {
+    users.findOne({ username: username }, function(err, result) {
         if(err) {
             console.error('Error when checking if username exists before creating it: ' + username);
             console.error(err);
@@ -116,6 +173,10 @@ users.findOne({ username: username }, function(err, result) {
 }
 
 function create_session(username, password, callback) {
+    if(!database) {
+        return callback('Not connected to database.');
+    }
+
     if(!username || !password) {
         return callback('Username and password cannot be empty.');
     }
@@ -156,6 +217,10 @@ function create_session(username, password, callback) {
 }
 
 function validate_session(session_id, callback) {
+    if(!database) {
+        return callback('Not connected to database.');
+    }
+
     sessions.findOne({ _id: session_id }, function(err, result) {
         if(err) {
             console.error('Error when validating session');
@@ -172,6 +237,10 @@ function validate_session(session_id, callback) {
 }
 
 function destroy_session(session_id, callback) {
+    if(!database) {
+        return callback('Not connected to database.');
+    }
+
     sessions.findOneAndDelete({ _id: session_id }, function(err, result) {
         if(err) {
             console.error('Error when destroying session');
@@ -191,6 +260,10 @@ function cleanup_user(user, noadmin) {
 }
 
 function get_user(username, callback) {
+    if(!database) {
+        return callback('Not connected to database.');
+    }
+
     users.findOne({ username: username }, function(err, user) {
         if(err) {
             console.error('Error when getting user: ' + username);
@@ -207,6 +280,10 @@ function get_user(username, callback) {
 }
 
 function get_all_users(callback) {
+    if(!database) {
+        return callback('Not connected to database.');
+    }
+
     users.find({ admin: false }).toArray(function(err, results) {
         if(err) {
             console.error('Error when getting all users');
@@ -233,11 +310,36 @@ function get_all_users(callback) {
     });
 }
 
+function validate_question(question) {
+    if(!question ||
+        typeof question.name !== 'string' ||
+        !Array.isArray(question.answers) ||
+        typeof question.correct !== 'string' ||
+        typeof question.image !== 'string' ||
+        question.answers.length < 2 ||
+        question.correct % 1 !== 0 ||
+        question.correct < 0 ||
+        question.correct >= question.answers.length) {
+        return null;
+    }
+
+    return {
+        name: question.name,
+        answers: question.answers.map((ans) => String(ans)),
+        correct: question.correct,
+        image: question.image
+    };
+}
+
 function create_question(question, callback) {
-    question.name = escape(question.name);
-    question.answers.forEach(function(elem, idx) {
-        question.answers[idx] = escape(elem);
-    });
+    if(!database) {
+        return callback('Not connected to database.');
+    }
+
+    question = validate_question(question);
+    if(!question) {
+        return callback('Invalid question object.');
+    }
 
     questions.insertOne(question, function(err, result) {
         if(err) {
@@ -249,22 +351,11 @@ function create_question(question, callback) {
     });
 }
 
-function check_question(check_question, callback) {
-    var id = check_question.id;
-    var answer = check_question.answer;
-
-    questions.findOne({ _id: new ObjectID(id) }, function(err, question) {
-        if(err) {
-            console.error('Error when checking question: ' + check_question);
-            console.error(err);
-            return callback(err);
-        }
-
-        callback(err, question.correct == answer);
-    });
-}
-
 function delete_question(question_id, callback) {
+    if(!database) {
+        return callback('Not connected to database.');
+    }
+
     questions.findOneAndDelete({ _id: new ObjectID(question_id) }, function(err, result) {
         if(err) {
             console.error('Error when deleting question: ' + question_id);
@@ -285,6 +376,10 @@ function delete_question(question_id, callback) {
 }
 
 function get_question_by_id(question_id, callback) {
+    if(!database) {
+        return callback('Not connected to database.');
+    }
+
     questions.findOne({ _id: new ObjectID(question_id) }, function(err, question) {
         if(err) {
             console.error('Error when getting question by id: ' + question_id);
@@ -294,15 +389,19 @@ function get_question_by_id(question_id, callback) {
 
         callback(null, {
             id: question._id.toHexString(),
-            name: question.name,
-            answers: question.answers,
+            name: escape(question.name),
+            answers: question.answers.map((str) => escape(str)),
             correct: question.correct,
-            image: question.image
+            image: escape(question.image)
         });
     });
 }
 
 function get_questions(include_correct, callback) {
+    if(!database) {
+        return callback('Not connected to database.');
+    }
+
     questions.find().toArray(function(err, results) {
         if(err) {
             console.error('Error when getting all questions');
@@ -316,10 +415,10 @@ function get_questions(include_correct, callback) {
 
             cleaned[id] = {
                 id: id,
-                name: result.name,
-                answers: result.answers,
+                name: escape(result.name),
+                answers: result.answers.map((str) => escape(str)),
                 correct: include_correct ? result.correct : undefined,
-                image: result.image
+                image: escape(result.image)
             };
         });
 
@@ -327,13 +426,31 @@ function get_questions(include_correct, callback) {
     });
 }
 
-function create_quiz(quiz, callback) {
-    var to_insert = {
-        name: escape(quiz.name),
-        questions: quiz.questions
-    };
+function validate_quiz(quiz) {
+    if(!quiz ||
+        typeof quiz.name !== 'string' ||
+        !Array.isArray(quiz.questions) ||
+        quiz.questions.length === 0) {
+        return null;
+    }
 
-    quizzes.insertOne(to_insert, function(err, result) {
+    return {
+        name: quiz.name,
+        questions: quiz.questions.map((q) => String(q))
+    };
+}
+
+function create_quiz(quiz, callback) {
+    if(!database) {
+        return callback('Not connected to database.');
+    }
+
+    quiz = validate_quiz(quiz);
+    if(!quiz) {
+        return callback('Invalid quiz object.');
+    }
+
+    quizzes.insertOne(quiz, function(err, result) {
         if(err) {
             console.error('Error when creating quiz: ' + quiz);
             console.error(err);
@@ -344,12 +461,17 @@ function create_quiz(quiz, callback) {
 }
 
 function update_quiz(quiz, callback) {
-    var to_update = {
-        name: escape(quiz.name),
-        questions: quiz.questions
-    };
+    if(!database) {
+        return callback('Not connected to database.');
+    }
 
-    quizzes.updateOne({ _id: new ObjectID(quiz.id) }, { $set: to_update }, function(err, result) {
+    var id = quiz.id;
+    quiz = validate_quiz(quiz);
+    if(!quiz) {
+        return callback('Invalid quiz object.');
+    }
+
+    quizzes.updateOne({ _id: new ObjectID(id) }, { $set: quiz }, function(err, result) {
         if(err) {
             console.error('Error when updating quiz: ' + quiz);
             console.error(err);
@@ -360,6 +482,10 @@ function update_quiz(quiz, callback) {
 }
 
 function delete_quiz(quiz_id, callback) {
+    if(!database) {
+        return callback('Not connected to database.');
+    }
+
     quizzes.findOneAndDelete({ _id: new ObjectID(quiz_id) }, function(err, result) {
         if(err) {
             console.error('Error when deleting quiz: ' + quiz_id);
@@ -372,6 +498,10 @@ function delete_quiz(quiz_id, callback) {
 }
 
 function get_quiz_by_id(quiz_id, callback) {
+    if(!database) {
+        return callback('Not connected to database.');
+    }
+
     quizzes.findOne({ _id: new ObjectID(quiz_id) }, function(err, quiz) {
         if(err) {
             console.error('Error when getting quiz by id: ' + quiz_id);
@@ -379,15 +509,23 @@ function get_quiz_by_id(quiz_id, callback) {
             return callback(err);
         }
 
-        callback(null, {
-            id: quiz._id.toHexString(),
-            name: quiz.name,
-            questions: quiz.questions,
-        });
+        if(quiz) {
+            callback(null, {
+                id: quiz._id.toHexString(),
+                name: escape(quiz.name),
+                questions: quiz.questions,
+            });
+        } else {
+            callback(null, null);
+        }
     });
 }
 
 function get_quizzes(callback) {
+    if(!database) {
+        return callback('Not connected to database.');
+    }
+
     quizzes.find().toArray(function(err, results) {
         if(err) {
             console.error('Error when getting all quizzes');
@@ -401,7 +539,7 @@ function get_quizzes(callback) {
 
             cleaned[id] = {
                 id: id,
-                name: result.name,
+                name: escape(result.name),
                 questions: result.questions
             };
         });
@@ -411,9 +549,19 @@ function get_quizzes(callback) {
 }
 
 function submit_quiz(user, submission, callback) {
+    if(!database) {
+        return callback('Not connected to database.');
+    }
+
+    if(!submission ||
+        typeof submission.quiz_id !== 'string' ||
+        !submission.answers) {
+        return callback('Invalid user or submission object.');
+    }
+
     var doc = {
         timestamp: new Date(),
-        username: user.username,
+        username: escape(user.username),
         quiz_id: submission.quiz_id,
         answers: submission.answers
     };
@@ -423,7 +571,7 @@ function submit_quiz(user, submission, callback) {
             return callback(err);
         }
 
-        doc.quiz_name = quiz.name;
+        doc.quiz_name = escape(quiz.name);
 
         var ids = quiz.questions.map(function(id) {
             return new ObjectID(id);
@@ -440,7 +588,7 @@ function submit_quiz(user, submission, callback) {
                 var id = question._id.toHexString();
                 if(doc.answers[id] !== undefined) {
                     doc.answers[id] = {
-                        name: question.name,
+                        name: escape(question.name),
                         answer: doc.answers[id],
                         score: doc.answers[id] == question.correct ? 1 : 0,
                         total: 1
@@ -448,9 +596,6 @@ function submit_quiz(user, submission, callback) {
                 }
             });
 
-            console.log('Inserting:');
-            console.log(JSON.stringify(doc, null, 4));
-            
             submissions.insertOne(doc, function(err, result) {
                 if(err) {
                     console.error('Error when creating submission: ' + doc);
@@ -464,6 +609,10 @@ function submit_quiz(user, submission, callback) {
 }
 
 function get_stats(username, callback) {
+    if(!database) {
+        return callback('Not connected to database.');
+    }
+    
     var find = {};
 
     if(typeof username == 'function') {
@@ -484,12 +633,14 @@ function get_stats(username, callback) {
         var stats = {};
 
         results.forEach(function(result) {
-            if(!stats[result.username]) {
-                stats[result.username] = {};
+            var username = escape(result.username);
+
+            if(!stats[username]) {
+                stats[username] = {};
             }
 
-            stats[result.username][result.quiz_id] = {
-                name: result.quiz_name,
+            stats[username][result.quiz_id] = {
+                name: escape(result.quiz_name),
                 questions: result.answers
             };
         });

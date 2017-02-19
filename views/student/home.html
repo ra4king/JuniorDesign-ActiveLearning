@@ -104,6 +104,7 @@
         <script src="https://unpkg.com/react@15/dist/react.js"></script>
         <script src="https://unpkg.com/react-dom@15/dist/react-dom.js"></script>
         <script src="js/utils.js"></script>
+        <script src="js/socket.js"></script>
         <script src="js/old-student-app.js"></script>
         <script src="js/student-app.js"></script>
     </head>
@@ -129,7 +130,7 @@
                     <button class="header-button" formaction="api/logout">Logout</button>
                 </form>
                 <a href="statistics"><button class="header-button">Statistics</button></a>
-                <button class="header-button">Home</button>
+                <button class="header-button" id="selected">Home</button>
             </div>
 
             <div id="quiz-panel">
@@ -142,7 +143,6 @@
 
                 <div id='questions-root'></div>
                 <button id="submit-all" class="submit-all-button" onclick="toggleConfirmBox()">Submit All</button>
-
             </div>
         </div>
     </body>
