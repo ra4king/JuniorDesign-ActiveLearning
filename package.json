@@ -4,8 +4,8 @@
   "description": "The Active Learning site for Junior Design 2016-2017.",
   "main": "src/site.js",
   "scripts": {
-    "build": "babel public/js/ -d public/js/ -x .jsx",
-    "start": "node src/site.js"
+    "build": "babel src/client/ -d public/js/ -x .jsx",
+    "start": "node src/server/site.js"
   },
   "repository": {
     "type": "git",
