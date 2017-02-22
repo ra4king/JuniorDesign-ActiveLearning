@@ -5,122 +5,20 @@
 
         <title>Active Learning Tool - Home</title>
         <link rel="icon" type="image/png" href="images/active_learning_logo_icon.png" />
-        <link rel="stylesheet" type="text/css" href="css/common.css">
-        <style type="text/css">
-            #live-question-msg {
-                margin: 25px 0 10px 0;
-                text-align: center;
-            }
-
-            #live-question {
-                margin-top: 30px;
-                display: block;
-            }
-
-            #quiz-title {
-                text-align: center;
-                margin-left: 10px;
-            }
-
-            #choose-quiz-msg {
-                text-align: center;
-            }
-
-            #quiz-name {
-                display: inline-block;
-                float: left;
-            }
-
-            #choose-quiz-msg {
-                text-align: center;
-            }
-
-            #live-question .question-image {
-                width: 25%;
-            }
-
-            #confirm-box {
-                text-align: center;
-                font-size: 32px;
-            }
-
-            .submit-div {
-                float: right;
-                vertical-align: top;
-                width: 13%;
-            }
-
-            .submit-button, .submit-confirm-button {
-                text-align: center;
-                float: right;
-                color: white;
-                background-color: #176d18;
-                border: none;
-                font-size: 18px;
-            }
-
-            .submit-confirm-button {
-                font-size: 24px;
-                padding: 10px;
-                margin-right: 25%;
-                margin-bottom: 5%;
-            }
-
-            .cancel-button {
-                text-align: center;
-                color: white;
-                background-color: #FF0000;
-                border: none;
-                font-size: 24px;
-                float: left;
-                padding: 10px;
-                margin-left: 25%;
-                margin-bottom: 5%;
-            }
-
-            #ok-button {
-                text-align: center;
-                color: black;
-                background-color: #DDEEFF;
-                border: none;
-                font-size: 24px;
-                margin-left: 45%;
-                padding: 10px;
-                margin-bottom: 5%;
-                display: block;
-            }
-
-            .submit-all-button {
-                text-align: center;
-                color: white;
-                background-color: #176d18;
-                border: none;
-                font-size: 24px;
-                margin-left: 41%;
-                margin-bottom: 10px;
-                display: block;
-            }
-        </style>
-        <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+        <link rel="stylesheet" type="text/css" href="css/common.css" />
+        <link rel="stylesheet" type="text/css" href="css/student-home.css" />
+        
         <script src="https://unpkg.com/react@15/dist/react.js"></script>
         <script src="https://unpkg.com/react-dom@15/dist/react-dom.js"></script>
+
+        <script>
+            var username = '{{username}}';
+        </script>
         <script src="js/utils.js"></script>
         <script src="js/socket.js"></script>
         <script src="js/student-app.js"></script>
     </head>
     <body>
-        <div id="main-container">
-            <div id="header-panel">
-                <img id="logo" src="images/active_learning_logo_white.png" width="175" height="75" alt="logo"/>
-                <h2 id="name">{{username}}</h2>
-                <form method="post">
-                    <button class="header-button" formaction="api/logout">Logout</button>
-                </form>
-                <a href="statistics"><button class="header-button">Statistics</button></a>
-                <button class="header-button" id="selected">Home</button>
-            </div>
-
-            <div id="panels"></div>
-        </div>
+        <div id="panels"></div>
     </body>
 </html>

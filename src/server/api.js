@@ -62,7 +62,6 @@ module.exports = function(base_url, server, database) {
         var send = function(command, err, data) {
             if(is_open(socket)) {
                 var to_send = JSON.stringify({id: command, err: err || undefined, data: data}, null, 4);
-                console.log('Sending: ' + to_send);
                 socket.send(to_send);
             }
         };

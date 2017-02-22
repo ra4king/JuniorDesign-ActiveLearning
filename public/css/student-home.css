@@ -1,0 +1,93 @@
+#live-question-msg {
+    margin: 25px 0 10px 0;
+    text-align: center;
+}
+
+#live-question {
+    margin-top: 30px;
+    display: block;
+}
+
+#quiz-title {
+    text-align: center;
+    margin-left: 10px;
+}
+
+#choose-quiz-msg {
+    text-align: center;
+}
+
+#quiz-name {
+    display: inline-block;
+    float: left;
+}
+
+#choose-quiz-msg {
+    text-align: center;
+}
+
+#live-question .question-image {
+    width: 25%;
+}
+
+#confirm-box {
+    text-align: center;
+    font-size: 32px;
+}
+
+.submit-div {
+    float: right;
+    vertical-align: top;
+    width: 13%;
+}
+
+.submit-button, .submit-confirm-button {
+    text-align: center;
+    float: right;
+    color: white;
+    background-color: #176d18;
+    border: none;
+    font-size: 18px;
+}
+
+.submit-confirm-button {
+    font-size: 24px;
+    padding: 10px;
+    margin-right: 25%;
+    margin-bottom: 5%;
+}
+
+.cancel-button {
+    text-align: center;
+    color: white;
+    background-color: #FF0000;
+    border: none;
+    font-size: 24px;
+    float: left;
+    padding: 10px;
+    margin-left: 25%;
+    margin-bottom: 5%;
+}
+
+#ok-button {
+    text-align: center;
+    color: black;
+    background-color: #DDEEFF;
+    border: none;
+    font-size: 24px;
+    margin-left: 45%;
+    padding: 10px;
+    margin-bottom: 5%;
+    display: block;
+}
+
+.submit-all-button {
+    text-align: center;
+    color: white;
+    background-color: #176d18;
+    border: none;
+    font-size: 24px;
+    margin-left: 41%;
+    margin-bottom: 10px;
+    display: block;
+}

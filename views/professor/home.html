@@ -5,122 +5,18 @@
 
         <title>Active Learning Tool - Home</title>
         <link rel="icon" type="image/png" href="images/active_learning_logo_icon.png" />
-        <link rel="stylesheet" type="text/css" href="css/common.css">
-        <style type="text/css">
-            #live-quiz {
-                position: fixed;
-                top: 8px;
-                bottom: 8px;
-                overflow: auto;
-            }
+        <link rel="stylesheet" type="text/css" href="css/common.css" />
+        <link rel="stylesheet" type="text/css" href="css/professor-home.css" />
 
-            #live-quiz-delete-button {
-                position: fixed;
-                top: 8px;
-                right: 20%;
-            }
-
-            .draggable {
-                border: dashed 1px red;
-                border-radius: 10px;
-            }
-
-            #question-creator {
-                display: none;
-                margin: 10px;
-                padding: 10px;
-                background-color: white;
-                color: black;
-            }
-
-            #quiz-creator {
-                display: none;
-            }
-
-            #quiz-creator-header {
-                margin: 10px;
-                height: 30px;
-            }
-
-            #quiz-question-list {
-                position: absolute;
-                text-align: center;
-                top: 90px;
-                width: 100%;
-                bottom: 0px;
-            }
-
-            #live-questions-list {
-                margin-top: 30px;
-            }
-
-            #quiz-name {
-                display: inline-block;
-                float: left;
-            }
-
-            #present-live {
-                display: inline-block;
-                margin-right: 10px;
-                float: right;
-            }
-
-            #submit-quiz {
-                display: inline-block;
-                float: right;
-            }
-
-            #submit-quiz-button, #present-live-button {
-                background-color: #FFFFFF;
-                border: none;
-            }
-
-            .live-button {
-                position: absolute;
-                display: block;
-                width: 23px;
-                height: 23px;
-                right: 0;
-                bottom: 0;
-                background-color: #008800;
-                color: white;
-                border: none;
-                text-align: center;
-                transition-duration: .6s;
-            }
-
-            .live-button:hover {
-                background-color: #66aa66;
-            }
-
-            .presenting-live-button {
-                position: absolute;
-                display: block;
-                right: 0;
-                bottom: 0;
-                background-color: #AA0000;
-                color: white;
-                border: none;
-                text-align: center;
-                min-height: 100%;
-                min-width: 5%;
-                transition-duration: .6s;
-            }
-
-            .presenting-live-button:hover {
-                background-color: #AA4444;
-            }
-
-            .presenting-live-button-selected {
-                background-color: #008800;
-            }
-
-            .presenting-live-button-selected:hover {
-                background-color: #008800;
-            }
-        </style>
         <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+        <script src="https://unpkg.com/react@15/dist/react.js"></script>
+        <script src="https://unpkg.com/react-dom@15/dist/react-dom.js"></script>
+
+        <script>
+            var username = '{{username}}';
+        </script>
         <script src="js/socket.js"></script>
+        <script src="js/old-professor-app.js"></script>
         <script src="js/professor-app.js"></script>
     </head>
     <body>

@@ -18,7 +18,7 @@ window.onload = () => {
             });
         }
     });
-    
+
     ReactDOM.render(<Panels />, document.getElementById('panels'));
 }
 
@@ -86,6 +86,8 @@ class Panels extends React.Component {
                     <ConfirmBox submission={this.state.showConfirm} doneSubmit={this.doneSubmit.bind(this)} />}
 
                 <div className={(this.state.showLiveQuestion || this.state.showConfirm) && 'blur'}>
+                    <HeaderPanel />
+
                     <QuizPanel
                         quizzes={this.state.quizzes}
                         chooseQuiz={this.chooseQuiz.bind(this)}
@@ -96,6 +98,22 @@ class Panels extends React.Component {
                         quiz={this.state.selectedQuiz && this.state.quizzes[this.state.selectedQuiz]}
                         submitQuiz={this.confirmSubmit.bind(this)} />
                 </div>
+            </div>
+        );
+    }
+}
+
+class HeaderPanel extends React.Component {
+    render() {
+        return (
+            <div id='header-panel'>
+                <img id='logo' src='images/active_learning_logo_white.png' width='175' height='75' alt='logo'/>
+                <h2 id='name'>{username}</h2>
+                <form method='post'>
+                    <button className='header-button' formAction='api/logout'>Logout</button>
+                </form>
+                <a href='statistics'><button className='header-button'>Statistics</button></a>
+                <a href='./'><button className='header-button' id='selected'>Home</button></a>
             </div>
         );
     }
