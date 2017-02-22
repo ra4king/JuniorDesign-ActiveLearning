@@ -2,18 +2,6 @@ var socket = new function() {
     var listeners = {};
     var callbacks = {};
 
-    function emit(data) {
-        if(!data.err && listeners[data.id]) {
-            listeners[data.id].forEach((cb) => cb(data.data));
-        }
-
-        if(callbacks[data.id]) {
-            var cb = callbacks[data.id];
-            cb.callback(data.err, data.data, cb.request);
-            delete callbacks[data.id];
-        }
-    }
-
     function readCookie(name) {
         var nameEQ = name + "=";
         var ca = document.cookie.split(';');
@@ -57,11 +45,20 @@ var socket = new function() {
                     console.log('Successfully logged in.');
                 }
 
-                emit({id: 'login', err: err, data: !err});
+                thisSocket.emit('login', !err);
             });
         };
         s.onmessage = function(msg) {
-            emit(JSON.parse(msg.data));
+            var data = JSON.parse(msg.data);
+
+            if(callbacks[data.id]) {
+                var cb = callbacks[data.id];
+                cb.callback(data.err, data.data, cb.request);
+                delete callbacks[data.id];
+            }
+            else if(!data.err) {
+                thisSocket.emit(data.id, data.data);
+            }
         };
         s.onclose = function() {
             websocket = null;
@@ -97,6 +94,12 @@ var socket = new function() {
         };
 
         this.on(command, func);
+    }
+
+    this.emit = function(command, data) {
+        if(listeners[command]) {
+            listeners[command].forEach((cb) => cb(data));
+        }
     }
 
     var next_id = 0;
