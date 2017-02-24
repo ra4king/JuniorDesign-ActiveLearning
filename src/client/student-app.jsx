@@ -1,21 +1,9 @@
 window.onload = () => {
-    socket.on('login', function(success) {
+    socket.on('login', (success) => {
         if(success) {
-            socket.send('get_quizzes', function(err, data) {
-                if(!err) {
-                    socket.emit('quizzes', data);
-                }
-            });
-            socket.send('get_questions', function(err, data) {
-                if(!err) {
-                    socket.emit('questions', data);
-                }
-            });
-            socket.send('get_live_question', function(err, data) {
-                if(!err) {
-                    socket.emit('live_question', data);
-                }
-            });
+            socket.send('get_quizzes', (err, data) => !err && socket.emit('quizzes', data));
+            socket.send('get_questions', (err, data) => !err && socket.emit('questions', data));
+            socket.send('get_live_question', (err, data) => !err && socket.emit('live_question', data));
         }
     });
 
@@ -45,31 +33,27 @@ class Panels extends React.Component {
     toggleLiveQuiz() {
         this.setState({ showLiveQuestion: !this.state.showLiveQuestion });
 
-        socket.send('live_question', function(err, data, request) {
+        socket.send('live_question', (err, data) => {
             if(!err) {
                 socket.emit('live_question', data);
             } else {
-                console.error('Error sending ' + JSON.stringify(request) + ': ' + err);
+                console.error('Error sending when requesting live question id: ' + err);
             }
         });
     }
 
     chooseQuiz(id) {
-        if(!this.state.selectedQuiz || confirm('Discard current quiz?')) {
-            this.setState({ selectedQuiz: id, showConfirm: null });
+        if(!id || !this.state.selectedQuiz || confirm('Discard current quiz?')) {
+            this.setState({ selectedQuiz: id });
         }
     }
 
-    confirmSubmit(submission) {
-        this.setState({ showConfirm: submission });
+    showConfirm(options) {
+        this.setState({ showConfirm: options });
     }
 
-    doneSubmit(success) {
-        if(success) {
-            this.setState({ selectedQuiz: null, showConfirm: null });
-        } else {
-            this.setState({ showConfirm: null });
-        }
+    hideConfirm() {
+        this.setState({ showConfirm: null });
     }
     
     render() {
@@ -82,21 +66,22 @@ class Panels extends React.Component {
                         question={this.state.currentLiveQuestion}
                         toggleLiveQuiz={this.toggleLiveQuiz.bind(this)} />}
 
-                {this.state.showConfirm &&
-                    <ConfirmBox submission={this.state.showConfirm} doneSubmit={this.doneSubmit.bind(this)} />}
+                {this.state.showConfirm && <ConfirmBox hideConfirm={() => this.hideConfirm()} {...this.state.showConfirm} />}
 
                 <div className={(this.state.showLiveQuestion || this.state.showConfirm) && 'blur'}>
                     <HeaderPanel />
 
                     <QuizPanel
+                        showConfirm={this.showConfirm.bind(this)}
                         quizzes={this.state.quizzes}
                         chooseQuiz={this.chooseQuiz.bind(this)}
                         toggleLiveQuiz={this.toggleLiveQuiz.bind(this)} />
 
                     <QuestionPanel
+                        showConfirm={this.showConfirm.bind(this)}
+                        hideQuiz={() => this.chooseQuiz(null)}
                         questions={this.state.questions}
-                        quiz={this.state.selectedQuiz && this.state.quizzes[this.state.selectedQuiz]}
-                        submitQuiz={this.confirmSubmit.bind(this)} />
+                        quiz={this.state.selectedQuiz && this.state.quizzes[this.state.selectedQuiz]} />
                 </div>
             </div>
         );
@@ -109,11 +94,13 @@ class HeaderPanel extends React.Component {
             <div id='header-panel'>
                 <img id='logo' src='images/active_learning_logo_white.png' width='175' height='75' alt='logo'/>
                 <h2 id='name'>{username}</h2>
-                <form method='post'>
-                    <button className='header-button' formAction='api/logout'>Logout</button>
-                </form>
-                <a href='statistics'><button className='header-button'>Statistics</button></a>
-                <a href='./'><button className='header-button' id='selected'>Home</button></a>
+                <nav>
+                    <form method='post'>
+                        <button className='header-nav-link' formAction='api/logout'>Logout</button>
+                    </form>
+                    <a href='statistics' className='header-nav-link'>Statistics</a>
+                    <a href='./' className='header-nav-link' id='selected'>Home</a>
+                </nav>
             </div>
         );
     }
@@ -133,60 +120,25 @@ class LiveQuizPanel extends React.Component {
 }
 
 class ConfirmBox extends React.Component {
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            isSubmitting: false,
-            doneSubmitting: false
-        };
-    }
-
-    cancelSubmit() {
-        if(!this.state.isSubmitting) {
-            this.props.doneSubmit(false);
-        }
-    }
-
-    submitQuiz() {
-        if(!this.state.isSubmitting) {
-            this.setState({ isSubmitting: true });
-
-            console.log(this.props.submission);
-
-            socket.send('submit_quiz', this.props.submission, (err, data, request) => {
-                this.setState({ isSubmitting: false });
-
-                if(err) {
-                    alert('Failed to submit, please trying again. Error: ' + err);
-                } else {
-                    this.setState({ doneSubmitting: true });
-                }
-            });
-        }
-    }
-
-    doneSubmitting() {
-        this.props.doneSubmit(true);
+    clicked(value) {
+        this.props.hideConfirm();
+        this.props.onAction && this.props.onAction(value);
     }
 
     render() {
         return (
             <div id='confirm-box'>
-                {this.state.doneSubmitting
-                    ? (<div>
-                            <p id='confirm-msg'>Your answers have been submitted.</p>
-                            <button onClick={this.doneSubmitting.bind(this)} id='ok-button'>OK</button>
-                        </div>)
-                    : (<div>
-                            <p id='confirm-msg'>Are you sure you want to submit this quiz?</p>
-                            <button
-                                onClick={!this.state.isSubmitting && this.cancelSubmit.bind(this)}
-                                className='cancel-button'>Cancel</button>
-                            <button
-                                onClick={!this.state.isSubmitting && this.submitQuiz.bind(this)}
-                                className='submit-confirm-button'>Submit</button>
-                        </div>)}
+                <p id='confirm-msg'>{this.props.title}</p>
+                {this.props.type == 'yesno' ?
+                    (<div>
+                        <button
+                            onClick={() => this.clicked(false)}
+                            className='cancel-button'>{this.props.noText || 'No'}</button>
+                        <button
+                            onClick={() => this.clicked(true)}
+                            className='confirm-button'>{this.props.yesText || 'Yes'}</button>
+                    </div>) :
+                    (<button onClick={() => this.clicked()} id='ok-button'>{this.props.okText || 'Ok'}</button>)}
             </div>
         );
     }
@@ -227,7 +179,11 @@ class QuestionPanel extends React.Component {
             <div id='question-panel'>
                 <h2 id='quiz-title'>{this.props.quiz ? this.props.quiz.name : 'Quiz'}</h2>
                 {this.props.quiz
-                    ? (<QuestionList quiz={this.props.quiz} questions={this.props.questions} submitQuiz={this.props.submitQuiz} />)
+                    ? (<QuestionList
+                            quiz={this.props.quiz}
+                            questions={this.props.questions}
+                            showConfirm={this.props.showConfirm}
+                            hideQuiz={this.props.hideQuiz} />)
                     : (<p id='choose-quiz-msg'>Choose a quiz from the left side!</p>)}
             </div>
         );
@@ -246,9 +202,34 @@ class QuestionList extends React.Component {
     }
 
     submitClicked() {
-        this.props.submitQuiz({
-            quiz_id: this.props.quiz.id,
-            answers: this.answers
+        var title = 'Are you sure you want to submit this quiz?'
+        var answersLen = Object.keys(this.answers).length;
+        var questionsLen = this.props.quiz.questions.length
+        if(answersLen != questionsLen) {
+            title += ' You only answered ' + answersLen + ' of the ' + questionsLen + ' questions.';
+        }
+
+        this.props.showConfirm({
+            type: 'yesno',
+            title: title,
+            onAction: (confirm) => {
+                if(confirm) {
+                    socket.send(
+                        'submit_quiz',
+                        { quiz_id: this.props.quiz.id, answers: this.answers },
+                        (err, data) => {
+                            this.props.showConfirm({
+                                type: 'ok',
+                                title: err
+                                    ? 'Failed to submit, please trying again. Error: ' + err
+                                    : 'Your answers have been submitted.'
+                            });
+
+                            this.props.hideQuiz();
+                        }
+                    );
+                }
+            }
         });
     }
 

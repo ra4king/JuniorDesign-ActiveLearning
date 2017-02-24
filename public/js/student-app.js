@@ -1,5 +1,7 @@
 'use strict';
 
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -12,19 +14,13 @@ window.onload = function () {
     socket.on('login', function (success) {
         if (success) {
             socket.send('get_quizzes', function (err, data) {
-                if (!err) {
-                    socket.emit('quizzes', data);
-                }
+                return !err && socket.emit('quizzes', data);
             });
             socket.send('get_questions', function (err, data) {
-                if (!err) {
-                    socket.emit('questions', data);
-                }
+                return !err && socket.emit('questions', data);
             });
             socket.send('get_live_question', function (err, data) {
-                if (!err) {
-                    socket.emit('live_question', data);
-                }
+                return !err && socket.emit('live_question', data);
             });
         }
     });
@@ -68,38 +64,36 @@ var Panels = function (_React$Component) {
         value: function toggleLiveQuiz() {
             this.setState({ showLiveQuestion: !this.state.showLiveQuestion });
 
-            socket.send('live_question', function (err, data, request) {
+            socket.send('live_question', function (err, data) {
                 if (!err) {
                     socket.emit('live_question', data);
                 } else {
-                    console.error('Error sending ' + JSON.stringify(request) + ': ' + err);
+                    console.error('Error sending when requesting live question id: ' + err);
                 }
             });
         }
     }, {
         key: 'chooseQuiz',
         value: function chooseQuiz(id) {
-            if (!this.state.selectedQuiz || confirm('Discard current quiz?')) {
-                this.setState({ selectedQuiz: id, showConfirm: null });
+            if (!id || !this.state.selectedQuiz || confirm('Discard current quiz?')) {
+                this.setState({ selectedQuiz: id });
             }
         }
     }, {
-        key: 'confirmSubmit',
-        value: function confirmSubmit(submission) {
-            this.setState({ showConfirm: submission });
+        key: 'showConfirm',
+        value: function showConfirm(options) {
+            this.setState({ showConfirm: options });
         }
     }, {
-        key: 'doneSubmit',
-        value: function doneSubmit(success) {
-            if (success) {
-                this.setState({ selectedQuiz: null, showConfirm: null });
-            } else {
-                this.setState({ showConfirm: null });
-            }
+        key: 'hideConfirm',
+        value: function hideConfirm() {
+            this.setState({ showConfirm: null });
         }
     }, {
         key: 'render',
         value: function render() {
+            var _this2 = this;
+
             return React.createElement(
                 'div',
                 null,
@@ -107,19 +101,25 @@ var Panels = function (_React$Component) {
                 this.state.showLiveQuestion && React.createElement(LiveQuizPanel, {
                     question: this.state.currentLiveQuestion,
                     toggleLiveQuiz: this.toggleLiveQuiz.bind(this) }),
-                this.state.showConfirm && React.createElement(ConfirmBox, { submission: this.state.showConfirm, doneSubmit: this.doneSubmit.bind(this) }),
+                this.state.showConfirm && React.createElement(ConfirmBox, _extends({ hideConfirm: function hideConfirm() {
+                        return _this2.hideConfirm();
+                    } }, this.state.showConfirm)),
                 React.createElement(
                     'div',
                     { className: (this.state.showLiveQuestion || this.state.showConfirm) && 'blur' },
                     React.createElement(HeaderPanel, null),
                     React.createElement(QuizPanel, {
+                        showConfirm: this.showConfirm.bind(this),
                         quizzes: this.state.quizzes,
                         chooseQuiz: this.chooseQuiz.bind(this),
                         toggleLiveQuiz: this.toggleLiveQuiz.bind(this) }),
                     React.createElement(QuestionPanel, {
+                        showConfirm: this.showConfirm.bind(this),
+                        hideQuiz: function hideQuiz() {
+                            return _this2.chooseQuiz(null);
+                        },
                         questions: this.state.questions,
-                        quiz: this.state.selectedQuiz && this.state.quizzes[this.state.selectedQuiz],
-                        submitQuiz: this.confirmSubmit.bind(this) })
+                        quiz: this.state.selectedQuiz && this.state.quizzes[this.state.selectedQuiz] })
                 )
             );
         }
@@ -150,29 +150,25 @@ var HeaderPanel = function (_React$Component2) {
                     username
                 ),
                 React.createElement(
-                    'form',
-                    { method: 'post' },
+                    'nav',
+                    null,
                     React.createElement(
-                        'button',
-                        { className: 'header-button', formAction: 'api/logout' },
-                        'Logout'
-                    )
-                ),
-                React.createElement(
-                    'a',
-                    { href: 'statistics' },
+                        'form',
+                        { method: 'post' },
+                        React.createElement(
+                            'button',
+                            { className: 'header-nav-link', formAction: 'api/logout' },
+                            'Logout'
+                        )
+                    ),
                     React.createElement(
-                        'button',
-                        { className: 'header-button' },
+                        'a',
+                        { href: 'statistics', className: 'header-nav-link' },
                         'Statistics'
-                    )
-                ),
-                React.createElement(
-                    'a',
-                    { href: './' },
+                    ),
                     React.createElement(
-                        'button',
-                        { className: 'header-button', id: 'selected' },
+                        'a',
+                        { href: './', className: 'header-nav-link', id: 'selected' },
                         'Home'
                     )
                 )
@@ -222,92 +218,58 @@ var LiveQuizPanel = function (_React$Component3) {
 var ConfirmBox = function (_React$Component4) {
     _inherits(ConfirmBox, _React$Component4);
 
-    function ConfirmBox(props) {
+    function ConfirmBox() {
         _classCallCheck(this, ConfirmBox);
 
-        var _this4 = _possibleConstructorReturn(this, (ConfirmBox.__proto__ || Object.getPrototypeOf(ConfirmBox)).call(this, props));
-
-        _this4.state = {
-            isSubmitting: false,
-            doneSubmitting: false
-        };
-        return _this4;
+        return _possibleConstructorReturn(this, (ConfirmBox.__proto__ || Object.getPrototypeOf(ConfirmBox)).apply(this, arguments));
     }
 
     _createClass(ConfirmBox, [{
-        key: 'cancelSubmit',
-        value: function cancelSubmit() {
-            if (!this.state.isSubmitting) {
-                this.props.doneSubmit(false);
-            }
-        }
-    }, {
-        key: 'submitQuiz',
-        value: function submitQuiz() {
-            var _this5 = this;
-
-            if (!this.state.isSubmitting) {
-                this.setState({ isSubmitting: true });
-
-                console.log(this.props.submission);
-
-                socket.send('submit_quiz', this.props.submission, function (err, data, request) {
-                    _this5.setState({ isSubmitting: false });
-
-                    if (err) {
-                        alert('Failed to submit, please trying again. Error: ' + err);
-                    } else {
-                        _this5.setState({ doneSubmitting: true });
-                    }
-                });
-            }
-        }
-    }, {
-        key: 'doneSubmitting',
-        value: function doneSubmitting() {
-            this.props.doneSubmit(true);
+        key: 'clicked',
+        value: function clicked(value) {
+            this.props.hideConfirm();
+            this.props.onAction && this.props.onAction(value);
         }
     }, {
         key: 'render',
         value: function render() {
+            var _this6 = this;
+
             return React.createElement(
                 'div',
                 { id: 'confirm-box' },
-                this.state.doneSubmitting ? React.createElement(
+                React.createElement(
+                    'p',
+                    { id: 'confirm-msg' },
+                    this.props.title
+                ),
+                this.props.type == 'yesno' ? React.createElement(
                     'div',
                     null,
                     React.createElement(
-                        'p',
-                        { id: 'confirm-msg' },
-                        'Your answers have been submitted.'
+                        'button',
+                        {
+                            onClick: function onClick() {
+                                return _this6.clicked(false);
+                            },
+                            className: 'cancel-button' },
+                        this.props.noText || 'No'
                     ),
                     React.createElement(
                         'button',
-                        { onClick: this.doneSubmitting.bind(this), id: 'ok-button' },
-                        'OK'
+                        {
+                            onClick: function onClick() {
+                                return _this6.clicked(true);
+                            },
+                            className: 'confirm-button' },
+                        this.props.yesText || 'Yes'
                     )
                 ) : React.createElement(
-                    'div',
-                    null,
-                    React.createElement(
-                        'p',
-                        { id: 'confirm-msg' },
-                        'Are you sure you want to submit this quiz?'
-                    ),
-                    React.createElement(
-                        'button',
-                        {
-                            onClick: !this.state.isSubmitting && this.cancelSubmit.bind(this),
-                            className: 'cancel-button' },
-                        'Cancel'
-                    ),
-                    React.createElement(
-                        'button',
-                        {
-                            onClick: !this.state.isSubmitting && this.submitQuiz.bind(this),
-                            className: 'submit-confirm-button' },
-                        'Submit'
-                    )
+                    'button',
+                    { onClick: function onClick() {
+                            return _this6.clicked();
+                        }, id: 'ok-button' },
+                    this.props.okText || 'Ok'
                 )
             );
         }
@@ -356,14 +318,14 @@ var QuizList = function (_React$Component6) {
     _createClass(QuizList, [{
         key: 'render',
         value: function render() {
-            var _this8 = this;
+            var _this9 = this;
 
             return React.createElement(
                 'ol',
                 { id: 'quiz-list' },
                 Object.keys(this.props.quizzes).map(function (id) {
-                    var quiz = _this8.props.quizzes[id];
-                    var chooseQuizId = _this8.props.chooseQuiz.bind(null, id);
+                    var quiz = _this9.props.quizzes[id];
+                    var chooseQuizId = _this9.props.chooseQuiz.bind(null, id);
                     return React.createElement(
                         'li',
                         { key: id, id: 'quiz-' + id, className: 'quiz' },
@@ -401,7 +363,11 @@ var QuestionPanel = function (_React$Component7) {
                     { id: 'quiz-title' },
                     this.props.quiz ? this.props.quiz.name : 'Quiz'
                 ),
-                this.props.quiz ? React.createElement(QuestionList, { quiz: this.props.quiz, questions: this.props.questions, submitQuiz: this.props.submitQuiz }) : React.createElement(
+                this.props.quiz ? React.createElement(QuestionList, {
+                    quiz: this.props.quiz,
+                    questions: this.props.questions,
+                    showConfirm: this.props.showConfirm,
+                    hideQuiz: this.props.hideQuiz }) : React.createElement(
                     'p',
                     { id: 'choose-quiz-msg' },
                     'Choose a quiz from the left side!'
@@ -419,10 +385,10 @@ var QuestionList = function (_React$Component8) {
     function QuestionList(props) {
         _classCallCheck(this, QuestionList);
 
-        var _this10 = _possibleConstructorReturn(this, (QuestionList.__proto__ || Object.getPrototypeOf(QuestionList)).call(this, props));
+        var _this11 = _possibleConstructorReturn(this, (QuestionList.__proto__ || Object.getPrototypeOf(QuestionList)).call(this, props));
 
-        _this10.answers = {};
-        return _this10;
+        _this11.answers = {};
+        return _this11;
     }
 
     _createClass(QuestionList, [{
@@ -433,15 +399,36 @@ var QuestionList = function (_React$Component8) {
     }, {
         key: 'submitClicked',
         value: function submitClicked() {
-            this.props.submitQuiz({
-                quiz_id: this.props.quiz.id,
-                answers: this.answers
+            var _this12 = this;
+
+            var title = 'Are you sure you want to submit this quiz?';
+            var answersLen = Object.keys(this.answers).length;
+            var questionsLen = this.props.quiz.questions.length;
+            if (answersLen != questionsLen) {
+                title += ' You only answered ' + answersLen + ' of the ' + questionsLen + ' questions.';
+            }
+
+            this.props.showConfirm({
+                type: 'yesno',
+                title: title,
+                onAction: function onAction(confirm) {
+                    if (confirm) {
+                        socket.send('submit_quiz', { quiz_id: _this12.props.quiz.id, answers: _this12.answers }, function (err, data) {
+                            _this12.props.showConfirm({
+                                type: 'ok',
+                                title: err ? 'Failed to submit, please trying again. Error: ' + err : 'Your answers have been submitted.'
+                            });
+
+                            _this12.props.hideQuiz();
+                        });
+                    }
+                }
             });
         }
     }, {
         key: 'render',
         value: function render() {
-            var _this11 = this;
+            var _this13 = this;
 
             return React.createElement(
                 'div',
@@ -452,8 +439,8 @@ var QuestionList = function (_React$Component8) {
                     this.props.quiz.questions.map(function (question_id) {
                         return React.createElement(Question, {
                             key: question_id,
-                            question: _this11.props.questions[question_id],
-                            answerSelected: _this11.answerSelected.bind(_this11, question_id) });
+                            question: _this13.props.questions[question_id],
+                            answerSelected: _this13.answerSelected.bind(_this13, question_id) });
                     })
                 ),
                 React.createElement(
@@ -485,7 +472,7 @@ var Question = function (_React$Component9) {
     }, {
         key: 'render',
         value: function render() {
-            var _this13 = this;
+            var _this15 = this;
 
             return React.createElement(
                 'li',
@@ -507,9 +494,9 @@ var Question = function (_React$Component9) {
                                 { key: answer + idx, className: 'answer' },
                                 React.createElement('input', {
                                     type: 'radio',
-                                    name: 'answers-' + _this13.props.question.id,
+                                    name: 'answers-' + _this15.props.question.id,
                                     value: idx,
-                                    onChange: _this13.answerSelected.bind(_this13) }),
+                                    onChange: _this15.answerSelected.bind(_this15) }),
                                 unescapeHTML(answer)
                             );
                         })

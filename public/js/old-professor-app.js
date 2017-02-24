@@ -240,32 +240,6 @@ function updateQuizzes(new_quizzes) {
     $('#quiz-list').html(html);
 }
 
-var curr_live_id = null;
-
-socket.on('login', function(success) {
-    if(success) {
-        socket.send('get_questions', function(err, questions) {
-            if(!err) {
-                updateQuestions(questions);
-            }
-        });
-
-        socket.send('get_quizzes', function(err, quizzes) {
-            if(!err) {
-                updateQuizzes(quizzes);
-            }
-        });
-
-        if(curr_live_id != null) {
-            socket.send('broadcast_live_question', curr_live_id);
-        }
-    }
-});
-
-socket.on('questions', updateQuestions);
-socket.on('quizzes', updateQuizzes);
-
-
 function createQuestion(name, answers, correct, image) {
     var cleaned_answers = [];
     answers.forEach(function(elem) {

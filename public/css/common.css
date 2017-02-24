@@ -63,33 +63,27 @@ body {
     min-width: 125px;
 }
 
-#header-panel button {
+.header-nav-link {
     background-color: #555555;
+    text-decoration: none;
     border: none;
     color: white;
     margin-top: 9px;
+    margin-right: 25px;
     padding: 15px 30px;
     text-align: center;
     font-size: 20px;
     transition-duration: .6s;
+    float: right;
 }
 
-#header-panel button:hover {
+.header-nav-link:hover {
     background-color: #3c6668;
     color: white;
 }
 
 #header-panel #selected {
     background-color: #0055AA
-}
-
-#home-button {
-    background-color: #0033EE;
-}
-
-.header-button {
-    float: right;
-    margin-right: 25px;
 }
 
 #quiz-panel, #question-panel {
@@ -265,4 +259,45 @@ ul.tab li a:focus, .active {
 
 .tabcontent {
     display: none;
+}
+
+#confirm-box {
+    text-align: center;
+    font-size: 32px;
+}
+
+.confirm-button {
+    text-align: center;
+    color: white;
+    background-color: #176d18;
+    border: none;
+    font-size: 24px;
+    float: right;
+    padding: 10px;
+    margin-right: 25%;
+    margin-bottom: 5%;
+}
+
+.cancel-button {
+    text-align: center;
+    color: white;
+    background-color: #FF0000;
+    border: none;
+    font-size: 24px;
+    float: left;
+    padding: 10px;
+    margin-left: 25%;
+    margin-bottom: 5%;
+}
+
+#ok-button {
+    text-align: center;
+    color: black;
+    background-color: #DDEEFF;
+    border: none;
+    font-size: 24px;
+    margin: auto;
+    margin-bottom: 5%;
+    padding: 10px;
+    display: block;
 }
