@@ -37,7 +37,7 @@ class Panels extends React.Component {
             if(!err) {
                 socket.emit('live_question', data);
             } else {
-                console.error('Error sending when requesting live question id: ' + err);
+                console.error('Error sending request for live question id: ' + err);
             }
         });
     }

@@ -49,7 +49,7 @@ class Panels extends React.Component {
     hideConfirm() {
         this.setState({ showConfirm: null });
     }
-    
+
     render() {
         return (
             <div>
@@ -172,7 +172,7 @@ class QuizList extends React.Component {
                 {Object.keys(this.props.quizzes).map((id) => {
                     var quiz = this.props.quizzes[id];
                     return (
-                        <li key={id} id={'quiz-' + id} className='quiz'>
+                        <li key={id} className='quiz'>
                             <button className='quiz-body' onClick={() => this.props.chooseQuiz(id)}>{unescapeHTML(quiz.name)}</button>
                             <button className="delete-button" onClick={() => this.deleteQuiz(id)}>&#10006;</button>
                             <button className="live-button" onClick={() => this.presentLive(id)}>L</button>
@@ -197,12 +197,10 @@ class QuestionPanel extends React.Component {
 class QuestionList extends React.Component {
     render() {
         return (
-            <div>
-                <ol id='question-list'>
-                    {Object.keys(this.props.questions).map((question_id) =>
-                        (<Question key={question_id} question={this.props.questions[question_id]} />))}
-                </ol>
-            </div>
+            <ol id='question-list'>
+                {Object.keys(this.props.questions).map((question_id) =>
+                    (<Question key={question_id} question={this.props.questions[question_id]} />))}
+            </ol>
         );
     }
 }
