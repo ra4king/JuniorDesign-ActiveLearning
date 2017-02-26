@@ -83,7 +83,7 @@ class HeaderPanel extends React.Component {
                     <form method='post'>
                         <button className='header-nav-link' formAction='api/logout'>Logout</button>
                     </form>
-                    <a href="settings" className='header-nav-link'>Settings</a>
+                    <a href='settings' className='header-nav-link'>Settings</a>
                     <a href='statistics' className='header-nav-link'>Statistics</a>
                     <a href='./' className='header-nav-link' id='selected'>Home</a>
                 </nav>
@@ -185,7 +185,7 @@ class QuizPanel extends React.Component {
     render() {
         return (
             <div id='quiz-panel'>
-                <button className="option-button" onClick={() => this.toggleQuizEditor()}>
+                <button className='option-button' onClick={() => this.toggleQuizEditor()}>
                     {this.state.editQuiz ? 'Cancel' : 'Create Quiz'}
                 </button>
 
@@ -321,18 +321,18 @@ class QuizEditor extends React.Component {
 
     render() {
         return (
-            <div id="quiz-creator">
-                <div id="quiz-creator-header">
-                    <div id="quiz-name">
-                        Name: <input type="text" id="quiz-name-field" value={this.state.name} onChange={this.onNameChange.bind(this)}/>
+            <div id='quiz-creator'>
+                <div id='quiz-creator-header'>
+                    <div id='quiz-name'>
+                        Name: <input type='text' id='quiz-name-field' value={this.state.name} onChange={this.onNameChange.bind(this)}/>
                     </div>
-                    <div id="submit-quiz">
-                        <button id="submit-quiz-button" onClick={this.submitQuiz.bind(this)}>{this.state.id ? 'Update' : 'Submit'}</button>
+                    <div id='submit-quiz'>
+                        <button id='submit-quiz-button' onClick={this.submitQuiz.bind(this)}>{this.state.id ? 'Update' : 'Submit'}</button>
                     </div>
                 </div>
-                <ol id="quiz-question-list" onDrop={this.onDrop.bind(this)} onDragOver={this.onDragOver.bind(this)}>
+                <ol id='quiz-question-list' onDrop={this.onDrop.bind(this)} onDragOver={this.onDragOver.bind(this)}>
                     {this.state.questions.length > 0
-                        ? this.state.questions.map((id) => (
+                        ? [this.state.questions.map((id) => (
                             <Question key={id}
                                 question={this.props.questions[id]}
                                 draggable
@@ -340,9 +340,9 @@ class QuizEditor extends React.Component {
                                 draggedOver={this.state.dragOver == id}>
 
                                 <button className='delete-button' onClick={() => this.removeQuestion(id)}>&#10006;</button>
-                            </Question>))
-                        : (<p style={{ textAlign: 'center' }}>Drag questions here!</p>)
-                    }
+                            </Question>)),
+                            (<li style={{ visibility: 'hidden', height: '100px' }}></li>)]
+                        : (<p style={{ textAlign: 'center' }}>Drag questions here!</p>)}
                 </ol>
             </div>
         );

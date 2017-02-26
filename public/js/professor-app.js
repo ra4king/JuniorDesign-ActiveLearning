@@ -509,7 +509,7 @@ var QuizEditor = function (_React$Component6) {
                 React.createElement(
                     'ol',
                     { id: 'quiz-question-list', onDrop: this.onDrop.bind(this), onDragOver: this.onDragOver.bind(this) },
-                    this.state.questions.length > 0 ? this.state.questions.map(function (id) {
+                    this.state.questions.length > 0 ? [this.state.questions.map(function (id) {
                         return React.createElement(
                             Question,
                             { key: id,
@@ -525,7 +525,7 @@ var QuizEditor = function (_React$Component6) {
                                 '\u2716'
                             )
                         );
-                    }) : React.createElement(
+                    }), React.createElement('li', { style: { visibility: 'hidden', height: '100px' } })] : React.createElement(
                         'p',
                         { style: { textAlign: 'center' } },
                         'Drag questions here!'
