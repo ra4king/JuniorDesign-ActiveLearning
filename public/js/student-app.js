@@ -68,7 +68,7 @@ var Panels = function (_React$Component) {
                 if (!err) {
                     socket.emit('live_question', data);
                 } else {
-                    console.error('Error sending when requesting live question id: ' + err);
+                    console.error('Error sending request for live question id: ' + err);
                 }
             });
         }
@@ -322,7 +322,7 @@ var QuizList = function (_React$Component6) {
 
             return React.createElement(
                 'ol',
-                { id: 'quiz-list' },
+                { className: 'quiz-list' },
                 Object.keys(this.props.quizzes).map(function (id) {
                     var quiz = _this9.props.quizzes[id];
                     var chooseQuizId = _this9.props.chooseQuiz.bind(null, id);

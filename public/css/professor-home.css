@@ -16,16 +16,15 @@
     border-radius: 10px;
 }
 
+.drag-over {
+    border: dashed 3px orange;
+}
+
 #question-creator {
-    display: none;
     margin: 10px;
     padding: 10px;
     background-color: white;
     color: black;
-}
-
-#quiz-creator {
-    display: none;
 }
 
 #quiz-creator-header {
@@ -35,7 +34,6 @@
 
 #quiz-question-list {
     position: absolute;
-    text-align: center;
     top: 90px;
     width: 100%;
     bottom: 0px;
@@ -50,18 +48,12 @@
     float: left;
 }
 
-#present-live {
-    display: inline-block;
-    margin-right: 10px;
-    float: right;
-}
-
 #submit-quiz {
     display: inline-block;
     float: right;
 }
 
-#submit-quiz-button, #present-live-button {
+#submit-quiz-button {
     background-color: #FFFFFF;
     border: none;
 }

@@ -17,42 +17,12 @@
         </script>
         <script src="js/utils.js"></script>
         <script src="js/socket.js"></script>
-        <script src="js/old-professor-app.js"></script>
         <script src="js/professor-app.js"></script>
     </head>
     <body>
         <div id="panels"></div>
-        <!-- <div id="overlay"></div>
-        <div id="live-quiz">
-            <button id="live-quiz-delete-button" onclick="toggleLiveQuiz()" class="delete-button">&#10006;</button>
-            <ol id="live-questions-list"></ol>
-        </div>
 
-        <div id="main-container">
-            <div id="header-panel">
-                <img id="logo" src="images/active_learning_logo_white.png" width="175" height="75" alt="logo"/>
-                <h2 id="name">{{username}}</h2>
-                <form method="post">
-                    <button class="header-button" formaction="api/logout">Logout</button>
-                </form>
-                <a href="settings"><button class="header-button">Settings</button></a>
-                <a href="statistics"><button class="header-button">Statistics</button></a>
-                <button class="header-button" id="selected">Home</button>
-            </div>
-
-            <div id="quiz-panel">
-                <button id="create-quiz" class="option-button" onclick="toggleQuizForm()">Create Quiz</button>
-                <div id="quiz-creator">
-                    <div id="quiz-creator-header">
-                        <div id="quiz-name">Name: <input type="text" id="quiz-name-field" /></div>
-                        <div id="submit-quiz"><button id="submit-quiz-button" onclick="createQuiz()">Submit</button></div>
-                        <div id="present-live"><button id="present-live-button" onclick="presentLiveQuiz(current_quiz.questions)">Present Live</button></div>
-                    </div>
-                    <ol id="quiz-question-list" ondrop="drop(event)" ondragover="allowDrop(event)"></ol>
-                </div>
-                <ol id="quiz-list"></ol>
-            </div>
-
+        <!-- <div id="main-container">
             <div id="question-panel">
                 <button id="create-button" class="option-button" onclick="toggleQuestionForm()">Create Question</button>
                 <ol id="question-list"></ol>

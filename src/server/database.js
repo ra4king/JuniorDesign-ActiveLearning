@@ -111,9 +111,9 @@ MongoClient.connect('mongodb://roiatalla.com:27017', function(err, db) {
         quizzes = db.collection('quizzes');
         submissions = db.collection('submissions');
 
-        users.createIndex({ username: 1 }, { unique: true });
-        sessions.createIndex({ createdAt: 1 }, { expireAfterSeconds: 30 * 24 * 60 * 60 }); // 30 days
-        submissions.createIndex({ username: 1, timestamp: 1 }, { unique: true });
+        users.createIndex({ username: 1 }, { background: true, unique: true });
+        sessions.createIndex({ username: 1, createdAt: 1 }, { background: true, expireAfterSeconds: 24 * 60 * 60 }); // 1 day
+        submissions.createIndex({ username: 1, timestamp: 1 }, { background: true, unique: true });
     });
 });
 
@@ -180,7 +180,7 @@ function create_session(username, password, callback) {
     if(!username || !password) {
         return callback('Username and password cannot be empty.');
     }
-    
+
     users.findOne({ username: username }, function(err, result) {
         if(err) {
             console.error('Error when creating session: ' + username);
@@ -625,7 +625,7 @@ function get_stats(username, callback) {
 
     submissions.find(find).sort({ username: 1, timestamp: 1 }).toArray(function(err, results) {
         if(err) {
-            console.error('Error whne getting statistics');
+            console.error('Error when getting statistics');
             console.error(err);
             return callback(err);
         }

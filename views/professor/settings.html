@@ -40,17 +40,16 @@
         <script src="js/professor-settings.js"></script>
     </head>
     <body>
-        <div id="overlay"></div>
         <div id="main-container">
             <div id="header-panel">
                 <img id="logo" src="images/active_learning_logo_white.png" width="175" height="75" alt="logo"/>
                 <h2 id="name">{{username}}</h2>
                 <form method="post">
-                    <button class="header-button" formaction="api/logout">Logout</button>
+                    <button class="header-nav-link" formaction="api/logout">Logout</button>
                 </form>
-                <button class="header-button" id="selected">Settings</button>
-                <a href="statistics"><button class="header-button">Statistics</button></a>
-                <a href="./"><button class="header-button">Home</button></a>
+                <button class="header-nav-link" id="selected">Settings</button>
+                <a href="statistics"><button class="header-nav-link">Statistics</button></a>
+                <a href="./"><button class="header-nav-link">Home</button></a>
             </div>
 
             <div class="panel" id="student-panel">

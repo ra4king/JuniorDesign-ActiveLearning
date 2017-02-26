@@ -158,7 +158,7 @@ class QuizPanel extends React.Component {
 class QuizList extends React.Component {
     render() {
         return (
-            <ol id='quiz-list'>
+            <ol className='quiz-list'>
                 {Object.keys(this.props.quizzes).map((id) => {
                     var quiz = this.props.quizzes[id];
                     var chooseQuizId = this.props.chooseQuiz.bind(null, id);

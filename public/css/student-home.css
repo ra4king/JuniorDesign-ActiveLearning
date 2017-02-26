@@ -1,3 +1,7 @@
+#live-question {
+    list-style-type: none;
+}
+
 #live-question-msg {
     margin: 25px 0 10px 0;
     text-align: center;
