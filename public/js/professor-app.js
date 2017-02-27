@@ -594,10 +594,12 @@ var Quiz = function (_React$Component8) {
                 onAction: function onAction(choice) {
                     if (choice) {
                         socket.send('delete_quiz', _this16.props.quiz.id, function (err, data) {
-                            _this16.props.showConfirm({
-                                type: 'ok',
-                                title: err || 'Quiz deleted'
-                            });
+                            if (err) {
+                                _this16.props.showConfirm({
+                                    type: 'ok',
+                                    title: err
+                                });
+                            }
                         });
                     }
                 } });
@@ -703,7 +705,7 @@ var QuestionEditor = function (_React$Component10) {
     }, {
         key: 'changeAnswer',
         value: function changeAnswer(idx, e) {
-            var value = e.target.value.trim();
+            var value = e.target.value;
             this.setState(function (prevState) {
                 var answers = prevState.answers.slice();
                 answers[idx] = String(value);
@@ -774,8 +776,12 @@ var QuestionEditor = function (_React$Component10) {
         value: function submitQuestion() {
             var _this20 = this;
 
-            if (this.state.answers.findIndex(function (elem) {
-                return !elem.trim();
+            var answers = this.state.answers.map(function (elem) {
+                return elem.trim();
+            });
+
+            if (answers.findIndex(function (elem) {
+                return !elem;
             }) != -1) {
                 this.props.showConfirm({
                     type: 'ok',
@@ -787,7 +793,7 @@ var QuestionEditor = function (_React$Component10) {
 
             socket.send('create_question', {
                 name: this.state.title,
-                answers: this.state.answers,
+                answers: answers,
                 correct: String(this.state.correct),
                 image: this.state.image || undefined
             }, function (err) {
@@ -901,10 +907,12 @@ var QuestionList = function (_React$Component11) {
                 onAction: function onAction(choice) {
                     if (choice) {
                         socket.send('delete_question', id, function (err, data) {
-                            _this23.props.showConfirm({
-                                type: 'ok',
-                                title: err || 'Question deleted'
-                            });
+                            if (err) {
+                                _this23.props.showConfirm({
+                                    type: 'ok',
+                                    title: err
+                                });
+                            }
                         });
                     }
                 } });

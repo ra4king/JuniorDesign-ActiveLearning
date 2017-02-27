@@ -376,10 +376,12 @@ class Quiz extends React.Component {
             onAction: (choice) => {
             if(choice) {
                 socket.send('delete_quiz', this.props.quiz.id, (err, data) => {
-                    this.props.showConfirm({
-                        type: 'ok',
-                        title: err || 'Quiz deleted'
-                    });
+                    if(err) {
+                        this.props.showConfirm({
+                            type: 'ok',
+                            title: err
+                        });
+                    }
                 });
             }
         }});
@@ -451,7 +453,7 @@ class QuestionEditor extends React.Component {
     }
 
     changeAnswer(idx, e) {
-        var value = e.target.value.trim();
+        var value = e.target.value;
         this.setState((prevState) => {
             var answers = prevState.answers.slice();
             answers[idx] = String(value);
@@ -512,7 +514,9 @@ class QuestionEditor extends React.Component {
     }
 
     submitQuestion() {
-        if(this.state.answers.findIndex((elem) => !elem.trim()) != -1) {
+        var answers = this.state.answers.map((elem) => elem.trim());
+
+        if(answers.findIndex((elem) => !elem) != -1) {
             this.props.showConfirm({
                 type: 'ok',
                 title: 'Cannot have a blank answer field.'
@@ -523,7 +527,7 @@ class QuestionEditor extends React.Component {
 
         socket.send('create_question', {
             name: this.state.title,
-            answers: this.state.answers,
+            answers: answers,
             correct: String(this.state.correct),
             image: this.state.image || undefined
         }, (err) => {
@@ -595,10 +599,12 @@ class QuestionList extends React.Component {
             onAction: (choice) => {
             if(choice) {
                 socket.send('delete_question', id, (err, data) => {
-                    this.props.showConfirm({
-                        type: 'ok',
-                        title: err || 'Question deleted'
-                    });
+                    if(err) {
+                        this.props.showConfirm({
+                            type: 'ok',
+                            title: err
+                        });
+                    }
                 });
             }
         }});
