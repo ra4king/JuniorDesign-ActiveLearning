@@ -450,13 +450,28 @@ function create_quiz(quiz, callback) {
         return callback('Invalid quiz object.');
     }
 
-    quizzes.insertOne(quiz, function(err, result) {
-        if(err) {
-            console.error('Error when creating quiz: ' + quiz);
-            console.error(err);
-        }
+    var ids = quiz.questions.map(function(id) {
+        return new ObjectID(id);
+    });
 
-        callback(err);
+    questions.find({ _id: { $in: ids }}).toArray(function(err, results) {
+        var verifiedIds = [];
+        quiz.questions.forEach(function(id) {
+            if(results.findIndex(function(result) { return result._id.toHexString() === id }) != -1) {
+                verifiedIds.push(id);
+            }
+        });
+
+        quiz.questions = verifiedIds;
+
+        quizzes.insertOne(quiz, function(err, result) {
+            if(err) {
+                console.error('Error when creating quiz: ' + quiz);
+                console.error(err);
+            }
+
+            callback(err);
+        });
     });
 }
 
@@ -465,19 +480,34 @@ function update_quiz(quiz, callback) {
         return callback('Not connected to database.');
     }
 
-    var id = quiz.id;
+    var quiz_id = quiz.id;
     quiz = validate_quiz(quiz);
     if(!quiz) {
         return callback('Invalid quiz object.');
     }
 
-    quizzes.updateOne({ _id: new ObjectID(id) }, { $set: quiz }, function(err, result) {
-        if(err) {
-            console.error('Error when updating quiz: ' + quiz);
-            console.error(err);
-        }
+    var ids = quiz.questions.map(function(id) {
+        return new ObjectID(id);
+    });
 
-        callback(err);
+    questions.find({ _id: { $in: ids }}).toArray(function(err, results) {
+        var verifiedIds = [];
+        quiz.questions.forEach(function(id) {
+            if(results.findIndex(function(result) { return result._id.toHexString() === id }) != -1) {
+                verifiedIds.push(id);
+            }
+        });
+
+        quiz.questions = verifiedIds;
+
+        quizzes.updateOne({ _id: new ObjectID(quiz_id) }, { $set: quiz }, function(err, result) {
+            if(err) {
+                console.error('Error when updating quiz: ' + quiz);
+                console.error(err);
+            }
+
+            callback(err);
+        });
     });
 }
 
