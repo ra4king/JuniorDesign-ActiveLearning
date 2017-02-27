@@ -1,0 +1,54 @@
+#statistics-panel {
+    position: absolute;
+    overflow: hidden;
+    background-color: #2C2C2C;
+    color: white;
+    width: 98.5%;
+    top: 100px;
+    bottom: 8px;
+    left: 10px;
+}
+#statistics-chart {
+    position: absolute;
+    overflow: hidden;
+    background-color: #2C2C2C;
+}
+#student-panel {
+    width: 15%;
+    left: 10px;
+}
+#student-list, #quiz-list{
+    width: 50%;
+    text-align: center;
+}
+
+#student-list {
+    display: table;
+}
+ul.tab {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid #000000;
+    background-color: #CCCCCC;
+}
+ul.tab li {
+    float: left;
+    width: 100%;
+}
+ul.tab li a {
+    display: block;
+    color: black;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    transition: 0.3s;
+    font-size: 17px;
+}
+ul.tab li a:hover {
+    background-color: #DDDDDD;
+}
+ul.tab li a:focus, .active {
+    background-color: #CCCCCC;
+}
