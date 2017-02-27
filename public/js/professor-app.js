@@ -776,6 +776,15 @@ var QuestionEditor = function (_React$Component10) {
         value: function submitQuestion() {
             var _this20 = this;
 
+            var title = this.state.title.trim();
+            if (!title) {
+                this.props.showConfirm({
+                    type: 'ok',
+                    title: 'Question title cannot be empty.'
+                });
+                return;
+            }
+
             var answers = this.state.answers.map(function (elem) {
                 return elem.trim();
             });
@@ -787,7 +796,6 @@ var QuestionEditor = function (_React$Component10) {
                     type: 'ok',
                     title: 'Cannot have a blank answer field.'
                 });
-
                 return;
             }
 

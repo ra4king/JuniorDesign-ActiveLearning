@@ -514,6 +514,15 @@ class QuestionEditor extends React.Component {
     }
 
     submitQuestion() {
+        var title = this.state.title.trim();
+        if(!title) {
+            this.props.showConfirm({
+                type: 'ok',
+                title: 'Question title cannot be empty.'
+            });
+            return;
+        }
+
         var answers = this.state.answers.map((elem) => elem.trim());
 
         if(answers.findIndex((elem) => !elem) != -1) {
@@ -521,7 +530,6 @@ class QuestionEditor extends React.Component {
                 type: 'ok',
                 title: 'Cannot have a blank answer field.'
             });
-
             return;
         }
 
