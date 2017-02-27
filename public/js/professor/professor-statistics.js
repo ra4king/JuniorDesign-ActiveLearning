@@ -128,21 +128,8 @@ var SidePanel = function (_React$Component2) {
 
         var _this2 = _possibleConstructorReturn(this, (SidePanel.__proto__ || Object.getPrototypeOf(SidePanel)).call(this, props));
 
-        var statistics = props.statistics;
-
-        var quizNames = [];
-        for (var username in statistics) {
-            for (var quiz_id in statistics[username]) {
-                var quizName = statistics[username][quiz_id].name;
-                if (quizNames.indexOf(quizName) == -1) {
-                    quizNames.push(quizName);
-                }
-            }
-        }
-
         _this2.state = {
-            showStudents: true,
-            quizzes: quizNames
+            showStudents: true
         };
         return _this2;
     }
@@ -158,6 +145,23 @@ var SidePanel = function (_React$Component2) {
         value: function showQuizzes() {
             this.setState({ showStudents: false });
             this.props.showAllQuizStats();
+        }
+    }, {
+        key: 'getAllQuizNames',
+        value: function getAllQuizNames() {
+            var statistics = this.props.statistics;
+
+            var quizNames = [];
+            for (var username in statistics) {
+                for (var quiz_id in statistics[username]) {
+                    var quizName = statistics[username][quiz_id].name;
+                    if (quizNames.indexOf(quizName) == -1) {
+                        quizNames.push(quizName);
+                    }
+                }
+            }
+
+            return quizNames;
         }
     }, {
         key: 'render',
@@ -245,7 +249,7 @@ var SidePanel = function (_React$Component2) {
                     React.createElement(
                         'tbody',
                         { id: 'quiz-buttons' },
-                        this.state.quizzes.map(function (quizName, idx) {
+                        this.getAllQuizNames().map(function (quizName, idx) {
                             return React.createElement(
                                 'tr',
                                 { key: idx + '-' + quizName },

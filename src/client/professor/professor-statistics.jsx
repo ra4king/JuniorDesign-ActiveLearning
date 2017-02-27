@@ -101,21 +101,8 @@ class SidePanel extends React.Component {
     constructor(props) {
         super(props);
 
-        var statistics = props.statistics;
-
-        var quizNames = [];
-        for(var username in statistics) {
-            for(var quiz_id in statistics[username]) {
-                var quizName = statistics[username][quiz_id].name;
-                if(quizNames.indexOf(quizName) == -1) {
-                    quizNames.push(quizName);
-                }
-            }
-        }
-
         this.state = {
-            showStudents: true,
-            quizzes: quizNames
+            showStudents: true
         }
     }
 
@@ -127,6 +114,22 @@ class SidePanel extends React.Component {
     showQuizzes() {
         this.setState({ showStudents: false });
         this.props.showAllQuizStats();
+    }
+
+    getAllQuizNames() {
+        var statistics = this.props.statistics;
+
+        var quizNames = [];
+        for(var username in statistics) {
+            for(var quiz_id in statistics[username]) {
+                var quizName = statistics[username][quiz_id].name;
+                if(quizNames.indexOf(quizName) == -1) {
+                    quizNames.push(quizName);
+                }
+            }
+        }
+
+        return quizNames;
     }
 
     render() {
@@ -167,7 +170,7 @@ class SidePanel extends React.Component {
                             <tr><th>Quizzes</th></tr>
                         </thead>
                         <tbody id='quiz-buttons'>
-                            {this.state.quizzes.map((quizName, idx) => (
+                            {this.getAllQuizNames().map((quizName, idx) => (
                                 <tr key={idx + '-' + quizName}>
                                     <td>
                                         <button className='list-button' onClick={() => this.props.showQuizStats(quizName)}>
