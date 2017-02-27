@@ -3,147 +3,23 @@
     <head>
         <meta charset="UTF-8">
 
-        <title>Active Learning Tool - Professor Settings</title>
+        <title>Active Learning Tool - Settings</title>
         <link rel="icon" type="image/png" href="images/active_learning_logo_icon.png" />
         <link rel="stylesheet" type="text/css" href="css/common.css" />
-        <style type="text/css">
-            .draggable {
-                border: dashed 1px red;
-                border-radius: 10px;
-            }
+        <link rel="stylesheet" type="text/css" href="css/professor-settings.css" />
 
-            #permission-panel {
-                width: 65%;
-                right: 10px;
-            }
+        <script src="https://unpkg.com/react@15/dist/react.js"></script>
+        <script src="https://unpkg.com/react-dom@15/dist/react-dom.js"></script>
 
-            #student-list, #ta-list{
-                width: 100%;
-                text-align: center;
-            }
-
-            #student-list {
-                display: table;
-            }
-
-            #make-ta-button {
-                margin-left: 45%;
-                width: 10%;
-            }
-
-            .panel {
-                position: absolute;
-                overflow: auto;
-                background-color: #2C2C2C;
-                color: white;
-                top: 100px;
-                bottom: 8px;
-            }
-
-            #student-panel {
-                width: 30%;
-                left: 10px;
-            }
-
-            table.sortable thead {
-                background-color:#eee;
-                color:#000000;
-                font-weight: bold;
-                cursor: default;
-            }
-
-            .list-button {
-                width: 100%;
-                text-align: center;
-                color: white;
-                background-color: #222222;
-                border: 1px solid #111111;
-            }
-
-            .list-button:hover {
-                background-color: #333333;
-            }
-
-            ul.tab {
-                list-style-type: none;
-                margin: 0;
-                padding: 0;
-                overflow: hidden;
-                border: 1px solid #000000;
-                background-color: #444444;
-            }
-
-            ul.tab li {
-                float: left;
-                width: 50%;
-            }
-
-            ul.tab li a {
-                display: block;
-                color: black;
-                text-align: center;
-                padding: 14px 16px;
-                text-decoration: none;
-                transition: 0.3s;
-                font-size: 17px;
-            }
-
-            ul.tab li a:hover {
-                background-color: #DDDDDD;
-            }
-
-            ul.tab li a:focus, .active {
-                background-color: #CCCCCC;
-            }
-
-            .tabcontent {
-                display: none;
-            }
-        </style>
-        <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
         <script src="js/sorttable.js"></script>
         <script src="js/utils.js"></script>
         <script type="text/javascript">
+            var username = '{{username}}';
             var users = {{{users}}};
         </script>
         <script src="js/professor-settings.js"></script>
     </head>
     <body>
-        <div id="main-container">
-            <div id="header-panel">
-                <img id="logo" src="images/active_learning_logo_white.png" width="175" height="75" alt="logo"/>
-                <h2 id="name">{{username}}</h2>
-                <form method="post">
-                    <button class="header-nav-link" formaction="api/logout">Logout</button>
-                </form>
-                <button class="header-nav-link" id="selected">Settings</button>
-                <a href="statistics"><button class="header-nav-link">Statistics</button></a>
-                <a href="./"><button class="header-nav-link">Home</button></a>
-            </div>
-
-            <div class="panel" id="student-panel">
-                <ul class="tab">
-                    <li><a href="javascript:void(0)" class="tablinks active" onclick="openTab(event, 'student-list')">Students</a></li>
-                    <li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'ta-list')">TAs</a></li>
-                </ul>
-                <table class="sortable tabcontent" id="student-list">
-                    <thead>
-                        <tr><th>Users</th></tr>
-                    </thead>
-                    <tbody id="student-buttons"></tbody>
-                </table>
-                <table class="sortable tabcontent" id="ta-list">
-                    <thead>
-                        <tr><th>Teaching Assistants</th></tr>
-                    </thead>
-                    <tbody id="ta-buttons"></tbody>
-                </table>
-            </div>
-
-            <div class="panel" id="permission-panel">
-                <p>What else are we going to put here?</p>
-                <button id="make-ta-button">Make a TA</button>
-            </div>
-        </div>
+        <div id="panels"></div>
     </body>
 </html>
