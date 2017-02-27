@@ -8,10 +8,6 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-window.onload = function () {
-    ReactDOM.render(React.createElement(StatisticsPanels, { statistics: statistics }), document.getElementById('panels'));
-};
-
 /* JSON Object I want
 statistics = {
     ...
@@ -35,10 +31,27 @@ statistics = {
 var StatisticsPanels = function (_React$Component) {
     _inherits(StatisticsPanels, _React$Component);
 
-    function StatisticsPanels() {
+    function StatisticsPanels(props) {
         _classCallCheck(this, StatisticsPanels);
 
-        return _possibleConstructorReturn(this, (StatisticsPanels.__proto__ || Object.getPrototypeOf(StatisticsPanels)).apply(this, arguments));
+        var _this = _possibleConstructorReturn(this, (StatisticsPanels.__proto__ || Object.getPrototypeOf(StatisticsPanels)).call(this, props));
+
+        props.setPage('statistics');
+
+        _this.state = {
+            statistics: {}
+        };
+
+        socket.on('login', function (user) {
+            socket.send('get_stats', function (err, stats) {
+                if (err) {
+                    console.error('Error getting stats: ' + err);
+                } else {
+                    _this.setState({ statistics: stats[user.username] });
+                }
+            });
+        });
+        return _this;
     }
 
     _createClass(StatisticsPanels, [{
@@ -47,8 +60,7 @@ var StatisticsPanels = function (_React$Component) {
             return React.createElement(
                 'div',
                 null,
-                React.createElement(HeaderPanel, null),
-                React.createElement(GraphPanel, { statistics: this.props.statistics })
+                React.createElement(GraphPanel, { statistics: this.state.statistics })
             );
         }
     }]);
@@ -56,59 +68,8 @@ var StatisticsPanels = function (_React$Component) {
     return StatisticsPanels;
 }(React.Component);
 
-var HeaderPanel = function (_React$Component2) {
-    _inherits(HeaderPanel, _React$Component2);
-
-    function HeaderPanel() {
-        _classCallCheck(this, HeaderPanel);
-
-        return _possibleConstructorReturn(this, (HeaderPanel.__proto__ || Object.getPrototypeOf(HeaderPanel)).apply(this, arguments));
-    }
-
-    _createClass(HeaderPanel, [{
-        key: 'render',
-        value: function render() {
-            return React.createElement(
-                'div',
-                { id: 'header-panel' },
-                React.createElement('img', { id: 'logo', src: 'images/active_learning_logo_white.png', width: '175', height: '75', alt: 'logo' }),
-                React.createElement(
-                    'h2',
-                    { id: 'name' },
-                    username
-                ),
-                React.createElement(
-                    'nav',
-                    null,
-                    React.createElement(
-                        'form',
-                        { method: 'post' },
-                        React.createElement(
-                            'button',
-                            { className: 'header-nav-link', formAction: 'api/logout' },
-                            'Logout'
-                        )
-                    ),
-                    React.createElement(
-                        'a',
-                        { href: 'statistics', className: 'header-nav-link', id: 'selected' },
-                        'Statistics'
-                    ),
-                    React.createElement(
-                        'a',
-                        { href: './', className: 'header-nav-link' },
-                        'Home'
-                    )
-                )
-            );
-        }
-    }]);
-
-    return HeaderPanel;
-}(React.Component);
-
-var GraphPanel = function (_React$Component3) {
-    _inherits(GraphPanel, _React$Component3);
+var GraphPanel = function (_React$Component2) {
+    _inherits(GraphPanel, _React$Component2);
 
     function GraphPanel() {
         _classCallCheck(this, GraphPanel);
@@ -119,6 +80,8 @@ var GraphPanel = function (_React$Component3) {
     _createClass(GraphPanel, [{
         key: 'setupChart',
         value: function setupChart(canvas) {
+            this.canvas = this.canvas || canvas;
+
             var statistics = this.props.statistics;
 
             var quizNames = [];
@@ -150,7 +113,7 @@ var GraphPanel = function (_React$Component3) {
                 this.chart.destroy();
             }
 
-            this.chart = new Chart(canvas, {
+            this.chart = new Chart(this.canvas, {
                 type: 'bar',
                 data: info,
                 options: {

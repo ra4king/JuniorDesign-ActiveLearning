@@ -6,10 +6,24 @@ window.onload = () => {
         }
     });
 
-    ReactDOM.render(<Panels />, document.getElementById('panels'));
+    var ReactRouter = window.ReactRouter;
+    var Router = ReactRouter.Router;
+    var Route = ReactRouter.Route;
+    var IndexRoute = ReactRouter.IndexRoute;
+    var browserHistory = ReactRouter.browserHistory;
+
+    ReactDOM.render(
+        <Router history={browserHistory}>
+            <Route path='/active-learning/' component={App}>
+                <IndexRoute component={Panels} page='home' />
+                <Route path='/active-learning/statistics' component={StatisticsPanels} page='statistics' />
+                <Route path='/active-learning/settings' component={SettingsPanels} page='settings' />
+            </Route>
+        </Router>,
+        document.getElementById('panels'));
 }
 
-class Panels extends React.Component {
+class App extends React.Component {
     constructor(props) {
         super(props);
 
@@ -40,6 +54,10 @@ class Panels extends React.Component {
         this.setState({ showConfirm: null });
     }
 
+    setPage(page) {
+        setTimeout(() => this.setState({ page: page }), 1);
+    }
+
     render() {
         return (
             <div>
@@ -56,17 +74,16 @@ class Panels extends React.Component {
                     <ConfirmBox hide={() => this.hideConfirm()} {...this.state.showConfirm} />}
 
                 <div className={(this.state.currentLiveQuiz || this.state.showConfirm) && 'blur'}>
-                    <HeaderPanel />
+                    <HeaderPanel page={this.state.page} />
 
-                    <QuizPanel
-                        showConfirm={this.showConfirm.bind(this)}
-                        questions={this.state.questions}
-                        quizzes={this.state.quizzes}
-                        presentLive={this.presentLive.bind(this)} />
-
-                    <QuestionPanel
-                        showConfirm={this.showConfirm.bind(this)}
-                        questions={this.state.questions} />
+                    {React.Children.map(this.props.children, (child) =>
+                        React.cloneElement(child, {
+                            setPage: this.setPage.bind(this),
+                            showConfirm: this.showConfirm.bind(this),
+                            questions: this.state.questions,
+                            quizzes: this.state.quizzes,
+                            presentLive: this.presentLive.bind(this)
+                        }))}
                 </div>
             </div>
         );
@@ -74,18 +91,34 @@ class Panels extends React.Component {
 }
 
 class HeaderPanel extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            username: ''
+        }
+
+        socket.on('login', (user) => {
+            if(user) {
+                this.setState({ username: user.username });
+            }
+        });
+    }
+
     render() {
+        var isSelected = (page) => page == this.props.page ? 'selected' : '';
+
         return (
             <div id='header-panel'>
                 <img id='logo' src='images/active_learning_logo_white.png' width='175' height='75' alt='logo'/>
-                <h2 id='name'>{username}</h2>
+                <h2 id='name'>{this.state.username}</h2>
                 <nav>
                     <form method='post'>
                         <button className='header-nav-link' formAction='api/logout'>Logout</button>
                     </form>
-                    <a href='settings' className='header-nav-link'>Settings</a>
-                    <a href='statistics' className='header-nav-link'>Statistics</a>
-                    <a href='./' className='header-nav-link' id='selected'>Home</a>
+                    <a href='settings' className='header-nav-link' id={isSelected('settings')}>Settings</a>
+                    <a href='statistics' className='header-nav-link' id={isSelected('statistics')}>Statistics</a>
+                    <a href='./' className='header-nav-link'  id={isSelected('home')}>Home</a>
                 </nav>
             </div>
         );
@@ -156,6 +189,30 @@ class ConfirmBox extends React.Component {
                         <button onClick={() => this.clicked(true)} className='confirm-button'>{this.props.yesText || 'Yes'}</button>
                     </div>) :
                     (<button onClick={() => this.clicked()} id='ok-button'>{this.props.okText || 'Ok'}</button>)}
+            </div>
+        );
+    }
+}
+
+class Panels extends React.Component {
+    constructor(props) {
+        super(props);
+
+        props.setPage('home');
+    }
+    
+    render() {
+        return (
+            <div>
+                <QuizPanel
+                    showConfirm={this.props.showConfirm}
+                    questions={this.props.questions}
+                    quizzes={this.props.quizzes}
+                    presentLive={this.props.presentLive} />
+
+                <QuestionPanel
+                    showConfirm={this.props.showConfirm}
+                    questions={this.props.questions} />
             </div>
         );
     }

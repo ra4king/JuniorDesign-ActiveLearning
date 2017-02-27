@@ -38,14 +38,14 @@ var socket = new function() {
             websocket = s;
             console.log('Connected to server!');
 
-            thisSocket.send('login', session_id, function(err) {
+            thisSocket.send('login', session_id, function(err, user) {
                 if(err) {
                     console.error('Failed to authenticate to API.');
                 } else {
                     console.log('Successfully logged in.');
                 }
 
-                thisSocket.emit('login', !err);
+                thisSocket.emit('login', user);
             });
         };
         s.onmessage = function(msg) {

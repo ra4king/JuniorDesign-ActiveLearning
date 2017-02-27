@@ -8,10 +8,6 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-window.onload = function () {
-    ReactDOM.render(React.createElement(SettingsPanels, { users: users }), document.getElementById('panels'));
-};
-
 var SettingsPanels = function (_React$Component) {
     _inherits(SettingsPanels, _React$Component);
 
@@ -20,9 +16,22 @@ var SettingsPanels = function (_React$Component) {
 
         var _this = _possibleConstructorReturn(this, (SettingsPanels.__proto__ || Object.getPrototypeOf(SettingsPanels)).call(this, props));
 
+        props.setPage('settings');
+
         _this.state = {
+            users: [],
             selectedUser: null
         };
+
+        socket.on('login', function (success) {
+            socket.send('get_users', function (err, users) {
+                if (err) {
+                    console.error('Error getting users: ' + err);
+                } else {
+                    _this.setState({ users: users });
+                }
+            });
+        });
         return _this;
     }
 
@@ -37,9 +46,8 @@ var SettingsPanels = function (_React$Component) {
             return React.createElement(
                 'div',
                 null,
-                React.createElement(HeaderPanel, null),
-                React.createElement(StudentPanel, { users: this.props.users, selectUser: this.selectUser.bind(this) }),
-                React.createElement(PermissionPanel, { users: this.props.users, selectedUser: this.state.selectedUser })
+                React.createElement(StudentPanel, { users: this.state.users, selectUser: this.selectUser.bind(this) }),
+                React.createElement(PermissionPanel, { users: this.state.users, selectedUser: this.state.selectedUser })
             );
         }
     }]);
@@ -47,74 +55,18 @@ var SettingsPanels = function (_React$Component) {
     return SettingsPanels;
 }(React.Component);
 
-var HeaderPanel = function (_React$Component2) {
-    _inherits(HeaderPanel, _React$Component2);
-
-    function HeaderPanel() {
-        _classCallCheck(this, HeaderPanel);
-
-        return _possibleConstructorReturn(this, (HeaderPanel.__proto__ || Object.getPrototypeOf(HeaderPanel)).apply(this, arguments));
-    }
-
-    _createClass(HeaderPanel, [{
-        key: 'render',
-        value: function render() {
-            return React.createElement(
-                'div',
-                { id: 'header-panel' },
-                React.createElement('img', { id: 'logo', src: 'images/active_learning_logo_white.png', width: '175', height: '75', alt: 'logo' }),
-                React.createElement(
-                    'h2',
-                    { id: 'name' },
-                    username
-                ),
-                React.createElement(
-                    'nav',
-                    null,
-                    React.createElement(
-                        'form',
-                        { method: 'post' },
-                        React.createElement(
-                            'button',
-                            { className: 'header-nav-link', formAction: 'api/logout' },
-                            'Logout'
-                        )
-                    ),
-                    React.createElement(
-                        'a',
-                        { href: 'settings', className: 'header-nav-link', id: 'selected' },
-                        'Settings'
-                    ),
-                    React.createElement(
-                        'a',
-                        { href: 'statistics', className: 'header-nav-link' },
-                        'Statistics'
-                    ),
-                    React.createElement(
-                        'a',
-                        { href: './', className: 'header-nav-link' },
-                        'Home'
-                    )
-                )
-            );
-        }
-    }]);
-
-    return HeaderPanel;
-}(React.Component);
-
-var StudentPanel = function (_React$Component3) {
-    _inherits(StudentPanel, _React$Component3);
+var StudentPanel = function (_React$Component2) {
+    _inherits(StudentPanel, _React$Component2);
 
     function StudentPanel(props) {
         _classCallCheck(this, StudentPanel);
 
-        var _this3 = _possibleConstructorReturn(this, (StudentPanel.__proto__ || Object.getPrototypeOf(StudentPanel)).call(this, props));
+        var _this2 = _possibleConstructorReturn(this, (StudentPanel.__proto__ || Object.getPrototypeOf(StudentPanel)).call(this, props));
 
-        _this3.state = {
+        _this2.state = {
             showStudents: true
         };
-        return _this3;
+        return _this2;
     }
 
     _createClass(StudentPanel, [{
@@ -130,7 +82,7 @@ var StudentPanel = function (_React$Component3) {
     }, {
         key: 'render',
         value: function render() {
-            var _this4 = this;
+            var _this3 = this;
 
             return React.createElement(
                 'div',
@@ -186,7 +138,7 @@ var StudentPanel = function (_React$Component3) {
                                     React.createElement(
                                         'button',
                                         { className: 'list-button', onClick: function onClick() {
-                                                return _this4.props.selectUser(user);
+                                                return _this3.props.selectUser(user);
                                             } },
                                         unescapeHTML(user.username)
                                     )
@@ -219,8 +171,8 @@ var StudentPanel = function (_React$Component3) {
     return StudentPanel;
 }(React.Component);
 
-var PermissionPanel = function (_React$Component4) {
-    _inherits(PermissionPanel, _React$Component4);
+var PermissionPanel = function (_React$Component3) {
+    _inherits(PermissionPanel, _React$Component3);
 
     function PermissionPanel() {
         _classCallCheck(this, PermissionPanel);

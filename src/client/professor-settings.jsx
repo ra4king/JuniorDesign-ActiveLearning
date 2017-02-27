@@ -1,14 +1,23 @@
-window.onload = () => {
-    ReactDOM.render(<SettingsPanels users={users} />, document.getElementById('panels'));
-}
-
 class SettingsPanels extends React.Component {
     constructor(props) {
         super(props);
 
+        props.setPage('settings');
+
         this.state = {
+            users: [],
             selectedUser: null,
         }
+
+        socket.on('login', (success) => {
+            socket.send('get_users', (err, users) => {
+                if(err) {
+                    console.error('Error getting users: ' + err);
+                } else {
+                    this.setState({ users: users });
+                }
+            });
+        });
     }
 
     selectUser(user) {
@@ -18,30 +27,9 @@ class SettingsPanels extends React.Component {
     render() {
         return (
             <div>
-                <HeaderPanel />
+                <StudentPanel users={this.state.users} selectUser={this.selectUser.bind(this)} />
 
-                <StudentPanel users={this.props.users} selectUser={this.selectUser.bind(this)} />
-
-                <PermissionPanel users={this.props.users} selectedUser={this.state.selectedUser} />
-            </div>
-        );
-    }
-}
-
-class HeaderPanel extends React.Component {
-    render() {
-        return (
-            <div id='header-panel'>
-                <img id='logo' src='images/active_learning_logo_white.png' width='175' height='75' alt='logo'/>
-                <h2 id='name'>{username}</h2>
-                <nav>
-                    <form method='post'>
-                        <button className='header-nav-link' formAction='api/logout'>Logout</button>
-                    </form>
-                    <a href='settings' className='header-nav-link' id='selected'>Settings</a>
-                    <a href='statistics' className='header-nav-link'>Statistics</a>
-                    <a href='./' className='header-nav-link'>Home</a>
-                </nav>
+                <PermissionPanel users={this.state.users} selectedUser={this.state.selectedUser} />
             </div>
         );
     }

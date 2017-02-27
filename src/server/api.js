@@ -95,7 +95,7 @@ module.exports = function(base_url, server, database) {
 
                     connections[session_id] = { send: send, socket: socket, session_id: session_id, user: user };
 
-                    reply();
+                    reply(null, user);
                 });
             }
 
@@ -114,6 +114,17 @@ module.exports = function(base_url, server, database) {
             }
 
             switch(data.command) {
+                case 'get_users':
+                    if(!verifyAdmin()) return;
+                    database.get_all_users(reply);
+                    break;
+                case 'get_stats':
+                    if(user_data.admin) {
+                        database.get_stats(reply);
+                    } else {
+                        database.get_stats(user_data.username, reply);
+                    }
+                    break;
                 case 'create_question':
                     if(!verifyAdmin()) return;
 

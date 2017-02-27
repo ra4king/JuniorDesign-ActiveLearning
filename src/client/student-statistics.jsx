@@ -1,7 +1,3 @@
-window.onload = () => {
-    ReactDOM.render(<StatisticsPanels statistics={statistics}/>, document.getElementById('panels'));
-}
-
 /* JSON Object I want
 statistics = {
     ...
@@ -22,32 +18,31 @@ statistics = {
 }
 */
 
-
 class StatisticsPanels extends React.Component {
+    constructor(props) {
+        super(props);
+
+        props.setPage('statistics');
+
+        this.state = {
+            statistics: {}
+        }
+
+        socket.on('login', (user) => {
+            socket.send('get_stats', (err, stats) => {
+                if(err) {
+                    console.error('Error getting stats: ' + err);
+                } else {
+                    this.setState({ statistics: stats[user.username] });
+                }
+            });
+        });
+    }
+
     render() {
         return (
             <div>
-                <HeaderPanel />
-
-                <GraphPanel statistics={this.props.statistics} />
-            </div>
-        );
-    }
-}
-
-class HeaderPanel extends React.Component {
-    render() {
-        return (
-            <div id='header-panel'>
-                <img id='logo' src='images/active_learning_logo_white.png' width='175' height='75' alt='logo'/>
-                <h2 id='name'>{username}</h2>
-                <nav>
-                    <form method='post'>
-                        <button className='header-nav-link' formAction='api/logout'>Logout</button>
-                    </form>
-                    <a href='statistics' className='header-nav-link' id='selected'>Statistics</a>
-                    <a href='./' className='header-nav-link'>Home</a>
-                </nav>
+                <GraphPanel statistics={this.state.statistics} />
             </div>
         );
     }
@@ -55,6 +50,8 @@ class HeaderPanel extends React.Component {
 
 class GraphPanel extends React.Component {
     setupChart(canvas) {
+        this.canvas = this.canvas || canvas;
+
         var statistics = this.props.statistics;
 
         var quizNames = [];
@@ -86,7 +83,7 @@ class GraphPanel extends React.Component {
             this.chart.destroy();
         }
         
-        this.chart = new Chart(canvas, {
+        this.chart = new Chart(this.canvas, {
             type: 'bar',
             data: info,
             options: {

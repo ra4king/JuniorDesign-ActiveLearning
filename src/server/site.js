@@ -46,7 +46,11 @@ var check_login = function(req, res, next) {
 app.get('/', check_login, function(req, res) {
     var user = req.user;
 
-    res.render((user.admin ? 'professor' : 'student') + '/home', { username: user.username });
+    if(user.admin) {
+        res.render('professor');
+    } else {
+        res.render('student');
+    }
 });
 
 app.get('/admin', check_login, function(req, res) {
@@ -61,23 +65,11 @@ app.get('/admin', check_login, function(req, res) {
 
 app.get('/statistics', check_login, function(req, res) {
     var user = req.user;
-
+    
     if(user.admin) {
-        database.get_stats(function(err, stats) {
-            if(err) {
-                res.status(500).send(err);
-            } else {
-                res.render('professor/statistics', { username: user.username, statistics: JSON.stringify(stats) });
-            }
-        });
+        res.render('professor');
     } else {
-        database.get_stats(user.username, function(err, stats) {
-            if(err) {
-                res.status(500).send(err);
-            } else {
-                res.render('student/statistics', { username: user.username, statistics: JSON.stringify(stats) });
-            }
-        });
+        res.render('student');
     }
 });
 
@@ -85,13 +77,7 @@ app.get('/settings', check_login, function(req, res) {
     var user = req.user;
 
     if(user.admin) {
-        database.get_all_users(function(err, users) {
-            if(err) {
-                res.status(500).send(err);
-            } else {
-                res.render('professor/settings', { username: user.username, users: JSON.stringify(users) });
-            }
-        });
+        res.render('professor');
     } else {
         res.status(404).send('Not found');
     }

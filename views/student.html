@@ -3,22 +3,22 @@
     <head>
         <meta charset="UTF-8">
 
-        <title>Active Learning Tool - Statistics</title>
+        <title>Active Learning Tool - Home</title>
         <link rel="icon" type="image/png" href="images/active_learning_logo_icon.png" />
         <link rel="stylesheet" type="text/css" href="css/common.css" />
-        <link rel="stylesheet" type="text/css" href="css/professor-statistics.css" />
+        <link rel="stylesheet" type="text/css" href="css/student-home.css" />
+        <link rel="stylesheet" type="text/css" href="css/student-statistics.css" />
 
         <script src="https://unpkg.com/react@15/dist/react.js"></script>
         <script src="https://unpkg.com/react-dom@15/dist/react-dom.js"></script>
+        <script src="https://unpkg.com/react-router/umd/ReactRouter.min.js"></script>
 
-        <script>
-            var username = '{{username}}';
-            var statistics = {{{statistics}}};
-        </script>
         <script src="js/chart.bundle.min.js"></script>
         <script src="js/sorttable.js"></script>
         <script src="js/utils.js"></script>
-        <script src="js/professor-statistics.js"></script>
+        <script src="js/socket.js"></script>
+        <script src="js/student-statistics.js"></script>
+        <script src="js/student-app.js"></script>
     </head>
     <body>
         <div id="panels"></div>

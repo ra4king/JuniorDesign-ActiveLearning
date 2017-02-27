@@ -1,7 +1,3 @@
-window.onload = () => {
-    ReactDOM.render(<StatisticsPanels statistics={statistics}/>, document.getElementById('panels'));
-}
-
 /* JSON Object I want
 statistics = {
     ...
@@ -22,14 +18,26 @@ statistics = {
 }
 */
 
-
 class StatisticsPanels extends React.Component {
     constructor(props) {
         super(props);
 
+        props.setPage('statistics');
+
         this.state = {
+            statistics: {},
             showAllStudents: true
         }
+
+        socket.on('login', (success) => {
+            socket.send('get_stats', (err, stats) => {
+                if(err) {
+                    console.error('Error getting stats: ' + err);
+                } else {
+                    this.setState({ statistics: stats });
+                }
+            });
+        });
     }
 
     showStudentStats(studentName) {
@@ -71,40 +79,19 @@ class StatisticsPanels extends React.Component {
     render() {
         return (
             <div>
-                <HeaderPanel />
-
                 <SidePanel
                     showStudentStats={this.showStudentStats.bind(this)}
                     showQuizStats={this.showQuizStats.bind(this)}
                     showAllQuizStats={this.showAllQuizStats.bind(this)}
                     showAllStudentStats={this.showAllStudentStats.bind(this)}
-                    statistics={this.props.statistics} />
+                    statistics={this.state.statistics} />
 
                 <GraphPanel
                     showStudent={this.state.showStudent}
                     showQuiz={this.state.showQuiz}
                     showAllQuizzes={this.state.showAllQuizzes}
                     showAllStudents={this.state.showAllStudents}
-                    statistics={this.props.statistics} />
-            </div>
-        );
-    }
-}
-
-class HeaderPanel extends React.Component {
-    render() {
-        return (
-            <div id='header-panel'>
-                <img id='logo' src='images/active_learning_logo_white.png' width='175' height='75' alt='logo'/>
-                <h2 id='name'>{username}</h2>
-                <nav>
-                    <form method='post'>
-                        <button className='header-nav-link' formAction='api/logout'>Logout</button>
-                    </form>
-                    <a href='settings' className='header-nav-link'>Settings</a>
-                    <a href='statistics' className='header-nav-link' id='selected'>Statistics</a>
-                    <a href='./' className='header-nav-link'>Home</a>
-                </nav>
+                    statistics={this.state.statistics} />
             </div>
         );
     }
@@ -113,6 +100,8 @@ class HeaderPanel extends React.Component {
 class SidePanel extends React.Component {
     constructor(props) {
         super(props);
+
+        var statistics = props.statistics;
 
         var quizNames = [];
         for(var username in statistics) {
@@ -252,6 +241,8 @@ class GraphPanel extends React.Component {
     }
 
     displayQuizStatistics(name) {
+        var statistics = this.props.statistics;
+
         var questions = {}
         for (var username in statistics){
             for (var quiz_id in statistics[username]) {
@@ -428,7 +419,7 @@ class GraphPanel extends React.Component {
     }
 
     setupChart(canvas) {
-        this.canvas = canvas;
+        this.canvas = this.canvas || canvas;
 
         if(this.props.showStudent) {
             this.displayStudentStatistics(this.props.showStudent);
