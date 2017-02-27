@@ -28,7 +28,10 @@ function unescapeHTML(str) {
     if(str == null)
         return '';
 
-    return decodeURIComponent(str).replace(__unescape_regex, function(match) {
-        return chars[match];
-    });
+    var newStr;
+    while((newStr = decodeURIComponent(str).replace(__unescape_regex, function(match) { return chars[match]; })) != str) {
+        str = newStr;
+    }
+
+    return str;
 };

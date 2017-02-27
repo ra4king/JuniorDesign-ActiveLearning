@@ -27,6 +27,27 @@
     color: black;
 }
 
+.question-creator-row {
+    margin: 10px;
+}
+
+.question-creator-title {
+    font-size: 18px;
+}
+
+.remove-answer-button {
+    margin-left: 20px;
+}
+
+#image-input {
+    max-width: 80%;
+    max-height: 300px;
+}
+
+#question-list {
+    list-style-type: none;
+}
+
 #quiz-creator-header {
     margin: 10px;
     height: 30px;

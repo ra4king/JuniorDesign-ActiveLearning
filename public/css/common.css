@@ -163,13 +163,20 @@ ol, ul {
 }
 
 .answer-list {
+    list-style-position: outside;
     list-style-type: upper-alpha;
     font-size: 18px;
     font-weight: normal;
+    padding-left: 40px;
+}
+
+.answer {
+    margin: 5px;
 }
 
 .question-image {
-    width: 20%;
+    max-width: 20%;
+    max-height: 300px;
     display: inline-block;
     vertical-align: top;
 }

@@ -428,7 +428,7 @@ var QuizEditor = function (_React$Component6) {
     }, {
         key: 'onDrop',
         value: function onDrop(e) {
-            this.setState({ dragOver: null });
+            this.setState({ dragOverId: null });
 
             e.preventDefault();
             var id = e.dataTransfer.getData('question-id');
@@ -475,8 +475,8 @@ var QuizEditor = function (_React$Component6) {
 
             var dragOverId = this.getDropTargetId(e);
 
-            if (dragOverId != this.state.dragOver) {
-                this.setState({ dragOver: dragOverId });
+            if (dragOverId != this.state.dragOverId) {
+                this.setState({ dragOverId: dragOverId });
             }
         }
     }, {
@@ -516,7 +516,7 @@ var QuizEditor = function (_React$Component6) {
                                 question: _this12.props.questions[id],
                                 draggable: true,
                                 onDragStart: _this12.onDragStart.bind(_this12, id),
-                                draggedOver: _this12.state.dragOver == id },
+                                draggedOver: _this12.state.dragOverId == id },
                             React.createElement(
                                 'button',
                                 { className: 'delete-button', onClick: function onClick() {
@@ -525,9 +525,9 @@ var QuizEditor = function (_React$Component6) {
                                 '\u2716'
                             )
                         );
-                    }), React.createElement('li', { style: { visibility: 'hidden', height: '100px' } })] : React.createElement(
-                        'p',
-                        { style: { textAlign: 'center' } },
+                    }), React.createElement('li', { key: 'hidden', style: { visibility: 'hidden', height: '100px' } })] : React.createElement(
+                        'li',
+                        { style: { listStyleType: 'none', textAlign: 'center' } },
                         'Drag questions here!'
                     )
                 )
@@ -633,19 +633,44 @@ var Quiz = function (_React$Component8) {
 var QuestionPanel = function (_React$Component9) {
     _inherits(QuestionPanel, _React$Component9);
 
-    function QuestionPanel() {
+    function QuestionPanel(props) {
         _classCallCheck(this, QuestionPanel);
 
-        return _possibleConstructorReturn(this, (QuestionPanel.__proto__ || Object.getPrototypeOf(QuestionPanel)).apply(this, arguments));
+        var _this17 = _possibleConstructorReturn(this, (QuestionPanel.__proto__ || Object.getPrototypeOf(QuestionPanel)).call(this, props));
+
+        _this17.state = {
+            editQuestion: null
+        };
+        return _this17;
     }
 
     _createClass(QuestionPanel, [{
+        key: 'toggleQuestionEditor',
+        value: function toggleQuestionEditor() {
+            this.setState(function (prevState) {
+                return { editQuestion: prevState.editQuestion ? null : {} };
+            });
+        }
+    }, {
+        key: 'hideQuestionEditor',
+        value: function hideQuestionEditor() {
+            this.setState({ editQuestion: null });
+        }
+    }, {
         key: 'render',
         value: function render() {
             return React.createElement(
                 'div',
                 { id: 'question-panel' },
-                React.createElement(QuestionList, { questions: this.props.questions, showConfirm: this.props.showConfirm })
+                React.createElement(
+                    'button',
+                    { className: 'option-button', onClick: this.toggleQuestionEditor.bind(this) },
+                    this.state.editQuestion ? 'Cancel' : 'Create Question'
+                ),
+                this.state.editQuestion ? React.createElement(QuestionEditor, {
+                    question: this.state.editQuestion,
+                    hideQuestionEditor: this.hideQuestionEditor.bind(this),
+                    showConfirm: this.props.showConfirm }) : React.createElement(QuestionList, { questions: this.props.questions, showConfirm: this.props.showConfirm })
             );
         }
     }]);
@@ -653,8 +678,211 @@ var QuestionPanel = function (_React$Component9) {
     return QuestionPanel;
 }(React.Component);
 
-var QuestionList = function (_React$Component10) {
-    _inherits(QuestionList, _React$Component10);
+var QuestionEditor = function (_React$Component10) {
+    _inherits(QuestionEditor, _React$Component10);
+
+    function QuestionEditor(props) {
+        _classCallCheck(this, QuestionEditor);
+
+        var _this18 = _possibleConstructorReturn(this, (QuestionEditor.__proto__ || Object.getPrototypeOf(QuestionEditor)).call(this, props));
+
+        _this18.state = {
+            title: props.question.name || '',
+            answers: props.question.answers || ['', '', '', ''],
+            correct: props.question.correct || null,
+            image: props.question.image || null
+        };
+        return _this18;
+    }
+
+    _createClass(QuestionEditor, [{
+        key: 'changeTitle',
+        value: function changeTitle(e) {
+            this.setState({ title: e.target.value });
+        }
+    }, {
+        key: 'changeAnswer',
+        value: function changeAnswer(idx, e) {
+            var value = e.target.value.trim();
+            this.setState(function (prevState) {
+                var answers = prevState.answers.slice();
+                answers[idx] = String(value);
+                return { answers: answers };
+            });
+        }
+    }, {
+        key: 'addAnswer',
+        value: function addAnswer() {
+            this.setState(function (prevState) {
+                var answers = prevState.answers.slice();
+                answers.push('');
+                return { answers: answers };
+            });
+        }
+    }, {
+        key: 'removeAnswer',
+        value: function removeAnswer(idx) {
+            if (this.state.answers.length == 2) {
+                this.props.showConfirm({
+                    type: 'ok',
+                    title: 'You must have at least 2 answer fields.'
+                });
+                return;
+            }
+
+            this.setState(function (prevState) {
+                var answers = prevState.answers.slice();
+                answers.splice(idx, 1);
+                return { answers: answers };
+            });
+        }
+    }, {
+        key: 'correctSelected',
+        value: function correctSelected(idx) {
+            this.setState({ correct: idx });
+        }
+    }, {
+        key: 'imageSelected',
+        value: function imageSelected(e) {
+            var _this19 = this;
+
+            if (e.target.files && e.target.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    var image = e.target.result;
+                    if (image.startsWith('data:image')) {
+                        _this19.setState({ image: image });
+                    } else {
+                        _this19.props.showConfirm({
+                            type: 'ok',
+                            title: 'Invalid image file'
+                        });
+                    }
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            } else {
+                this.setState({ image: null });
+            }
+        }
+    }, {
+        key: 'clearImage',
+        value: function clearImage() {
+            this.setState({ image: null });
+        }
+    }, {
+        key: 'submitQuestion',
+        value: function submitQuestion() {
+            var _this20 = this;
+
+            if (this.state.answers.findIndex(function (elem) {
+                return !elem.trim();
+            }) != -1) {
+                this.props.showConfirm({
+                    type: 'ok',
+                    title: 'Cannot have a blank answer field.'
+                });
+
+                return;
+            }
+
+            socket.send('create_question', {
+                name: this.state.title,
+                answers: this.state.answers,
+                correct: String(this.state.correct),
+                image: this.state.image || undefined
+            }, function (err) {
+                if (err) {
+                    _this20.props.showConfirm({
+                        type: 'ok',
+                        title: 'Error submitting question: ' + err
+                    });
+                } else {
+                    _this20.props.hideQuestionEditor();
+                }
+            });
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            var _this21 = this;
+
+            return React.createElement(
+                'div',
+                { id: 'question-creator' },
+                React.createElement(
+                    'label',
+                    { className: 'question-creator-row' },
+                    React.createElement(
+                        'span',
+                        { className: 'question-creator-title' },
+                        'Question: '
+                    ),
+                    React.createElement('input', { type: 'text', value: this.state.title, size: '75', onChange: this.changeTitle.bind(this) })
+                ),
+                React.createElement(
+                    'ol',
+                    { className: 'answer-list' },
+                    this.state.answers.map(function (answer, idx) {
+                        return React.createElement(
+                            'li',
+                            { key: idx, className: 'answer' },
+                            React.createElement('input', {
+                                type: 'text',
+                                value: answer,
+                                size: '35',
+                                onChange: _this21.changeAnswer.bind(_this21, idx) }),
+                            React.createElement('input', {
+                                type: 'radio',
+                                name: 'correct',
+                                checked: _this21.state.correct == idx,
+                                onChange: _this21.correctSelected.bind(_this21, idx) }),
+                            'Correct',
+                            React.createElement(
+                                'button',
+                                { className: 'remove-answer-button', onClick: _this21.removeAnswer.bind(_this21, idx) },
+                                '\u2716'
+                            )
+                        );
+                    })
+                ),
+                React.createElement(
+                    'div',
+                    { className: 'question-creator-row' },
+                    React.createElement(
+                        'button',
+                        { onClick: this.addAnswer.bind(this) },
+                        'Add answer'
+                    )
+                ),
+                React.createElement(
+                    'div',
+                    { className: 'question-creator-row' },
+                    React.createElement('input', { type: 'file', onChange: this.imageSelected.bind(this) }),
+                    this.state.image && React.createElement('input', { className: 'option-button', type: 'button', value: 'Clear image', onClick: this.clearImage.bind(this) })
+                ),
+                this.state.image && React.createElement(
+                    'div',
+                    { className: 'question-creator-row' },
+                    React.createElement('img', { id: 'image-input', src: this.state.image })
+                ),
+                React.createElement(
+                    'div',
+                    { className: 'question-creator-row' },
+                    React.createElement(
+                        'button',
+                        { className: 'option-button', onClick: this.submitQuestion.bind(this) },
+                        'Submit'
+                    )
+                )
+            );
+        }
+    }]);
+
+    return QuestionEditor;
+}(React.Component);
+
+var QuestionList = function (_React$Component11) {
+    _inherits(QuestionList, _React$Component11);
 
     function QuestionList() {
         _classCallCheck(this, QuestionList);
@@ -665,7 +893,7 @@ var QuestionList = function (_React$Component10) {
     _createClass(QuestionList, [{
         key: 'deleteQuestion',
         value: function deleteQuestion(id) {
-            var _this19 = this;
+            var _this23 = this;
 
             this.props.showConfirm({
                 type: 'yesno',
@@ -673,7 +901,7 @@ var QuestionList = function (_React$Component10) {
                 onAction: function onAction(choice) {
                     if (choice) {
                         socket.send('delete_question', id, function (err, data) {
-                            _this19.props.showConfirm({
+                            _this23.props.showConfirm({
                                 type: 'ok',
                                 title: err || 'Question deleted'
                             });
@@ -689,19 +917,19 @@ var QuestionList = function (_React$Component10) {
     }, {
         key: 'render',
         value: function render() {
-            var _this20 = this;
+            var _this24 = this;
 
             return React.createElement(
-                'ol',
+                'ul',
                 { id: 'question-list' },
                 Object.keys(this.props.questions).map(function (id) {
                     return React.createElement(
                         Question,
-                        { key: id, question: _this20.props.questions[id], draggable: true, onDragStart: _this20.onDragStart.bind(_this20, id) },
+                        { key: id, question: _this24.props.questions[id], draggable: true, onDragStart: _this24.onDragStart.bind(_this24, id) },
                         React.createElement(
                             'button',
                             { className: 'delete-button', onClick: function onClick() {
-                                    return _this20.deleteQuestion(id);
+                                    return _this24.deleteQuestion(id);
                                 } },
                             '\u2716'
                         )
@@ -714,8 +942,8 @@ var QuestionList = function (_React$Component10) {
     return QuestionList;
 }(React.Component);
 
-var Question = function (_React$Component11) {
-    _inherits(Question, _React$Component11);
+var Question = function (_React$Component12) {
+    _inherits(Question, _React$Component12);
 
     function Question() {
         _classCallCheck(this, Question);
@@ -726,7 +954,11 @@ var Question = function (_React$Component11) {
     _createClass(Question, [{
         key: 'render',
         value: function render() {
-            var _this22 = this;
+            var _this26 = this;
+
+            if (!this.props.question) {
+                return null;
+            }
 
             return React.createElement(
                 'li',
@@ -753,13 +985,13 @@ var Question = function (_React$Component11) {
                                     type: 'radio',
                                     value: idx,
                                     readOnly: true,
-                                    checked: _this22.props.question.correct == idx }),
+                                    checked: _this26.props.question.correct == idx }),
                                 unescapeHTML(answer)
                             );
                         })
                     )
                 ),
-                React.createElement('img', { className: 'question-image', src: this.props.question.image || null }),
+                this.props.question.image && React.createElement('img', { className: 'question-image', src: this.props.question.image }),
                 this.props.children
             );
         }

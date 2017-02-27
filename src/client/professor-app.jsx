@@ -35,7 +35,7 @@ class Panels extends React.Component {
     showConfirm(options) {
         this.setState({ showConfirm: options });
     }
-    
+
     hideConfirm() {
         this.setState({ showConfirm: null });
     }
@@ -268,7 +268,7 @@ class QuizEditor extends React.Component {
     }
 
     onDrop(e) {
-        this.setState({ dragOver: null });
+        this.setState({ dragOverId: null });
 
         e.preventDefault();
         var id = e.dataTransfer.getData('question-id');
@@ -314,8 +314,8 @@ class QuizEditor extends React.Component {
 
         var dragOverId = this.getDropTargetId(e);
 
-        if(dragOverId != this.state.dragOver) {
-            this.setState({ dragOver: dragOverId });
+        if(dragOverId != this.state.dragOverId) {
+            this.setState({ dragOverId: dragOverId });
         }
     }
 
@@ -337,12 +337,12 @@ class QuizEditor extends React.Component {
                                 question={this.props.questions[id]}
                                 draggable
                                 onDragStart={this.onDragStart.bind(this, id)}
-                                draggedOver={this.state.dragOver == id}>
+                                draggedOver={this.state.dragOverId == id}>
 
                                 <button className='delete-button' onClick={() => this.removeQuestion(id)}>&#10006;</button>
                             </Question>)),
-                            (<li style={{ visibility: 'hidden', height: '100px' }}></li>)]
-                        : (<p style={{ textAlign: 'center' }}>Drag questions here!</p>)}
+                            (<li key='hidden' style={{ visibility: 'hidden', height: '100px' }}></li>)]
+                        : (<li style={{ listStyleType: 'none', textAlign: 'center' }}>Drag questions here!</li>)}
                 </ol>
             </div>
         );
@@ -397,10 +397,191 @@ class Quiz extends React.Component {
 }
 
 class QuestionPanel extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            editQuestion: null
+        };
+    }
+
+    toggleQuestionEditor() {
+        this.setState((prevState) =>  {
+            return { editQuestion: prevState.editQuestion ? null : {}};
+        });
+    }
+
+    hideQuestionEditor() {
+        this.setState({ editQuestion: null });
+    }
+
     render() {
         return (
             <div id='question-panel'>
-                <QuestionList questions={this.props.questions} showConfirm={this.props.showConfirm} />
+                <button className='option-button' onClick={this.toggleQuestionEditor.bind(this)}>
+                    {this.state.editQuestion ? 'Cancel' : 'Create Question'}
+                </button>
+
+                {this.state.editQuestion
+                    ? (<QuestionEditor
+                            question={this.state.editQuestion}
+                            hideQuestionEditor={this.hideQuestionEditor.bind(this)}
+                            showConfirm={this.props.showConfirm} />)
+                    : (<QuestionList questions={this.props.questions} showConfirm={this.props.showConfirm} />)
+                }
+            </div>
+        );
+    }
+}
+
+class QuestionEditor extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            title: props.question.name || '',
+            answers: props.question.answers || ['', '', '', ''],
+            correct: props.question.correct || null,
+            image: props.question.image || null,
+        }
+    }
+
+    changeTitle(e) {
+        this.setState({ title: e.target.value });
+    }
+
+    changeAnswer(idx, e) {
+        var value = e.target.value.trim();
+        this.setState((prevState) => {
+            var answers = prevState.answers.slice();
+            answers[idx] = String(value);
+            return { answers: answers };
+        });
+    }
+
+    addAnswer() {
+        this.setState((prevState) => {
+            var answers = prevState.answers.slice();
+            answers.push('');
+            return { answers: answers };
+        });
+    }
+
+    removeAnswer(idx) {
+        if(this.state.answers.length == 2) {
+            this.props.showConfirm({
+                type: 'ok',
+                title: 'You must have at least 2 answer fields.'
+            });
+            return;
+        }
+
+        this.setState((prevState) => {
+            var answers = prevState.answers.slice();
+            answers.splice(idx, 1);
+            return { answers: answers };
+        });
+    }
+
+    correctSelected(idx) {
+        this.setState({ correct: idx });
+    }
+
+    imageSelected(e) {
+        if(e.target.files && e.target.files[0]) {
+            var reader = new FileReader();
+            reader.onload = (e) => {
+                var image = e.target.result;
+                if(image.startsWith('data:image')) {
+                    this.setState({ image: image });
+                } else {
+                    this.props.showConfirm({
+                        type: 'ok',
+                        title: 'Invalid image file'
+                    });
+                }
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        } else {
+            this.setState({ image: null });
+        }
+    }
+
+    clearImage() {
+        this.setState({ image: null });
+    }
+
+    submitQuestion() {
+        if(this.state.answers.findIndex((elem) => !elem.trim()) != -1) {
+            this.props.showConfirm({
+                type: 'ok',
+                title: 'Cannot have a blank answer field.'
+            });
+
+            return;
+        }
+
+        socket.send('create_question', {
+            name: this.state.title,
+            answers: this.state.answers,
+            correct: String(this.state.correct),
+            image: this.state.image || undefined
+        }, (err) => {
+            if(err) {
+                this.props.showConfirm({
+                    type: 'ok',
+                    title: 'Error submitting question: ' + err
+                });
+            } else {
+                this.props.hideQuestionEditor();
+            }
+        });
+    }
+
+    render() {
+        return (
+            <div id='question-creator'>
+                <label className='question-creator-row'>
+                    <span className='question-creator-title'>Question: </span>
+                    <input type='text' value={this.state.title} size='75' onChange={this.changeTitle.bind(this)} />
+                </label>
+
+                <ol className='answer-list'>
+                    {this.state.answers.map((answer, idx) => {
+                        return (
+                            <li key={idx} className='answer'>
+                                <input
+                                    type='text'
+                                    value={answer}
+                                    size='35'
+                                    onChange={this.changeAnswer.bind(this, idx)} />
+                                <input
+                                    type='radio'
+                                    name='correct'
+                                    checked={this.state.correct == idx}
+                                    onChange={this.correctSelected.bind(this, idx)} />
+                                Correct
+
+                                <button className='remove-answer-button' onClick={this.removeAnswer.bind(this, idx)}>&#10006;</button>
+                            </li>
+                        );
+                    })}
+                </ol>
+
+                <div className='question-creator-row'>
+                    <button onClick={this.addAnswer.bind(this)}>Add answer</button>
+                </div>
+
+                <div className='question-creator-row'>
+                    <input type='file' onChange={this.imageSelected.bind(this)} />
+                    {this.state.image &&
+                        <input className='option-button' type='button' value='Clear image' onClick={this.clearImage.bind(this)} />}
+                </div>
+
+                {this.state.image &&
+                    (<div className='question-creator-row'><img id='image-input' src={this.state.image} /></div>)}
+
+                <div className='question-creator-row'><button className='option-button' onClick={this.submitQuestion.bind(this)}>Submit</button></div>
             </div>
         );
     }
@@ -429,19 +610,23 @@ class QuestionList extends React.Component {
 
     render() {
         return (
-            <ol id='question-list'>
+            <ul id='question-list'>
                 {Object.keys(this.props.questions).map((id) => (
                     <Question key={id} question={this.props.questions[id]} draggable onDragStart={this.onDragStart.bind(this, id)}>
                         <button className='delete-button' onClick={() => this.deleteQuestion(id)}>&#10006;</button>
                     </Question>
                 ))}
-            </ol>
+            </ul>
         );
     }
 }
 
 class Question extends React.Component {
     render() {
+        if(!this.props.question) {
+            return null;
+        }
+
         return (
             <li data-id={this.props.question.id}
                 className={'question' + (this.props.draggable ? ' draggable' : '') + (this.props.draggedOver ? ' drag-over' : '')}
@@ -462,7 +647,7 @@ class Question extends React.Component {
                         ))}
                     </ol>
                 </div>
-                <img className='question-image' src={this.props.question.image || null} />
+                {this.props.question.image && (<img className='question-image' src={this.props.question.image} />)}
                 {this.props.children}
             </li>
         );

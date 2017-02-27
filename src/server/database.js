@@ -315,7 +315,7 @@ function validate_question(question) {
         typeof question.name !== 'string' ||
         !Array.isArray(question.answers) ||
         typeof question.correct !== 'string' ||
-        typeof question.image !== 'string' ||
+        (question.image && typeof question.image !== 'string') ||
         question.answers.length < 2 ||
         question.correct % 1 !== 0 ||
         question.correct < 0 ||
@@ -392,7 +392,7 @@ function get_question_by_id(question_id, callback) {
             name: escape(question.name),
             answers: question.answers.map((str) => escape(str)),
             correct: question.correct,
-            image: escape(question.image)
+            image: question.image ? escape(question.image) : undefined
         });
     });
 }
@@ -418,7 +418,7 @@ function get_questions(include_correct, callback) {
                 name: escape(result.name),
                 answers: result.answers.map((str) => escape(str)),
                 correct: include_correct ? result.correct : undefined,
-                image: escape(result.image)
+                image: result.image ? escape(result.image) : undefined
             };
         });
 
