@@ -19,6 +19,7 @@ var socket = new function() {
     var thisSocket = this;
 
     var websocket;
+    var loggedIn = false;
 
     function connect() {
         if(session_id == null) {
@@ -45,6 +46,7 @@ var socket = new function() {
                     console.log('Successfully logged in.');
                 }
 
+                loggedIn = true;
                 thisSocket.emit('login', user);
             });
         };
@@ -62,6 +64,7 @@ var socket = new function() {
         };
         s.onclose = function() {
             websocket = null;
+            loggedIn = false;
             connecting = false;
             console.log('Connection closed.');
             setTimeout(connect, 1000);
@@ -76,6 +79,14 @@ var socket = new function() {
         }
 
         return true;
+    }
+
+    this.isConnected = function() {
+        return websocket != null;
+    }
+
+    this.isLoggedIn = function() {
+        return loggedIn;
     }
 
     this.on = function(command, callback) {

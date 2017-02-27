@@ -36,26 +36,33 @@ var StatisticsPanels = function (_React$Component) {
 
         var _this = _possibleConstructorReturn(this, (StatisticsPanels.__proto__ || Object.getPrototypeOf(StatisticsPanels)).call(this, props));
 
-        props.setPage('statistics');
-
         _this.state = {
             statistics: {},
             showAllStudents: true
         };
 
-        socket.on('login', function (success) {
-            socket.send('get_stats', function (err, stats) {
-                if (err) {
-                    console.error('Error getting stats: ' + err);
-                } else {
-                    _this.setState({ statistics: stats });
-                }
-            });
-        });
+        if (socket.isLoggedIn()) {
+            _this.getStats();
+        } else {
+            socket.on('login', _this.getStats.bind(_this));
+        }
         return _this;
     }
 
     _createClass(StatisticsPanels, [{
+        key: 'getStats',
+        value: function getStats() {
+            var _this2 = this;
+
+            socket.send('get_stats', function (err, stats) {
+                if (err) {
+                    console.error('Error getting stats: ' + err);
+                } else {
+                    _this2.setState({ statistics: stats });
+                }
+            });
+        }
+    }, {
         key: 'showStudentStats',
         value: function showStudentStats(studentName) {
             this.setState({
@@ -126,12 +133,12 @@ var SidePanel = function (_React$Component2) {
     function SidePanel(props) {
         _classCallCheck(this, SidePanel);
 
-        var _this2 = _possibleConstructorReturn(this, (SidePanel.__proto__ || Object.getPrototypeOf(SidePanel)).call(this, props));
+        var _this3 = _possibleConstructorReturn(this, (SidePanel.__proto__ || Object.getPrototypeOf(SidePanel)).call(this, props));
 
-        _this2.state = {
+        _this3.state = {
             showStudents: true
         };
-        return _this2;
+        return _this3;
     }
 
     _createClass(SidePanel, [{
@@ -166,7 +173,7 @@ var SidePanel = function (_React$Component2) {
     }, {
         key: 'render',
         value: function render() {
-            var _this3 = this;
+            var _this4 = this;
 
             return React.createElement(
                 'div',
@@ -222,7 +229,7 @@ var SidePanel = function (_React$Component2) {
                                     React.createElement(
                                         'button',
                                         { className: 'list-button', onClick: function onClick() {
-                                                return _this3.props.showStudentStats(studentName);
+                                                return _this4.props.showStudentStats(studentName);
                                             } },
                                         studentName
                                     )
@@ -259,7 +266,7 @@ var SidePanel = function (_React$Component2) {
                                     React.createElement(
                                         'button',
                                         { className: 'list-button', onClick: function onClick() {
-                                                return _this3.props.showQuizStats(quizName);
+                                                return _this4.props.showQuizStats(quizName);
                                             } },
                                         quizName
                                     )

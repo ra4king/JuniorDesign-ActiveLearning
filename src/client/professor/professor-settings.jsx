@@ -2,21 +2,25 @@ class SettingsPanels extends React.Component {
     constructor(props) {
         super(props);
 
-        props.setPage('settings');
-
         this.state = {
             users: [],
             selectedUser: null,
         }
 
-        socket.on('login', (success) => {
-            socket.send('get_users', (err, users) => {
-                if(err) {
-                    console.error('Error getting users: ' + err);
-                } else {
-                    this.setState({ users: users });
-                }
-            });
+        if(socket.isLoggedIn()) {
+            this.getUsers();
+        } else {
+            socket.on('login', this.getUsers.bind(this));
+        }
+    }
+
+    getUsers() {
+        socket.send('get_users', (err, users) => {
+            if(err) {
+                console.error('Error getting users: ' + err);
+            } else {
+                this.setState({ users: users });
+            }
         });
     }
 

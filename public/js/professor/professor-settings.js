@@ -16,26 +16,33 @@ var SettingsPanels = function (_React$Component) {
 
         var _this = _possibleConstructorReturn(this, (SettingsPanels.__proto__ || Object.getPrototypeOf(SettingsPanels)).call(this, props));
 
-        props.setPage('settings');
-
         _this.state = {
             users: [],
             selectedUser: null
         };
 
-        socket.on('login', function (success) {
-            socket.send('get_users', function (err, users) {
-                if (err) {
-                    console.error('Error getting users: ' + err);
-                } else {
-                    _this.setState({ users: users });
-                }
-            });
-        });
+        if (socket.isLoggedIn()) {
+            _this.getUsers();
+        } else {
+            socket.on('login', _this.getUsers.bind(_this));
+        }
         return _this;
     }
 
     _createClass(SettingsPanels, [{
+        key: 'getUsers',
+        value: function getUsers() {
+            var _this2 = this;
+
+            socket.send('get_users', function (err, users) {
+                if (err) {
+                    console.error('Error getting users: ' + err);
+                } else {
+                    _this2.setState({ users: users });
+                }
+            });
+        }
+    }, {
         key: 'selectUser',
         value: function selectUser(user) {
             this.setState({ selectedUser: user });
@@ -61,12 +68,12 @@ var StudentPanel = function (_React$Component2) {
     function StudentPanel(props) {
         _classCallCheck(this, StudentPanel);
 
-        var _this2 = _possibleConstructorReturn(this, (StudentPanel.__proto__ || Object.getPrototypeOf(StudentPanel)).call(this, props));
+        var _this3 = _possibleConstructorReturn(this, (StudentPanel.__proto__ || Object.getPrototypeOf(StudentPanel)).call(this, props));
 
-        _this2.state = {
+        _this3.state = {
             showStudents: true
         };
-        return _this2;
+        return _this3;
     }
 
     _createClass(StudentPanel, [{
@@ -82,7 +89,7 @@ var StudentPanel = function (_React$Component2) {
     }, {
         key: 'render',
         value: function render() {
-            var _this3 = this;
+            var _this4 = this;
 
             return React.createElement(
                 'div',
@@ -138,7 +145,7 @@ var StudentPanel = function (_React$Component2) {
                                     React.createElement(
                                         'button',
                                         { className: 'list-button', onClick: function onClick() {
-                                                return _this3.props.selectUser(user);
+                                                return _this4.props.selectUser(user);
                                             } },
                                         unescapeHTML(user.username)
                                     )

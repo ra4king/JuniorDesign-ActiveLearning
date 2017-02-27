@@ -36,25 +36,39 @@ var StatisticsPanels = function (_React$Component) {
 
         var _this = _possibleConstructorReturn(this, (StatisticsPanels.__proto__ || Object.getPrototypeOf(StatisticsPanels)).call(this, props));
 
-        props.setPage('statistics');
-
         _this.state = {
             statistics: {}
         };
 
-        socket.on('login', function (user) {
-            socket.send('get_stats', function (err, stats) {
-                if (err) {
-                    console.error('Error getting stats: ' + err);
-                } else {
-                    _this.setState({ statistics: stats[user.username] });
-                }
-            });
-        });
+        _this.getStats = _this.getStats.bind(_this);
+
+        if (socket.isLoggedIn()) {
+            _this.getStats(props.user);
+        } else {
+            socket.on('login', _this.getStats);
+        }
         return _this;
     }
 
     _createClass(StatisticsPanels, [{
+        key: 'getStats',
+        value: function getStats(user) {
+            var _this2 = this;
+
+            socket.send('get_stats', function (err, stats) {
+                if (err) {
+                    console.error('Error getting stats: ' + err);
+                } else {
+                    _this2.setState({ statistics: stats[user.username] });
+                }
+            });
+        }
+    }, {
+        key: 'componentWillUnmount',
+        value: function componentWillUnmount() {
+            socket.remove('login', this.getStats);
+        }
+    }, {
         key: 'render',
         value: function render() {
             return React.createElement(

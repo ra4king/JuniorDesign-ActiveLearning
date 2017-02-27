@@ -22,21 +22,25 @@ class StatisticsPanels extends React.Component {
     constructor(props) {
         super(props);
 
-        props.setPage('statistics');
-
         this.state = {
             statistics: {},
             showAllStudents: true
         }
 
-        socket.on('login', (success) => {
-            socket.send('get_stats', (err, stats) => {
-                if(err) {
-                    console.error('Error getting stats: ' + err);
-                } else {
-                    this.setState({ statistics: stats });
-                }
-            });
+        if(socket.isLoggedIn()) {
+            this.getStats();
+        } else {
+            socket.on('login', this.getStats.bind(this));
+        }
+    }
+
+    getStats() {
+        socket.send('get_stats', (err, stats) => {
+            if(err) {
+                console.error('Error getting stats: ' + err);
+            } else {
+                this.setState({ statistics: stats });
+            }
         });
     }
 

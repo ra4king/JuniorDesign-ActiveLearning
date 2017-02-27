@@ -10,6 +10,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
+var IndexLink = ReactRouter.IndexLink;
+
 window.onload = function () {
     socket.on('login', function (success) {
         if (success) {
@@ -22,7 +24,6 @@ window.onload = function () {
         }
     });
 
-    var ReactRouter = window.ReactRouter;
     var Router = ReactRouter.Router;
     var Route = ReactRouter.Route;
     var IndexRoute = ReactRouter.IndexRoute;
@@ -56,6 +57,11 @@ var App = function (_React$Component) {
             currentLiveQuiz: null
         };
 
+        socket.on('login', function (user) {
+            if (user) {
+                _this.setState({ user: user });
+            }
+        });
         socket.on('questions', function (data) {
             return _this.setState({ questions: data });
         });
@@ -86,18 +92,9 @@ var App = function (_React$Component) {
             this.setState({ showConfirm: null });
         }
     }, {
-        key: 'setPage',
-        value: function setPage(page) {
-            var _this2 = this;
-
-            setTimeout(function () {
-                return _this2.setState({ page: page });
-            }, 1);
-        }
-    }, {
         key: 'render',
         value: function render() {
-            var _this3 = this;
+            var _this2 = this;
 
             return React.createElement(
                 'div',
@@ -108,19 +105,19 @@ var App = function (_React$Component) {
                     questions: this.state.questions,
                     hideLiveQuiz: this.hideLiveQuiz.bind(this) }),
                 this.state.showConfirm && React.createElement(ConfirmBox, _extends({ hide: function hide() {
-                        return _this3.hideConfirm();
+                        return _this2.hideConfirm();
                     } }, this.state.showConfirm)),
                 React.createElement(
                     'div',
                     { className: (this.state.currentLiveQuiz || this.state.showConfirm) && 'blur' },
-                    React.createElement(HeaderPanel, { page: this.state.page }),
+                    React.createElement(HeaderPanel, { user: this.state.user, page: this.state.page }),
                     React.Children.map(this.props.children, function (child) {
                         return React.cloneElement(child, {
-                            setPage: _this3.setPage.bind(_this3),
-                            showConfirm: _this3.showConfirm.bind(_this3),
-                            questions: _this3.state.questions,
-                            quizzes: _this3.state.quizzes,
-                            presentLive: _this3.presentLive.bind(_this3)
+                            user: _this2.state.user,
+                            showConfirm: _this2.showConfirm.bind(_this2),
+                            questions: _this2.state.questions,
+                            quizzes: _this2.state.quizzes,
+                            presentLive: _this2.presentLive.bind(_this2)
                         });
                     })
                 )
@@ -134,32 +131,15 @@ var App = function (_React$Component) {
 var HeaderPanel = function (_React$Component2) {
     _inherits(HeaderPanel, _React$Component2);
 
-    function HeaderPanel(props) {
+    function HeaderPanel() {
         _classCallCheck(this, HeaderPanel);
 
-        var _this4 = _possibleConstructorReturn(this, (HeaderPanel.__proto__ || Object.getPrototypeOf(HeaderPanel)).call(this, props));
-
-        _this4.state = {
-            username: ''
-        };
-
-        socket.on('login', function (user) {
-            if (user) {
-                _this4.setState({ username: user.username });
-            }
-        });
-        return _this4;
+        return _possibleConstructorReturn(this, (HeaderPanel.__proto__ || Object.getPrototypeOf(HeaderPanel)).apply(this, arguments));
     }
 
     _createClass(HeaderPanel, [{
         key: 'render',
         value: function render() {
-            var _this5 = this;
-
-            var isSelected = function isSelected(page) {
-                return page == _this5.props.page ? 'selected' : '';
-            };
-
             return React.createElement(
                 'div',
                 { id: 'header-panel' },
@@ -167,7 +147,7 @@ var HeaderPanel = function (_React$Component2) {
                 React.createElement(
                     'h2',
                     { id: 'name' },
-                    this.state.username
+                    this.props.user ? this.props.user.username : ''
                 ),
                 React.createElement(
                     'nav',
@@ -182,18 +162,18 @@ var HeaderPanel = function (_React$Component2) {
                         )
                     ),
                     React.createElement(
-                        'a',
-                        { href: 'settings', className: 'header-nav-link', id: isSelected('settings') },
+                        IndexLink,
+                        { to: '/active-learning/settings', className: 'header-nav-link', activeClassName: 'selected' },
                         'Settings'
                     ),
                     React.createElement(
-                        'a',
-                        { href: 'statistics', className: 'header-nav-link', id: isSelected('statistics') },
+                        IndexLink,
+                        { to: '/active-learning/statistics', className: 'header-nav-link', activeClassName: 'selected' },
                         'Statistics'
                     ),
                     React.createElement(
-                        'a',
-                        { href: './', className: 'header-nav-link', id: isSelected('home') },
+                        IndexLink,
+                        { to: '/active-learning/', className: 'header-nav-link', activeClassName: 'selected' },
                         'Home'
                     )
                 )
@@ -210,17 +190,17 @@ var LiveQuizPanel = function (_React$Component3) {
     function LiveQuizPanel(props) {
         _classCallCheck(this, LiveQuizPanel);
 
-        var _this6 = _possibleConstructorReturn(this, (LiveQuizPanel.__proto__ || Object.getPrototypeOf(LiveQuizPanel)).call(this, props));
+        var _this4 = _possibleConstructorReturn(this, (LiveQuizPanel.__proto__ || Object.getPrototypeOf(LiveQuizPanel)).call(this, props));
 
-        _this6.state = {
+        _this4.state = {
             currentLiveQuestion: null,
             onLoginFunc: function onLoginFunc(success) {
-                if (_this6.state.currentLiveQuestion != null) socket.send('broadcast_live_question', _this6.state.currentLiveQuestion);
+                if (_this4.state.currentLiveQuestion != null) socket.send('broadcast_live_question', _this4.state.currentLiveQuestion);
             }
         };
 
-        socket.on('login', _this6.state.onLoginFunc);
-        return _this6;
+        socket.on('login', _this4.state.onLoginFunc);
+        return _this4;
     }
 
     _createClass(LiveQuizPanel, [{
@@ -238,7 +218,7 @@ var LiveQuizPanel = function (_React$Component3) {
     }, {
         key: 'render',
         value: function render() {
-            var _this7 = this;
+            var _this5 = this;
 
             return React.createElement(
                 'div',
@@ -249,13 +229,13 @@ var LiveQuizPanel = function (_React$Component3) {
                     this.props.quiz.questions.map(function (id) {
                         return React.createElement(
                             Question,
-                            { key: id, question: _this7.props.questions[id] },
+                            { key: id, question: _this5.props.questions[id] },
                             React.createElement(
                                 'button',
                                 {
-                                    className: 'presenting-live-button' + (id == _this7.state.currentLiveQuestion ? ' presenting-live-button-selected' : ''),
+                                    className: 'presenting-live-button' + (id == _this5.state.currentLiveQuestion ? ' presenting-live-button-selected' : ''),
                                     onClick: function onClick() {
-                                        return _this7.presentLiveQuestion(id);
+                                        return _this5.presentLiveQuestion(id);
                                     } },
                                 'L'
                             )
@@ -292,7 +272,7 @@ var ConfirmBox = function (_React$Component4) {
     }, {
         key: 'render',
         value: function render() {
-            var _this9 = this;
+            var _this7 = this;
 
             return React.createElement(
                 'div',
@@ -308,21 +288,21 @@ var ConfirmBox = function (_React$Component4) {
                     React.createElement(
                         'button',
                         { onClick: function onClick() {
-                                return _this9.clicked(false);
+                                return _this7.clicked(false);
                             }, className: 'cancel-button' },
                         this.props.noText || 'No'
                     ),
                     React.createElement(
                         'button',
                         { onClick: function onClick() {
-                                return _this9.clicked(true);
+                                return _this7.clicked(true);
                             }, className: 'confirm-button' },
                         this.props.yesText || 'Yes'
                     )
                 ) : React.createElement(
                     'button',
                     { onClick: function onClick() {
-                            return _this9.clicked();
+                            return _this7.clicked();
                         }, id: 'ok-button' },
                     this.props.okText || 'Ok'
                 )
@@ -336,13 +316,10 @@ var ConfirmBox = function (_React$Component4) {
 var Panels = function (_React$Component5) {
     _inherits(Panels, _React$Component5);
 
-    function Panels(props) {
+    function Panels() {
         _classCallCheck(this, Panels);
 
-        var _this10 = _possibleConstructorReturn(this, (Panels.__proto__ || Object.getPrototypeOf(Panels)).call(this, props));
-
-        props.setPage('home');
-        return _this10;
+        return _possibleConstructorReturn(this, (Panels.__proto__ || Object.getPrototypeOf(Panels)).apply(this, arguments));
     }
 
     _createClass(Panels, [{
@@ -372,12 +349,12 @@ var QuizPanel = function (_React$Component6) {
     function QuizPanel(props) {
         _classCallCheck(this, QuizPanel);
 
-        var _this11 = _possibleConstructorReturn(this, (QuizPanel.__proto__ || Object.getPrototypeOf(QuizPanel)).call(this, props));
+        var _this9 = _possibleConstructorReturn(this, (QuizPanel.__proto__ || Object.getPrototypeOf(QuizPanel)).call(this, props));
 
-        _this11.state = {
+        _this9.state = {
             editQuiz: null
         };
-        return _this11;
+        return _this9;
     }
 
     _createClass(QuizPanel, [{
@@ -400,7 +377,7 @@ var QuizPanel = function (_React$Component6) {
     }, {
         key: 'render',
         value: function render() {
-            var _this12 = this;
+            var _this10 = this;
 
             return React.createElement(
                 'div',
@@ -408,7 +385,7 @@ var QuizPanel = function (_React$Component6) {
                 React.createElement(
                     'button',
                     { className: 'option-button', onClick: function onClick() {
-                            return _this12.toggleQuizEditor();
+                            return _this10.toggleQuizEditor();
                         } },
                     this.state.editQuiz ? 'Cancel' : 'Create Quiz'
                 ),
@@ -434,16 +411,16 @@ var QuizEditor = function (_React$Component7) {
     function QuizEditor(props) {
         _classCallCheck(this, QuizEditor);
 
-        var _this13 = _possibleConstructorReturn(this, (QuizEditor.__proto__ || Object.getPrototypeOf(QuizEditor)).call(this, props));
+        var _this11 = _possibleConstructorReturn(this, (QuizEditor.__proto__ || Object.getPrototypeOf(QuizEditor)).call(this, props));
 
-        _this13.state = {
+        _this11.state = {
             id: props.quiz.id,
             name: props.quiz.name || '',
             questions: props.quiz.questions || []
         };
 
-        _this13.questionsDOM = {};
-        return _this13;
+        _this11.questionsDOM = {};
+        return _this11;
     }
 
     _createClass(QuizEditor, [{
@@ -454,16 +431,16 @@ var QuizEditor = function (_React$Component7) {
     }, {
         key: 'submitQuiz',
         value: function submitQuiz() {
-            var _this14 = this;
+            var _this12 = this;
 
             var callback = function callback(err) {
                 if (err) {
-                    _this14.props.showConfirm({
+                    _this12.props.showConfirm({
                         type: 'ok',
                         title: err
                     });
                 } else {
-                    _this14.props.hideQuizEditor();
+                    _this12.props.hideQuizEditor();
                 }
             };
 
@@ -558,7 +535,7 @@ var QuizEditor = function (_React$Component7) {
     }, {
         key: 'render',
         value: function render() {
-            var _this15 = this;
+            var _this13 = this;
 
             return React.createElement(
                 'div',
@@ -589,14 +566,14 @@ var QuizEditor = function (_React$Component7) {
                         return React.createElement(
                             Question,
                             { key: id,
-                                question: _this15.props.questions[id],
+                                question: _this13.props.questions[id],
                                 draggable: true,
-                                onDragStart: _this15.onDragStart.bind(_this15, id),
-                                draggedOver: _this15.state.dragOverId == id },
+                                onDragStart: _this13.onDragStart.bind(_this13, id),
+                                draggedOver: _this13.state.dragOverId == id },
                             React.createElement(
                                 'button',
                                 { className: 'delete-button', onClick: function onClick() {
-                                        return _this15.removeQuestion(id);
+                                        return _this13.removeQuestion(id);
                                     } },
                                 '\u2716'
                             )
@@ -626,22 +603,22 @@ var QuizList = function (_React$Component8) {
     _createClass(QuizList, [{
         key: 'render',
         value: function render() {
-            var _this17 = this;
+            var _this15 = this;
 
             return React.createElement(
                 'ol',
                 { className: 'quiz-list' },
                 Object.keys(this.props.quizzes).map(function (id) {
-                    var quiz = _this17.props.quizzes[id];
+                    var quiz = _this15.props.quizzes[id];
                     return React.createElement(Quiz, { key: id,
                         quiz: quiz,
                         chooseQuiz: function chooseQuiz() {
-                            return _this17.props.chooseQuiz(id);
+                            return _this15.props.chooseQuiz(id);
                         },
                         presentLive: function presentLive() {
-                            return _this17.props.presentLive(id);
+                            return _this15.props.presentLive(id);
                         },
-                        showConfirm: _this17.props.showConfirm });
+                        showConfirm: _this15.props.showConfirm });
                 })
             );
         }
@@ -662,16 +639,16 @@ var Quiz = function (_React$Component9) {
     _createClass(Quiz, [{
         key: 'deleteQuiz',
         value: function deleteQuiz() {
-            var _this19 = this;
+            var _this17 = this;
 
             this.props.showConfirm({
                 type: 'yesno',
                 title: 'Are you sure you want to delete this quiz?',
                 onAction: function onAction(choice) {
                     if (choice) {
-                        socket.send('delete_quiz', _this19.props.quiz.id, function (err, data) {
+                        socket.send('delete_quiz', _this17.props.quiz.id, function (err, data) {
                             if (err) {
-                                _this19.props.showConfirm({
+                                _this17.props.showConfirm({
                                     type: 'ok',
                                     title: err
                                 });
@@ -714,12 +691,12 @@ var QuestionPanel = function (_React$Component10) {
     function QuestionPanel(props) {
         _classCallCheck(this, QuestionPanel);
 
-        var _this20 = _possibleConstructorReturn(this, (QuestionPanel.__proto__ || Object.getPrototypeOf(QuestionPanel)).call(this, props));
+        var _this18 = _possibleConstructorReturn(this, (QuestionPanel.__proto__ || Object.getPrototypeOf(QuestionPanel)).call(this, props));
 
-        _this20.state = {
+        _this18.state = {
             editQuestion: null
         };
-        return _this20;
+        return _this18;
     }
 
     _createClass(QuestionPanel, [{
@@ -762,15 +739,15 @@ var QuestionEditor = function (_React$Component11) {
     function QuestionEditor(props) {
         _classCallCheck(this, QuestionEditor);
 
-        var _this21 = _possibleConstructorReturn(this, (QuestionEditor.__proto__ || Object.getPrototypeOf(QuestionEditor)).call(this, props));
+        var _this19 = _possibleConstructorReturn(this, (QuestionEditor.__proto__ || Object.getPrototypeOf(QuestionEditor)).call(this, props));
 
-        _this21.state = {
+        _this19.state = {
             title: props.question.name || '',
             answers: props.question.answers || ['', '', '', ''],
             correct: props.question.correct || null,
             image: props.question.image || null
         };
-        return _this21;
+        return _this19;
     }
 
     _createClass(QuestionEditor, [{
@@ -822,16 +799,16 @@ var QuestionEditor = function (_React$Component11) {
     }, {
         key: 'imageSelected',
         value: function imageSelected(e) {
-            var _this22 = this;
+            var _this20 = this;
 
             if (e.target.files && e.target.files[0]) {
                 var reader = new FileReader();
                 reader.onload = function (e) {
                     var image = e.target.result;
                     if (image.startsWith('data:image')) {
-                        _this22.setState({ image: image });
+                        _this20.setState({ image: image });
                     } else {
-                        _this22.props.showConfirm({
+                        _this20.props.showConfirm({
                             type: 'ok',
                             title: 'Invalid image file'
                         });
@@ -850,7 +827,7 @@ var QuestionEditor = function (_React$Component11) {
     }, {
         key: 'submitQuestion',
         value: function submitQuestion() {
-            var _this23 = this;
+            var _this21 = this;
 
             var title = this.state.title.trim();
             if (!title) {
@@ -882,19 +859,19 @@ var QuestionEditor = function (_React$Component11) {
                 image: this.state.image || undefined
             }, function (err) {
                 if (err) {
-                    _this23.props.showConfirm({
+                    _this21.props.showConfirm({
                         type: 'ok',
                         title: 'Error submitting question: ' + err
                     });
                 } else {
-                    _this23.props.hideQuestionEditor();
+                    _this21.props.hideQuestionEditor();
                 }
             });
         }
     }, {
         key: 'render',
         value: function render() {
-            var _this24 = this;
+            var _this22 = this;
 
             return React.createElement(
                 'div',
@@ -920,16 +897,16 @@ var QuestionEditor = function (_React$Component11) {
                                 type: 'text',
                                 value: answer,
                                 size: '35',
-                                onChange: _this24.changeAnswer.bind(_this24, idx) }),
+                                onChange: _this22.changeAnswer.bind(_this22, idx) }),
                             React.createElement('input', {
                                 type: 'radio',
                                 name: 'correct',
-                                checked: _this24.state.correct == idx,
-                                onChange: _this24.correctSelected.bind(_this24, idx) }),
+                                checked: _this22.state.correct == idx,
+                                onChange: _this22.correctSelected.bind(_this22, idx) }),
                             'Correct',
                             React.createElement(
                                 'button',
-                                { className: 'remove-answer-button', onClick: _this24.removeAnswer.bind(_this24, idx) },
+                                { className: 'remove-answer-button', onClick: _this22.removeAnswer.bind(_this22, idx) },
                                 '\u2716'
                             )
                         );
@@ -983,7 +960,7 @@ var QuestionList = function (_React$Component12) {
     _createClass(QuestionList, [{
         key: 'deleteQuestion',
         value: function deleteQuestion(id) {
-            var _this26 = this;
+            var _this24 = this;
 
             this.props.showConfirm({
                 type: 'yesno',
@@ -992,7 +969,7 @@ var QuestionList = function (_React$Component12) {
                     if (choice) {
                         socket.send('delete_question', id, function (err, data) {
                             if (err) {
-                                _this26.props.showConfirm({
+                                _this24.props.showConfirm({
                                     type: 'ok',
                                     title: err
                                 });
@@ -1009,7 +986,7 @@ var QuestionList = function (_React$Component12) {
     }, {
         key: 'render',
         value: function render() {
-            var _this27 = this;
+            var _this25 = this;
 
             return React.createElement(
                 'ul',
@@ -1017,11 +994,11 @@ var QuestionList = function (_React$Component12) {
                 Object.keys(this.props.questions).map(function (id) {
                     return React.createElement(
                         Question,
-                        { key: id, question: _this27.props.questions[id], draggable: true, onDragStart: _this27.onDragStart.bind(_this27, id) },
+                        { key: id, question: _this25.props.questions[id], draggable: true, onDragStart: _this25.onDragStart.bind(_this25, id) },
                         React.createElement(
                             'button',
                             { className: 'delete-button', onClick: function onClick() {
-                                    return _this27.deleteQuestion(id);
+                                    return _this25.deleteQuestion(id);
                                 } },
                             '\u2716'
                         )
@@ -1046,7 +1023,7 @@ var Question = function (_React$Component13) {
     _createClass(Question, [{
         key: 'render',
         value: function render() {
-            var _this29 = this;
+            var _this27 = this;
 
             if (!this.props.question) {
                 return null;
@@ -1077,7 +1054,7 @@ var Question = function (_React$Component13) {
                                     type: 'radio',
                                     value: idx,
                                     readOnly: true,
-                                    checked: _this29.props.question.correct == idx }),
+                                    checked: _this27.props.question.correct == idx }),
                                 unescapeHTML(answer)
                             );
                         })

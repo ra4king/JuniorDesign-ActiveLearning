@@ -1,13 +1,6 @@
-window.onload = () => {
-    socket.on('login', (success) => {
-        if(success) {
-            socket.send('get_quizzes', (err, data) => !err && socket.emit('quizzes', data));
-            socket.send('get_questions', (err, data) => !err && socket.emit('questions', data));
-            socket.send('get_live_question', (err, data) => !err && socket.emit('live_question', data));
-        }
-    });
+var IndexLink = ReactRouter.IndexLink;
 
-    var ReactRouter = window.ReactRouter;
+window.onload = () => {
     var Router = ReactRouter.Router;
     var Route = ReactRouter.Route;
     var IndexRoute = ReactRouter.IndexRoute;
@@ -17,7 +10,7 @@ window.onload = () => {
         <Router history={browserHistory}>
             <Route path='/active-learning/' component={App}>
                 <IndexRoute component={Panels} />
-                <Route path='/active-learning/statistics' component={StatisticsPanels} page='statistics' />
+                <Route path='/active-learning/statistics' component={StatisticsPanels} />
             </Route>
         </Router>,
         document.getElementById('panels'));
@@ -33,6 +26,11 @@ class App extends React.Component {
             currentLiveQuestion: null,
         };
 
+        socket.on('login', (user) => {
+            if(user) {
+                this.setState({ user: user });
+            }
+        });
         socket.on('live_question', (data) => this.setState({ currentLiveQuestion: data }));
     }
 
@@ -56,10 +54,6 @@ class App extends React.Component {
         this.setState({ showConfirm: null });
     }
 
-    setPage(page) {
-        setTimeout(() => this.setState({ page: page }), 1);
-    }
-    
     render() {
         return (
             <div>
@@ -73,11 +67,11 @@ class App extends React.Component {
                 {this.state.showConfirm && <ConfirmBox hideConfirm={() => this.hideConfirm()} {...this.state.showConfirm} />}
 
                 <div className={(this.state.showLiveQuestion || this.state.showConfirm) && 'blur'}>
-                    <HeaderPanel page={this.state.page} />
+                    <HeaderPanel user={this.state.user} page={this.state.page} />
 
                     {React.Children.map(this.props.children, (child) =>
                         React.cloneElement(child, {
-                            setPage: this.setPage.bind(this),
+                            user: this.state.user,
                             showConfirm: this.showConfirm.bind(this),
                             toggleLiveQuiz: this.toggleLiveQuiz.bind(this)
                         }))}
@@ -88,33 +82,17 @@ class App extends React.Component {
 }
 
 class HeaderPanel extends React.Component {
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            username: ''
-        }
-
-        socket.on('login', (user) => {
-            if(user) {
-                this.setState({ username: user.username });
-            }
-        });
-    }
-
     render() {
-        var isSelected = (page) => (page == this.props.page) ? 'selected' : '';
-
         return (
             <div id='header-panel'>
                 <img id='logo' src='images/active_learning_logo_white.png' width='175' height='75' alt='logo'/>
-                <h2 id='name'>{this.state.username}</h2>
+                <h2 id='name'>{this.props.user ? this.props.user.username : ''}</h2>
                 <nav>
                     <form method='post'>
                         <button className='header-nav-link' formAction='api/logout'>Logout</button>
                     </form>
-                    <a href='statistics' className='header-nav-link' id={isSelected('statistics')}>Statistics</a>
-                    <a href='./' className='header-nav-link'  id={isSelected('home')}>Home</a>
+                    <IndexLink to='/active-learning/statistics' className='header-nav-link' activeClassName='selected'>Statistics</IndexLink>
+                    <IndexLink to='/active-learning/' className='header-nav-link' activeClassName='selected'>Home</IndexLink>
                 </nav>
             </div>
         );
@@ -162,9 +140,7 @@ class ConfirmBox extends React.Component {
 class Panels extends React.Component {
     constructor(props) {
         super(props);
-
-        props.setPage('home');
-
+        
         this.state = {
             questions: {},
             quizzes: {},
@@ -173,11 +149,39 @@ class Panels extends React.Component {
 
         socket.on('questions', (data) => this.setState({ questions: data }));
         socket.on('quizzes', (data) => this.setState({ quizzes: data }));
+
+        this.refresh = this.refresh.bind(this);
+
+        if(socket.isLoggedIn()) {
+            this.refresh();
+        } else {
+            socket.on('login', this.refresh);
+        }
+    }
+
+    refresh() {
+        socket.send('get_quizzes', (err, data) => !err && socket.emit('quizzes', data));
+        socket.send('get_questions', (err, data) => !err && socket.emit('questions', data));
+        socket.send('get_live_question', (err, data) => !err && socket.emit('live_question', data));
+    }
+
+    componentWillUnmount() {
+        socket.remove('login', this.refresh);
     }
 
     chooseQuiz(id) {
-        if(!id || !this.state.selectedQuiz || confirm('Discard current quiz?')) {
+        if(!id || !this.state.selectedQuiz) {
             this.setState({ selectedQuiz: id });
+        } else {
+            this.props.showConfirm({
+                type: 'yesno',
+                title: 'Discard current quiz?',
+                onAction: ((confirm) => {
+                    if(confirm) {
+                        this.setState({ selectedQuiz: id });
+                    }
+                })
+            });
         }
     }
 

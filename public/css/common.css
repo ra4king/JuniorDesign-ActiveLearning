@@ -82,7 +82,7 @@ body {
     color: white;
 }
 
-#header-panel #selected {
+#header-panel .selected {
     background-color: #0055AA
 }
 
