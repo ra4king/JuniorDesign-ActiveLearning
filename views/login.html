@@ -5,93 +5,21 @@
 
         <title>Active Learning Tool - Login</title>
         <link rel="icon" type="image/png" href="images/active_learning_logo_icon.png" />
-        <style  type="text/css">
-            body {
-                background-color: #DDEEFF;
-                font-family: "Noto Sans", sans-serif;
-                text-align: center;
-            }
+        <link rel="stylesheet" type="text/css" href="css/login.css" />
 
-            h1 {
-                font: Verdana;
-                text-align: center;
-                font-size: 50px;
-                margin: 10px;
-            }
+        <script src="https://unpkg.com/react@15/dist/react.js"></script>
+        <script src="https://unpkg.com/react-dom@15/dist/react-dom.js"></script>
 
-            #logo {
-                margin: 10px;
-            }
-
-            #message {
-                color: #FF3333;
-                margin: auto;
-                text-align: center;
-            }
-
-            .login-wrapper {
-                min-width: 250px;
-                min-height: 100px;
-                line-height: 100px;
-                text-align: center;
-            }
-
-            .login-wrapper .text {
-                display: block;
-                margin-left: auto;
-                margin-right: auto;
-                margin-top: 20px;
-                font-size: 40px;
-                text-align: center;
-            }
-            
-            .login-wrapper .login {
-                background-color: #2C2C2B;
-                border: none;
-                color: white;
-                padding: 15px 30px;
-                margin-right: 10px;
-                margin-left: 10px;
-                margin-top: 20px;
-                text-align: center;
-                font-size: 40px;
-                width: 200px;
-                transition-duration: .6s;
-                display: inline-block;
-                vertical-align: middle;
-                line-height: normal;
-            }
-
-            .login:hover {
-                background-color: #3c6668;
-                color: white;
-            }
-
-            .login:link {
-                color: white;
-                text-decoration: none;
-            }
-
-            .login:visited {
-                color: white;
-                text-decoration: none;
-            }
-        </style>
+        <script>
+            var redirect = '{{redirect}}';
+            var message = '{{message}}';
+            var csurf = '{{csurf}}';
+            var register = {{register}};
+            var username = '{{username}}';
+        </script>
+        <script src="js/login.js"></script>
     </head>
     <body>
-        <img id="logo" src="images/active_learning_logo_black.png" alt="logo"/>
-        <h1>Active Learning Tool</h1>
-        {{#if message}}
-            <p id="message">{{message}}</p>
-        {{/if}}
-        <div class="login-wrapper">
-            <form method="post">
-                <input type="hidden" name="_csrf" value="{{csurf}}" />
-                <input type="text" class="text" name="username" placeholder="Username" />
-                <input type="password" class="text" name="password" placeholder="Password" />
-                <input type="submit" class="login" value="Login" formaction="api/login?redirect={{redirect}}" />
-                <input type="submit" class="login" value="Register" formaction="api/register" />
-            </form>
-        </div>
+        <div id="login"></div>
     </body>
 </html>

@@ -117,14 +117,23 @@ MongoClient.connect('mongodb://roiatalla.com:27017', function(err, db) {
     });
 });
 
-function create_user(username, password, callback) {
+function create_user(username, passwords, callback) {
     if(!database) {
         return callback('Not connected to database.');
     }
 
+    var password = passwords[0];
+    var password2 = passwords[1];
+
     // TODO: Make passwords stronger....
-    if(!username || !password) {
+    if(!username || typeof username !== 'string' ||
+        !password || typeof password !== 'string' ||
+        !password2 || typeof password2 !== 'string') {
         return callback('Username and password cannot be empty.');
+    }
+
+    if(password != password2) {
+        return callback('Passwords do not match.');
     }
 
     users.findOne({ username: username }, function(err, result) {
@@ -147,6 +156,8 @@ function create_user(username, password, callback) {
 
             var salt = buf.toString('base64');
             var iterations = 100000;
+            console.log('password:');
+            console.log(password);
             crypto.pbkdf2(password, salt, iterations, 512, 'sha512', function(err, buf) {
                 var hash = buf.toString('base64');
 

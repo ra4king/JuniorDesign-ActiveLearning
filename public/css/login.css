@@ -1,0 +1,101 @@
+body {
+    background-color: #DDEEFF;
+    font-family: "Noto Sans", sans-serif;
+    text-align: center;
+}
+
+h1 {
+    font: Verdana;
+    text-align: center;
+    font-size: 50px;
+    margin: 10px;
+}
+
+#logo {
+    margin: 10px;
+}
+
+#message {
+    color: #FF3333;
+    margin: auto;
+    margin-top: 20px;
+    text-align: center;
+    font-size: 20px;
+}
+
+.login-wrapper {
+    margin: auto;
+    padding: 10px;
+    max-width: 500px;
+    text-align: center;
+    font-size: 40px;
+}
+
+.login-wrapper .text {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 20px;
+    text-align: center;
+    font-size: 40px;
+}
+
+.login-wrapper .login {
+    background-color: #2C2C2B;
+    border: none;
+    color: white;
+    padding: 15px 30px;
+    margin-right: 10px;
+    margin-left: 10px;
+    margin-top: 20px;
+    text-align: center;
+    font-size: 40px;
+    width: 200px;
+    transition-duration: .6s;
+    display: inline-block;
+    vertical-align: middle;
+    line-height: normal;
+}
+
+.login:hover {
+    background-color: #3c6668;
+    color: white;
+}
+
+.login:link {
+    color: white;
+    text-decoration: none;
+}
+
+.login:visited {
+    color: white;
+    text-decoration: none;
+}
+
+ul.tab {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid #000000;
+    background-color: #2C2C2B;
+}
+ul.tab li {
+    float: left;
+    width: 50%;
+}
+ul.tab li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    transition: 0.3s;
+    font-size: 30px;
+}
+ul.tab li a:hover {
+    background-color: #3c6668;
+}
+ul.tab li a:focus, .active {
+    background-color: #CCCCCC;
+}

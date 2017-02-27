@@ -104,7 +104,13 @@ app.use('/login', function(err, req, res, next) {
 });
 
 app.get('/login', function(req, res) {
-    res.render('login', { message: req.query.message, redirect: req.query.redirect, csurf: req.csrfToken() });
+    res.render('login', {
+        message: req.query.message,
+        redirect: req.query.redirect,
+        register: req.query.register || false,
+        username: req.query.username,
+        csurf: req.csrfToken()
+    });
 });
 
 app.post('/api/login', function(req, res) {
@@ -112,7 +118,9 @@ app.post('/api/login', function(req, res) {
         if(err) {
             var message = 'message=' + querystring.escape(err.toString());
             var redirect = req.query.redirect ? '&redirect=' + req.query.redirect : '';
-            res.redirect(req.baseUrl + '/login?' + message + redirect);
+            var username = '&username=' + req.body.username;
+            var register = '&register=false'
+            res.redirect(req.baseUrl + '/login?' + message + redirect + username + register);
         } else {
             res.cookie('session_id', session_id, { expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) });
             res.redirect(req.query.redirect || req.baseUrl);
@@ -137,7 +145,9 @@ app.post('/api/register', function(req, res) {
         if(err) {
             var message = 'message=' + querystring.escape(err.toString());
             var redirect = req.query.redirect ? '&redirect=' + req.query.redirect : '';
-            res.redirect(req.baseUrl + '/login?' + message + redirect);
+            var username = '&username=' + req.body.username;
+            var register = '&register=true'
+            res.redirect(req.baseUrl + '/login?' + message + redirect + username + register);
         } else {
             var message = 'message=' + querystring.escape('Register success, please login.');
             var redirect = req.query.redirect ? '&redirect=' + req.query.redirect : '';
