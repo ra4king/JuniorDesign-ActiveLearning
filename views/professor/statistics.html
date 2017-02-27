@@ -5,158 +5,23 @@
 
         <title>Active Learning Tool - Statistics</title>
         <link rel="icon" type="image/png" href="images/active_learning_logo_icon.png" />
-        <link rel="stylesheet" type="text/css" href="css/common.css">
-        <style type="text/css">
-            #button-chart-panel {
-                position: absolute;
-                overflow: hidden;
-                background-color: #2C2C2C;
-                width: 65%;
-                top: 100px;
-                bottom: 8px;
-                right: 10px;
-            }
+        <link rel="stylesheet" type="text/css" href="css/common.css" />
+        <link rel="stylesheet" type="text/css" href="css/professor-statistics.css" />
 
-            #statistics-panel {
-                position: absolute;
-                overflow: hidden;
-                background-color: #2C2C2C;
-                color: white;
-                width: 100%;
-                top: 20px;
-                bottom: 0px;
-            }
+        <script src="https://unpkg.com/react@15/dist/react.js"></script>
+        <script src="https://unpkg.com/react-dom@15/dist/react-dom.js"></script>
 
-            #statistics-chart {
-                position: absolute;
-                overflow: hidden;
-                background-color: #2C2C2C;
-            }
-
-            #student-list, #quiz-list{
-                width: 100%;
-                text-align: center;
-            }
-
-            #student-list {
-                display: table;
-            }
-
-            .panel {
-                position: absolute;
-                overflow: auto;
-                background-color: #2C2C2C;
-                color: white;
-                top: 100px;
-                bottom: 8px;
-            }
-
-            #student-panel {
-                width: 30%;
-                left: 10px;
-            }
-
-            table.sortable thead {
-                background-color:#eee;
-                color:#000000;
-                font-weight: bold;
-                cursor: default;
-            }
-
-            .list-button {
-                width: 100%;
-                text-align: center;
-                color: white;
-                background-color: #222222;
-                border: 1px solid #111111;
-            }
-
-            .list-button:hover {
-                background-color: #333333;
-            }
-
-            ul.tab {
-                list-style-type: none;
-                margin: 0;
-                padding: 0;
-                overflow: hidden;
-                border: 1px solid #000000;
-                background-color: #444444;
-            }
-
-            ul.tab li {
-                float: left;
-                width: 50%;
-            }
-
-            ul.tab li a {
-                display: block;
-                color: black;
-                text-align: center;
-                padding: 14px 16px;
-                text-decoration: none;
-                transition: 0.3s;
-                font-size: 17px;
-            }
-
-            ul.tab li a:hover {
-                background-color: #DDDDDD;
-            }
-
-            ul.tab li a:focus, .active {
-                background-color: #CCCCCC;
-            }
-
-            .tabcontent {
-                display: none;
-            }
-        </style>
-        <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
-         
-        <script src="js/Chart.bundle.min.js"></script>
+        <script src="js/chart.bundle.min.js"></script>
         <script src="js/sorttable.js"></script>
+
         <script src="js/utils.js"></script>
         <script type="text/javascript">
+            var username = '{{username}}';
             var statistics = {{{statistics}}};
         </script>
         <script src="js/professor-statistics.js"></script>
     </head>
     <body>
-        <div id="main-container">
-            <div id="header-panel">
-                <img id="logo" src="images/active_learning_logo_white.png" width="175" height="75" alt="logo"/>
-                <h2 id="name">{{username}}</h2>
-                <form method="post">
-                    <button class="header-nav-link" formaction="api/logout">Logout</button>
-                </form>
-                <a href="settings"><button class="header-nav-link">Settings</button></a>
-                <button class="header-nav-link" id="selected">Statistics</button>
-                <a href="./"><button class="header-nav-link">Home</button></a>
-            </div>
-            <div class="panel" id="student-panel">
-                <ul class="tab">
-                  <li><a href="javascript:void(0)" class="tablinks active" onclick="openTab(event, 'student-list')">Students</a></li>
-                  <li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'quiz-list'); displayAllQuizStatistics();">Quizzes</a></li>
-                </ul>
-                    <table class="sortable tabcontent" id="student-list">
-                        <thead>
-                            <tr><th>Students</th></tr>
-                        </thead>
-                        <tbody id="student-buttons"></tbody>
-                    </table>
-                    <table class="sortable tabcontent" id="quiz-list">
-                        <thead>
-                            <tr><th>Quizzes</th></tr>
-                        </thead>
-                        <tbody id="quiz-buttons"></tbody>
-                    </table>
-            </div>
-            <div id="button-chart-panel">
-                <button class="list-button" onclick="loadStatistics(false)">Load Question Statistics</button>
-                <div id="statistics-panel">
-                    <canvas id="statistics-chart"></canvas>
-                </div>
-            </div>
-        </div>
+        <div id="panels"></div>
     </body>
 </html>
