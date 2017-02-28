@@ -1,3 +1,6 @@
+import React from 'react';
+import ReactDOM from 'react-dom';
+
 window.onload = () => {
     ReactDOM.render(<LoginPage />, document.getElementById('login'));
 }

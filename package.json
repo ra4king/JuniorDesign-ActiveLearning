@@ -4,7 +4,7 @@
   "description": "The Active Learning site for Junior Design 2016-2017.",
   "main": "src/site.js",
   "scripts": {
-    "build": "babel src/client/ -d public/js/ -x .jsx",
+    "build": "webpack --colors --config webpack.config.prod.js",
     "start": "node src/server/site.js"
   },
   "repository": {
@@ -32,9 +32,12 @@
   },
   "devDependencies": {
     "babel-cli": "^6.22.2",
+    "babel-core": "^6.23.1",
+    "babel-loader": "^6.3.2",
     "babel-preset-env": "^1.1.8",
     "babel-preset-react": "^6.23.0",
-    "webpack": "^2.2.1"
+    "webpack": "^2.2.1",
+    "webpack-dev-server": "^2.4.1"
   },
   "babel": {
     "presets": [

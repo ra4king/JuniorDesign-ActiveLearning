@@ -1,23 +1,16 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <meta charset="UTF-8">
+
         <title>Active Learning Tool - Admin</title>
+        <link rel="icon" type="image/png" href="images/active_learning_logo_icon.png" />
         <link rel="stylesheet" type="text/css" href="css/common.css">
-        <script src="https://unpkg.com/react@15/dist/react.js"></script>
-        <script src="https://unpkg.com/react-dom@15/dist/react-dom.js"></script>
+
+        <script src="js/vendor-bundle.js"></script>
+        <script src="js/admin-bundle.js"></script>
     </head>
     <body>
-        <div id="header-panel">
-            <img id="logo" src="images/active_learning_logo_white.png" width="175" height="75" alt="logo"/>
-            <h2 id="name">{{username}}</h2>
-            <form method="post">
-                <button class="header-button" formaction="api/logout">Logout</button>
-            </form>
-            <button class="header-button" id="selected">Home</button>
-        </div>
-        <div id="admin-body">
-        </div>
-
-        <script src="js/admin-app.js"></script>
+        <div id="admin-body"></div>
     </body>
 </html>

@@ -1,3 +1,8 @@
+import React from 'react';
+import socket from '../socket.jsx';
+import { unescapeHTML } from '../utils.jsx';
+import Chart from 'chart.js';
+
 /* JSON Object I want
 statistics = {
     ...
@@ -18,7 +23,7 @@ statistics = {
 }
 */
 
-class StatisticsPanels extends React.Component {
+export default class StatisticsPanels extends React.Component {
     constructor(props) {
         super(props);
 

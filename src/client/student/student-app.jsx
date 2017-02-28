@@ -1,11 +1,12 @@
-var IndexLink = ReactRouter.IndexLink;
+import React from 'react';
+import ReactDOM from 'react-dom';
+import socket from '../socket.jsx';
+import { unescapeHTML } from '../utils.jsx';
+import StatisticsPanels from './student-statistics.jsx';
+
+import { Router, Route, IndexRoute, IndexLink, browserHistory } from 'react-router';
 
 window.onload = () => {
-    var Router = ReactRouter.Router;
-    var Route = ReactRouter.Route;
-    var IndexRoute = ReactRouter.IndexRoute;
-    var browserHistory = ReactRouter.browserHistory;
-
     ReactDOM.render(
         <Router history={browserHistory}>
             <Route path='/active-learning/' component={App}>

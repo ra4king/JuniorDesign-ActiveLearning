@@ -2,17 +2,28 @@ const webpack = require('webpack');
 const path = require('path');
 
 module.exports = {
-    entry: './src/client/professor/professor-app.jsx',
+    entry: {
+        professor: './src/client/professor/professor-app.jsx',
+        student: './src/client/student/student-app.jsx',
+        login: './src/client/login.jsx',
+        admin: './src/client/admin-app.jsx'
+    },
     output: {
-        filename: 'professor-bundle.js',
+        filename: '[name]-bundle.js',
         path: path.resolve(__dirname, 'public', 'js')
     },
     module: {
         rules: [
-            { test: /\.(js|jsx)$/, use: 'babel-loader' }
+            { test: /\.jsx$/, loader: 'babel-loader' }
         ]
     },
     plugins: [
-        new webpack.optimize.UglifyJsPlugin()
+        new webpack.optimize.UglifyJsPlugin(),
+        new webpack.optimize.CommonsChunkPlugin({
+            names: 'vendor',
+            minChunks: function(module) {
+                return module.context && module.context.indexOf('node_modules') != -1;
+            }
+        })
     ]
 }
