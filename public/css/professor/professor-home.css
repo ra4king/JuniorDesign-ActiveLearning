@@ -74,6 +74,24 @@
     border: none;
 }
 
+.edit-button {
+    position: absolute;
+    display: block;
+    width: 21px;
+    height: 21px;
+    right: 3px;
+    bottom: 3px;
+    background-color: #0000aa;
+    color: white;
+    border: none;
+    text-align: center;
+    transition-duration: .6s;
+}
+
+.edit-button:hover {
+    background-color: #6666aa;
+}
+
 .live-button {
     position: absolute;
     display: block;

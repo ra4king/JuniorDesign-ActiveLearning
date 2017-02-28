@@ -446,10 +446,12 @@ class QuestionPanel extends React.Component {
         };
     }
 
+    chooseQuestion(id) {
+        this.setState({ editQuestion: this.props.questions[id] });
+    }
+
     toggleQuestionEditor() {
-        this.setState((prevState) =>  {
-            return { editQuestion: prevState.editQuestion ? null : {}};
-        });
+        this.setState((prevState) =>  ({ editQuestion: prevState.editQuestion ? null : {}}));
     }
 
     hideQuestionEditor() {
@@ -468,7 +470,10 @@ class QuestionPanel extends React.Component {
                             question={this.state.editQuestion}
                             hideQuestionEditor={this.hideQuestionEditor.bind(this)}
                             showConfirm={this.props.showConfirm} />)
-                    : (<QuestionList questions={this.props.questions} showConfirm={this.props.showConfirm} />)
+                    : (<QuestionList
+                            questions={this.props.questions}
+                            chooseQuestion={this.chooseQuestion.bind(this)}
+                            showConfirm={this.props.showConfirm} />)
                 }
             </div>
         );
@@ -480,6 +485,7 @@ class QuestionEditor extends React.Component {
         super(props);
 
         this.state = {
+            id: props.question.id,
             title: props.question.name || '',
             answers: props.question.answers || ['', '', '', ''],
             correct: props.question.correct || null,
@@ -572,12 +578,7 @@ class QuestionEditor extends React.Component {
             return;
         }
 
-        socket.send('create_question', {
-            name: this.state.title,
-            answers: answers,
-            correct: String(this.state.correct),
-            image: this.state.image || undefined
-        }, (err) => {
+        var callback = (err) => {
             if(err) {
                 this.props.showConfirm({
                     type: 'ok',
@@ -586,7 +587,24 @@ class QuestionEditor extends React.Component {
             } else {
                 this.props.hideQuestionEditor();
             }
-        });
+        };
+
+        if(this.state.id) {
+            socket.send('update_question', {
+                id: this.state.id,
+                name: this.state.title,
+                answers: answers,
+                correct: String(this.state.correct),
+                image: this.state.image || undefined
+            }, callback);
+        } else {
+            socket.send('create_question', {
+                name: this.state.title,
+                answers: answers,
+                correct: String(this.state.correct),
+                image: this.state.image || undefined
+            }, callback);
+        }
     }
 
     render() {
@@ -632,7 +650,11 @@ class QuestionEditor extends React.Component {
                 {this.state.image &&
                     (<div className='question-creator-row'><img id='image-input' src={this.state.image} /></div>)}
 
-                <div className='question-creator-row'><button className='option-button' onClick={this.submitQuestion.bind(this)}>Submit</button></div>
+                <div className='question-creator-row'>
+                    <button className='option-button' onClick={this.submitQuestion.bind(this)}>
+                        {this.state.id ? 'Update' : 'Submit'}
+                    </button>
+                </div>
             </div>
         );
     }
@@ -665,8 +687,9 @@ class QuestionList extends React.Component {
         return (
             <ul id='question-list'>
                 {Object.keys(this.props.questions).map((id) => (
-                    <Question key={id} question={this.props.questions[id]} draggable onDragStart={this.onDragStart.bind(this, id)}>
+                    <Question question={this.props.questions[id]} draggable onDragStart={this.onDragStart.bind(this, id)}>
                         <button className='delete-button' onClick={() => this.deleteQuestion(id)}>&#10006;</button>
+                        <button className='edit-button' onClick={() => this.props.chooseQuestion(id)}>E</button>
                     </Question>
                 ))}
             </ul>

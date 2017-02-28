@@ -118,6 +118,7 @@ module.exports = function(base_url, server, database) {
                     if(!verifyAdmin()) return;
                     database.get_all_users(reply);
                     break;
+
                 case 'get_stats':
                     if(user_data.admin) {
                         database.get_stats(reply);
@@ -125,10 +126,23 @@ module.exports = function(base_url, server, database) {
                         database.get_stats(user_data.username, reply);
                     }
                     break;
+
                 case 'create_question':
                     if(!verifyAdmin()) return;
 
                     database.create_question(data.data, function(err) {
+                        reply(err);
+
+                        if(!err) {
+                            broadcast_questions();
+                        }
+                    });
+                    break;
+
+                case 'update_question':
+                    if(!verifyAdmin()) return;
+
+                    database.update_question(data.data, function(err) {
                         reply(err);
 
                         if(!err) {

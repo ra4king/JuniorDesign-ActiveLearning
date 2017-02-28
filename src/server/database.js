@@ -11,7 +11,7 @@ module.exports = {
     destroy_session: destroy_session,
 
     create_question: create_question,
-    //update_question: update_question, // TODO
+    update_question: update_question,
     delete_question: delete_question,
     get_question_by_id: get_question_by_id,
     get_questions: get_questions,
@@ -354,7 +354,28 @@ function create_question(question, callback) {
 
     questions.insertOne(question, function(err, result) {
         if(err) {
-            console.error('Error when inserting: ' + question);
+            console.error('Error when inserting question: ' + question);
+            console.error(err);
+        }
+
+        callback(err);
+    });
+}
+
+function update_question(question, callback) {
+    if(!database) {
+        return callback('Not connected to database.');
+    }
+
+    var question_id = question.id;
+    question = validate_question(question);
+    if(!question) {
+        return callback('Invalid question object.');
+    }
+
+    questions.updateOne({ _id: new ObjectID(question_id) }, { $set: question }, function(err, result) {
+        if(err) {
+            console.error('Error when update question: ' + question);
             console.error(err);
         }
 
