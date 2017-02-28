@@ -5,12 +5,6 @@
     overflow: auto;
 }
 
-#live-quiz-delete-button {
-    position: fixed;
-    top: 8px;
-    right: 20%;
-}
-
 .draggable {
     border: dashed 1px red;
     border-radius: 10px;
@@ -54,6 +48,7 @@
 }
 
 #quiz-question-list {
+    overflow: auto;
     position: absolute;
     top: 90px;
     width: 100%;
@@ -82,10 +77,10 @@
 .live-button {
     position: absolute;
     display: block;
-    width: 23px;
-    height: 23px;
-    right: 0;
-    bottom: 0;
+    width: 21px;
+    height: 21px;
+    right: 3px;
+    bottom: 3px;
     background-color: #008800;
     color: white;
     border: none;

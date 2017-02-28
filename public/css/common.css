@@ -88,7 +88,6 @@ body {
 
 #quiz-panel, #question-panel {
     position: absolute;
-    overflow: auto;
     background-color: #2C2C2C;
     color: white;
     width: 45%;
@@ -102,6 +101,14 @@ body {
 
 #question-panel {
     right: 8px;
+}
+
+#question-list {
+    position: absolute;
+    top: 45px;
+    bottom: 0px;
+    width: 100%;
+    overflow: auto;
 }
 
 .option-button {
@@ -126,6 +133,11 @@ ol, ul {
 }
 
 .quiz-list {
+    position: absolute;
+    top: 45px;
+    bottom: 0px;
+    width: 100%;
+    overflow: auto;
     list-style-type: none;
 }
 
@@ -184,10 +196,10 @@ ol, ul {
 .delete-button {
     position: absolute;
     display: block;
-    width: 23px;
-    height: 23px;
-    right: 0;
-    top: 0;
+    width: 21px;
+    height: 21px;
+    right: 3px;
+    top: 3px;
     background-color: #FF2222;
     color: white;
     border: none;
