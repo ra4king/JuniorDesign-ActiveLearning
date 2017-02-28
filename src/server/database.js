@@ -26,7 +26,6 @@ module.exports = {
     get_stats: get_stats
 };
 
-var escape = require('escape-html');
 var crypto = require('crypto');
 
 var mongodb = require('mongodb');
@@ -264,7 +263,7 @@ function destroy_session(session_id, callback) {
 
 function cleanup_user(user, noadmin) {
     return {
-        username: escape(user.username),
+        username: user.username,
         permissions: user.permissions,
         admin: (noadmin ? undefined : user.admin)
     };
@@ -325,19 +324,20 @@ function validate_question(question) {
     if(!question ||
         typeof question.name !== 'string' ||
         !Array.isArray(question.answers) ||
-        typeof question.correct !== 'string' ||
+        (typeof question.correct !== 'string' && typeof question.correct !== 'number') ||
         (question.image && typeof question.image !== 'string') ||
         question.answers.length < 2 ||
-        question.correct % 1 !== 0 ||
+        (Number(question.correct) !== NaN &&
+        (question.correct % 1 !== 0 ||
         question.correct < 0 ||
-        question.correct >= question.answers.length) {
+        question.correct >= question.answers.length))) {
         return null;
     }
 
     return {
         name: question.name,
         answers: question.answers.map((ans) => String(ans)),
-        correct: question.correct,
+        correct: String(question.correct),
         image: question.image
     };
 }
@@ -386,7 +386,17 @@ function delete_question(question_id, callback) {
     });
 }
 
-function get_question_by_id(question_id, callback) {
+function cleanup_question(question, include_correct) {
+    return {
+        id: question._id.toHexString(),
+        name: question.name,
+        answers: question.answers,
+        correct: include_correct ? question.correct : undefined,
+        image: question.image || undefined
+    };
+}
+
+function get_question_by_id(question_id, include_correct, callback) {
     if(!database) {
         return callback('Not connected to database.');
     }
@@ -398,13 +408,7 @@ function get_question_by_id(question_id, callback) {
             return callback(err);
         }
 
-        callback(null, {
-            id: question._id.toHexString(),
-            name: escape(question.name),
-            answers: question.answers.map((str) => escape(str)),
-            correct: question.correct,
-            image: question.image ? escape(question.image) : undefined
-        });
+        callback(null, cleanup_question(question, include_correct));
     });
 }
 
@@ -420,20 +424,13 @@ function get_questions(include_correct, callback) {
             return callback(err);
         }
 
-        var cleaned = {};
+        var cleaned_questions = {};
         results.forEach(function(result) {
-            var id = result._id.toHexString();
-
-            cleaned[id] = {
-                id: id,
-                name: escape(result.name),
-                answers: result.answers.map((str) => escape(str)),
-                correct: include_correct ? result.correct : undefined,
-                image: result.image ? escape(result.image) : undefined
-            };
+            var cleaned = cleanup_question(result, include_correct);
+            cleaned_questions[cleaned.id] = cleaned;
         });
 
-        callback(null, cleaned);
+        callback(null, cleaned_questions);
     });
 }
 
@@ -461,9 +458,7 @@ function create_quiz(quiz, callback) {
         return callback('Invalid quiz object.');
     }
 
-    var ids = quiz.questions.map(function(id) {
-        return new ObjectID(id);
-    });
+    var ids = quiz.questions.map((id) => new ObjectID(id));
 
     questions.find({ _id: { $in: ids }}).toArray(function(err, results) {
         var verifiedIds = [];
@@ -497,14 +492,12 @@ function update_quiz(quiz, callback) {
         return callback('Invalid quiz object.');
     }
 
-    var ids = quiz.questions.map(function(id) {
-        return new ObjectID(id);
-    });
+    var ids = quiz.questions.map((id) => new ObjectID(id));
 
     questions.find({ _id: { $in: ids }}).toArray(function(err, results) {
         var verifiedIds = [];
         quiz.questions.forEach(function(id) {
-            if(results.findIndex(function(result) { return result._id.toHexString() === id }) != -1) {
+            if(results.findIndex((result) => result._id.toHexString() === id) != -1) {
                 verifiedIds.push(id);
             }
         });
@@ -553,7 +546,7 @@ function get_quiz_by_id(quiz_id, callback) {
         if(quiz) {
             callback(null, {
                 id: quiz._id.toHexString(),
-                name: escape(quiz.name),
+                name: quiz.name,
                 questions: quiz.questions,
             });
         } else {
@@ -580,7 +573,7 @@ function get_quizzes(callback) {
 
             cleaned[id] = {
                 id: id,
-                name: escape(result.name),
+                name: result.name,
                 questions: result.questions
             };
         });
@@ -602,7 +595,7 @@ function submit_quiz(user, submission, callback) {
 
     var doc = {
         timestamp: new Date(),
-        username: escape(user.username),
+        username: user.username,
         quiz_id: submission.quiz_id,
         answers: submission.answers
     };
@@ -612,7 +605,7 @@ function submit_quiz(user, submission, callback) {
             return callback(err);
         }
 
-        doc.quiz_name = escape(quiz.name);
+        doc.quiz_name = quiz.name;
 
         var ids = quiz.questions.map(function(id) {
             return new ObjectID(id);
@@ -629,7 +622,7 @@ function submit_quiz(user, submission, callback) {
                 var id = question._id.toHexString();
                 if(doc.answers[id] !== undefined) {
                     doc.answers[id] = {
-                        name: escape(question.name),
+                        name: question.name,
                         answer: doc.answers[id],
                         score: doc.answers[id] == question.correct ? 1 : 0,
                         total: 1
@@ -674,14 +667,14 @@ function get_stats(username, callback) {
         var stats = {};
 
         results.forEach(function(result) {
-            var username = escape(result.username);
+            var username = result.username;
 
             if(!stats[username]) {
                 stats[username] = {};
             }
 
             stats[username][result.quiz_id] = {
-                name: escape(result.quiz_name),
+                name: result.quiz_name,
                 questions: result.answers
             };
         });

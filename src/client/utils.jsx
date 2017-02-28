@@ -20,3 +20,13 @@ export function unescapeHTML(str) {
 
     return str;
 };
+
+export function readCookie(name) {
+    var nameEQ = name + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0;i < ca.length;i++) {
+        var c = ca[i].trim();
+        if (c.indexOf(nameEQ) == 0) return decodeURIComponent(c.substring(nameEQ.length,c.length));
+    }
+    return null;
+}

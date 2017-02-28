@@ -1,27 +1,17 @@
+import { readCookie } from './utils.jsx'
+
 export default new function() {
     var listeners = {};
     var callbacks = {};
-
-    function readCookie(name) {
-        var nameEQ = name + "=";
-        var ca = document.cookie.split(';');
-        for(var i=0;i < ca.length;i++) {
-            var c = ca[i].trim();
-            if (c.indexOf(nameEQ) == 0) return decodeURIComponent(c.substring(nameEQ.length,c.length));
-        }
-        return null;
-    }
 
     var session_id = readCookie('session_id');
     
     var connecting = false;
 
-    var thisSocket = this;
-
     var websocket;
     var loggedIn = false;
 
-    function connect() {
+    var connect = () => {
         if(session_id == null) {
             console.error('Could not find session_id cookie?!');
             return;
@@ -35,11 +25,11 @@ export default new function() {
 
         console.log('Connecting...');
         var s = new WebSocket('wss://www.roiatalla.com/active-learning/api');
-        s.onopen = function() {
+        s.onopen = () => {
             websocket = s;
             console.log('Connected to server!');
 
-            thisSocket.send('login', session_id, function(err, user) {
+            this.send('login', session_id, (err, user) => {
                 if(err) {
                     console.error('Failed to authenticate to API.');
                 } else {
@@ -47,10 +37,10 @@ export default new function() {
                 }
 
                 loggedIn = true;
-                thisSocket.emit('login', user);
+                this.emit('login', user);
             });
         };
-        s.onmessage = function(msg) {
+        s.onmessage = (msg) => {
             var data = JSON.parse(msg.data);
 
             if(callbacks[data.id]) {
@@ -59,10 +49,10 @@ export default new function() {
                 delete callbacks[data.id];
             }
             else if(!data.err) {
-                thisSocket.emit(data.id, data.data);
+                this.emit(data.id, data.data);
             }
         };
-        s.onclose = function() {
+        s.onclose = () => {
             websocket = null;
             loggedIn = false;
             connecting = false;
@@ -81,36 +71,32 @@ export default new function() {
         return true;
     }
 
-    this.isConnected = function() {
-        return websocket != null;
-    }
+    this.isConnected = () => websocket != null;
 
-    this.isLoggedIn = function() {
-        return loggedIn;
-    }
+    this.isLoggedIn = () => loggedIn;
 
-    this.on = function(command, callback) {
+    this.on = (command, callback) => {
         listeners[command] = listeners[command] || [];
         listeners[command].push(callback);
     }
 
-    this.once = function(command, callback) {
-        var func = function(data) {
+    this.once = (command, callback) => {
+        var func = (data) => {
             callback(data);
             this.remove(func);
         };
 
-        this.on(command, func.bind(this));
+        this.on(command, func);
     }
 
-    this.remove = function(command, callback) {
+    this.remove = (command, callback) => {
         var idx = listeners[command].indexOf(callback);
         if(idx >= 0) {
             listeners[command].splice(idx, 1);
         }
     }
 
-    this.emit = function(command, data) {
+    this.emit = (command, data) => {
         if(listeners[command]) {
             listeners[command].forEach((cb) => cb(data));
         }
@@ -118,7 +104,7 @@ export default new function() {
 
     var next_id = 0;
 
-    this.send = function(command, data, callback) {
+    this.send = (command, data, callback) => {
         if(!command) {
             return callback('Invalid command');
         }
