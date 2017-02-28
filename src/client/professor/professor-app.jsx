@@ -1,4 +1,11 @@
-var IndexLink = ReactRouter.IndexLink;
+import React from 'react';
+import ReactDOM from 'react-dom';
+import socket from '../socket.jsx';
+import { unescapeHTML } from '../utils.jsx';
+import StatisticsPanels from './professor-statistics.jsx';
+import SettingsPanels from './professor-settings.jsx';
+
+import { Router, Route, IndexRoute, IndexLink, browserHistory } from 'react-router';
 
 window.onload = () => {
     socket.on('login', (success) => {
@@ -7,11 +14,6 @@ window.onload = () => {
             socket.send('get_questions', (err, data) => !err && socket.emit('questions', data));
         }
     });
-
-    var Router = ReactRouter.Router;
-    var Route = ReactRouter.Route;
-    var IndexRoute = ReactRouter.IndexRoute;
-    var browserHistory = ReactRouter.browserHistory;
 
     ReactDOM.render(
         <Router history={browserHistory}>

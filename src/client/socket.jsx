@@ -1,4 +1,4 @@
-var socket = new function() {
+export default new function() {
     var listeners = {};
     var callbacks = {};
 

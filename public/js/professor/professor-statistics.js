@@ -1,6 +1,26 @@
 'use strict';
 
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+var _socket = require('../socket.jsx');
+
+var _socket2 = _interopRequireDefault(_socket);
+
+var _utils = require('../utils.jsx');
+
+var _chart = require('chart.js');
+
+var _chart2 = _interopRequireDefault(_chart);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -41,10 +61,10 @@ var StatisticsPanels = function (_React$Component) {
             showAllStudents: true
         };
 
-        if (socket.isLoggedIn()) {
+        if (_socket2.default.isLoggedIn()) {
             _this.getStats();
         } else {
-            socket.on('login', _this.getStats.bind(_this));
+            _socket2.default.on('login', _this.getStats.bind(_this));
         }
         return _this;
     }
@@ -54,7 +74,7 @@ var StatisticsPanels = function (_React$Component) {
         value: function getStats() {
             var _this2 = this;
 
-            socket.send('get_stats', function (err, stats) {
+            _socket2.default.send('get_stats', function (err, stats) {
                 if (err) {
                     console.error('Error getting stats: ' + err);
                 } else {
@@ -105,16 +125,16 @@ var StatisticsPanels = function (_React$Component) {
     }, {
         key: 'render',
         value: function render() {
-            return React.createElement(
+            return _react2.default.createElement(
                 'div',
                 null,
-                React.createElement(SidePanel, {
+                _react2.default.createElement(SidePanel, {
                     showStudentStats: this.showStudentStats.bind(this),
                     showQuizStats: this.showQuizStats.bind(this),
                     showAllQuizStats: this.showAllQuizStats.bind(this),
                     showAllStudentStats: this.showAllStudentStats.bind(this),
                     statistics: this.state.statistics }),
-                React.createElement(GraphPanel, {
+                _react2.default.createElement(GraphPanel, {
                     showStudent: this.state.showStudent,
                     showQuiz: this.state.showQuiz,
                     showAllQuizzes: this.state.showAllQuizzes,
@@ -125,7 +145,9 @@ var StatisticsPanels = function (_React$Component) {
     }]);
 
     return StatisticsPanels;
-}(React.Component);
+}(_react2.default.Component);
+
+exports.default = StatisticsPanels;
 
 var SidePanel = function (_React$Component2) {
     _inherits(SidePanel, _React$Component2);
@@ -175,58 +197,58 @@ var SidePanel = function (_React$Component2) {
         value: function render() {
             var _this4 = this;
 
-            return React.createElement(
+            return _react2.default.createElement(
                 'div',
                 { className: 'panel', id: 'student-panel' },
-                React.createElement(
+                _react2.default.createElement(
                     'ul',
                     { className: 'tab' },
-                    React.createElement(
+                    _react2.default.createElement(
                         'li',
                         null,
-                        React.createElement(
+                        _react2.default.createElement(
                             'a',
                             { href: '#', className: 'tablinks' + (this.state.showStudents ? ' active' : ''), onClick: this.showStudents.bind(this) },
                             'Students'
                         )
                     ),
-                    React.createElement(
+                    _react2.default.createElement(
                         'li',
                         null,
-                        React.createElement(
+                        _react2.default.createElement(
                             'a',
                             { href: '#', className: 'tablinks' + (this.state.showStudents ? '' : ' active'), onClick: this.showQuizzes.bind(this) },
                             'Quizzes'
                         )
                     )
                 ),
-                this.state.showStudents ? React.createElement(
+                this.state.showStudents ? _react2.default.createElement(
                     'table',
                     { className: 'sortable tabcontent', id: 'student-list' },
-                    React.createElement(
+                    _react2.default.createElement(
                         'thead',
                         null,
-                        React.createElement(
+                        _react2.default.createElement(
                             'tr',
                             null,
-                            React.createElement(
+                            _react2.default.createElement(
                                 'th',
                                 null,
                                 'Students'
                             )
                         )
                     ),
-                    React.createElement(
+                    _react2.default.createElement(
                         'tbody',
                         { id: 'student-buttons' },
                         Object.keys(this.props.statistics).map(function (studentName) {
-                            return React.createElement(
+                            return _react2.default.createElement(
                                 'tr',
                                 { key: studentName },
-                                React.createElement(
+                                _react2.default.createElement(
                                     'td',
                                     null,
-                                    React.createElement(
+                                    _react2.default.createElement(
                                         'button',
                                         { className: 'list-button', onClick: function onClick() {
                                                 return _this4.props.showStudentStats(studentName);
@@ -237,33 +259,33 @@ var SidePanel = function (_React$Component2) {
                             );
                         })
                     )
-                ) : React.createElement(
+                ) : _react2.default.createElement(
                     'table',
                     { className: 'sortable tabcontent', id: 'quiz-list' },
-                    React.createElement(
+                    _react2.default.createElement(
                         'thead',
                         null,
-                        React.createElement(
+                        _react2.default.createElement(
                             'tr',
                             null,
-                            React.createElement(
+                            _react2.default.createElement(
                                 'th',
                                 null,
                                 'Quizzes'
                             )
                         )
                     ),
-                    React.createElement(
+                    _react2.default.createElement(
                         'tbody',
                         { id: 'quiz-buttons' },
                         this.getAllQuizNames().map(function (quizName, idx) {
-                            return React.createElement(
+                            return _react2.default.createElement(
                                 'tr',
                                 { key: idx + '-' + quizName },
-                                React.createElement(
+                                _react2.default.createElement(
                                     'td',
                                     null,
-                                    React.createElement(
+                                    _react2.default.createElement(
                                         'button',
                                         { className: 'list-button', onClick: function onClick() {
                                                 return _this4.props.showQuizStats(quizName);
@@ -280,7 +302,7 @@ var SidePanel = function (_React$Component2) {
     }]);
 
     return SidePanel;
-}(React.Component);
+}(_react2.default.Component);
 
 var GraphPanel = function (_React$Component3) {
     _inherits(GraphPanel, _React$Component3);
@@ -294,7 +316,7 @@ var GraphPanel = function (_React$Component3) {
     _createClass(GraphPanel, [{
         key: 'createChart',
         value: function createChart(info, displayX) {
-            return new Chart(document.getElementById('statistics-chart'), {
+            return new _chart2.default(document.getElementById('statistics-chart'), {
                 type: 'bar',
                 data: info,
                 options: {
@@ -329,7 +351,7 @@ var GraphPanel = function (_React$Component3) {
                     score += question['score'];
                     total += question['total'];
                 }
-                quizNames.push(unescapeHTML(statistics[username][quiz_id]['name']));
+                quizNames.push((0, _utils.unescapeHTML)(statistics[username][quiz_id]['name']));
                 quizScores.push(100.0 * (score / total));
             }
 
@@ -402,7 +424,7 @@ var GraphPanel = function (_React$Component3) {
             var labels = [];
             var data = [];
             for (question in questions) {
-                var str = unescapeHTML(question);
+                var str = (0, _utils.unescapeHTML)(question);
                 var perA = (100 * (questions[question]['A'] / questions[question]['total'])).toFixed(2);
                 var perB = (100 * (questions[question]['B'] / questions[question]['total'])).toFixed(2);
                 var perC = (100 * (questions[question]['C'] / questions[question]['total'])).toFixed(2);
@@ -467,7 +489,7 @@ var GraphPanel = function (_React$Component3) {
             var labels = [];
             var data = [];
             for (var quizName in quizzes) {
-                labels.push(unescapeHTML(quizName));
+                labels.push((0, _utils.unescapeHTML)(quizName));
                 data.push(100.0 * (quizzes[quizName]['score'] / quizzes[quizName]['total']));
             }
             var info = {
@@ -509,7 +531,7 @@ var GraphPanel = function (_React$Component3) {
                     count++;
                 }
 
-                usernames.push(unescapeHTML(username));
+                usernames.push((0, _utils.unescapeHTML)(username));
                 scores.push(grade /= count);
             }
 
@@ -547,13 +569,13 @@ var GraphPanel = function (_React$Component3) {
     }, {
         key: 'render',
         value: function render() {
-            return React.createElement(
+            return _react2.default.createElement(
                 'div',
                 { id: 'statistics-panel' },
-                React.createElement('canvas', { ref: this.setupChart.bind(this), id: 'statistics-chart' })
+                _react2.default.createElement('canvas', { ref: this.setupChart.bind(this), id: 'statistics-chart' })
             );
         }
     }]);
 
     return GraphPanel;
-}(React.Component);
+}(_react2.default.Component);

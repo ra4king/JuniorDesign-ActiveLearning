@@ -4,40 +4,59 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactDom = require('react-dom');
+
+var _reactDom2 = _interopRequireDefault(_reactDom);
+
+var _socket = require('../socket.jsx');
+
+var _socket2 = _interopRequireDefault(_socket);
+
+var _utils = require('../utils.jsx');
+
+var _professorStatistics = require('./professor-statistics.jsx');
+
+var _professorStatistics2 = _interopRequireDefault(_professorStatistics);
+
+var _professorSettings = require('./professor-settings.jsx');
+
+var _professorSettings2 = _interopRequireDefault(_professorSettings);
+
+var _reactRouter = require('react-router');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var IndexLink = ReactRouter.IndexLink;
-
 window.onload = function () {
-    socket.on('login', function (success) {
+    _socket2.default.on('login', function (success) {
         if (success) {
-            socket.send('get_quizzes', function (err, data) {
-                return !err && socket.emit('quizzes', data);
+            _socket2.default.send('get_quizzes', function (err, data) {
+                return !err && _socket2.default.emit('quizzes', data);
             });
-            socket.send('get_questions', function (err, data) {
-                return !err && socket.emit('questions', data);
+            _socket2.default.send('get_questions', function (err, data) {
+                return !err && _socket2.default.emit('questions', data);
             });
         }
     });
 
-    var Router = ReactRouter.Router;
-    var Route = ReactRouter.Route;
-    var IndexRoute = ReactRouter.IndexRoute;
-    var browserHistory = ReactRouter.browserHistory;
-
-    ReactDOM.render(React.createElement(
-        Router,
-        { history: browserHistory },
-        React.createElement(
-            Route,
+    _reactDom2.default.render(_react2.default.createElement(
+        _reactRouter.Router,
+        { history: _reactRouter.browserHistory },
+        _react2.default.createElement(
+            _reactRouter.Route,
             { path: '/active-learning/', component: App },
-            React.createElement(IndexRoute, { component: Panels, page: 'home' }),
-            React.createElement(Route, { path: '/active-learning/statistics', component: StatisticsPanels, page: 'statistics' }),
-            React.createElement(Route, { path: '/active-learning/settings', component: SettingsPanels, page: 'settings' })
+            _react2.default.createElement(_reactRouter.IndexRoute, { component: Panels, page: 'home' }),
+            _react2.default.createElement(_reactRouter.Route, { path: '/active-learning/statistics', component: _professorStatistics2.default, page: 'statistics' }),
+            _react2.default.createElement(_reactRouter.Route, { path: '/active-learning/settings', component: _professorSettings2.default, page: 'settings' })
         )
     ), document.getElementById('panels'));
 };
@@ -57,15 +76,15 @@ var App = function (_React$Component) {
             currentLiveQuiz: null
         };
 
-        socket.on('login', function (user) {
+        _socket2.default.on('login', function (user) {
             if (user) {
                 _this.setState({ user: user });
             }
         });
-        socket.on('questions', function (data) {
+        _socket2.default.on('questions', function (data) {
             return _this.setState({ questions: data });
         });
-        socket.on('quizzes', function (data) {
+        _socket2.default.on('quizzes', function (data) {
             return _this.setState({ quizzes: data });
         });
         return _this;
@@ -96,23 +115,23 @@ var App = function (_React$Component) {
         value: function render() {
             var _this2 = this;
 
-            return React.createElement(
+            return _react2.default.createElement(
                 'div',
                 null,
-                (this.state.currentLiveQuiz || this.state.showConfirm) && React.createElement('div', { id: 'overlay' }),
-                this.state.currentLiveQuiz && React.createElement(LiveQuizPanel, {
+                (this.state.currentLiveQuiz || this.state.showConfirm) && _react2.default.createElement('div', { id: 'overlay' }),
+                this.state.currentLiveQuiz && _react2.default.createElement(LiveQuizPanel, {
                     quiz: this.state.currentLiveQuiz,
                     questions: this.state.questions,
                     hideLiveQuiz: this.hideLiveQuiz.bind(this) }),
-                this.state.showConfirm && React.createElement(ConfirmBox, _extends({ hide: function hide() {
+                this.state.showConfirm && _react2.default.createElement(ConfirmBox, _extends({ hide: function hide() {
                         return _this2.hideConfirm();
                     } }, this.state.showConfirm)),
-                React.createElement(
+                _react2.default.createElement(
                     'div',
                     { className: (this.state.currentLiveQuiz || this.state.showConfirm) && 'blur' },
-                    React.createElement(HeaderPanel, { user: this.state.user, page: this.state.page }),
-                    React.Children.map(this.props.children, function (child) {
-                        return React.cloneElement(child, {
+                    _react2.default.createElement(HeaderPanel, { user: this.state.user, page: this.state.page }),
+                    _react2.default.Children.map(this.props.children, function (child) {
+                        return _react2.default.cloneElement(child, {
                             user: _this2.state.user,
                             showConfirm: _this2.showConfirm.bind(_this2),
                             questions: _this2.state.questions,
@@ -126,7 +145,7 @@ var App = function (_React$Component) {
     }]);
 
     return App;
-}(React.Component);
+}(_react2.default.Component);
 
 var HeaderPanel = function (_React$Component2) {
     _inherits(HeaderPanel, _React$Component2);
@@ -140,39 +159,39 @@ var HeaderPanel = function (_React$Component2) {
     _createClass(HeaderPanel, [{
         key: 'render',
         value: function render() {
-            return React.createElement(
+            return _react2.default.createElement(
                 'div',
                 { id: 'header-panel' },
-                React.createElement('img', { id: 'logo', src: 'images/active_learning_logo_white.png', width: '175', height: '75', alt: 'logo' }),
-                React.createElement(
+                _react2.default.createElement('img', { id: 'logo', src: 'images/active_learning_logo_white.png', width: '175', height: '75', alt: 'logo' }),
+                _react2.default.createElement(
                     'h2',
                     { id: 'name' },
                     this.props.user ? this.props.user.username : ''
                 ),
-                React.createElement(
+                _react2.default.createElement(
                     'nav',
                     null,
-                    React.createElement(
+                    _react2.default.createElement(
                         'form',
                         { method: 'post' },
-                        React.createElement(
+                        _react2.default.createElement(
                             'button',
                             { className: 'header-nav-link', formAction: 'api/logout' },
                             'Logout'
                         )
                     ),
-                    React.createElement(
-                        IndexLink,
+                    _react2.default.createElement(
+                        _reactRouter.IndexLink,
                         { to: '/active-learning/settings', className: 'header-nav-link', activeClassName: 'selected' },
                         'Settings'
                     ),
-                    React.createElement(
-                        IndexLink,
+                    _react2.default.createElement(
+                        _reactRouter.IndexLink,
                         { to: '/active-learning/statistics', className: 'header-nav-link', activeClassName: 'selected' },
                         'Statistics'
                     ),
-                    React.createElement(
-                        IndexLink,
+                    _react2.default.createElement(
+                        _reactRouter.IndexLink,
                         { to: '/active-learning/', className: 'header-nav-link', activeClassName: 'selected' },
                         'Home'
                     )
@@ -182,7 +201,7 @@ var HeaderPanel = function (_React$Component2) {
     }]);
 
     return HeaderPanel;
-}(React.Component);
+}(_react2.default.Component);
 
 var LiveQuizPanel = function (_React$Component3) {
     _inherits(LiveQuizPanel, _React$Component3);
@@ -195,42 +214,42 @@ var LiveQuizPanel = function (_React$Component3) {
         _this4.state = {
             currentLiveQuestion: null,
             onLoginFunc: function onLoginFunc(success) {
-                if (_this4.state.currentLiveQuestion != null) socket.send('broadcast_live_question', _this4.state.currentLiveQuestion);
+                if (_this4.state.currentLiveQuestion != null) _socket2.default.send('broadcast_live_question', _this4.state.currentLiveQuestion);
             }
         };
 
-        socket.on('login', _this4.state.onLoginFunc);
+        _socket2.default.on('login', _this4.state.onLoginFunc);
         return _this4;
     }
 
     _createClass(LiveQuizPanel, [{
         key: 'componentWillUnmount',
         value: function componentWillUnmount() {
-            socket.remove('login', this.state.onLoginFunc);
-            socket.send('end_live_question');
+            _socket2.default.remove('login', this.state.onLoginFunc);
+            _socket2.default.send('end_live_question');
         }
     }, {
         key: 'presentLiveQuestion',
         value: function presentLiveQuestion(id) {
             this.setState({ currentLiveQuestion: id });
-            socket.send('broadcast_live_question', id);
+            _socket2.default.send('broadcast_live_question', id);
         }
     }, {
         key: 'render',
         value: function render() {
             var _this5 = this;
 
-            return React.createElement(
+            return _react2.default.createElement(
                 'div',
                 { id: 'live-quiz' },
-                React.createElement(
+                _react2.default.createElement(
                     'ol',
                     { id: 'live-questions-list' },
                     this.props.quiz.questions.map(function (id) {
-                        return React.createElement(
+                        return _react2.default.createElement(
                             Question,
                             { key: id, question: _this5.props.questions[id] },
-                            React.createElement(
+                            _react2.default.createElement(
                                 'button',
                                 {
                                     className: 'presenting-live-button' + (id == _this5.state.currentLiveQuestion ? ' presenting-live-button-selected' : ''),
@@ -242,7 +261,7 @@ var LiveQuizPanel = function (_React$Component3) {
                         );
                     })
                 ),
-                React.createElement(
+                _react2.default.createElement(
                     'button',
                     { onClick: this.props.hideLiveQuiz, className: 'delete-button' },
                     '\u2716'
@@ -252,7 +271,7 @@ var LiveQuizPanel = function (_React$Component3) {
     }]);
 
     return LiveQuizPanel;
-}(React.Component);
+}(_react2.default.Component);
 
 var ConfirmBox = function (_React$Component4) {
     _inherits(ConfirmBox, _React$Component4);
@@ -274,32 +293,32 @@ var ConfirmBox = function (_React$Component4) {
         value: function render() {
             var _this7 = this;
 
-            return React.createElement(
+            return _react2.default.createElement(
                 'div',
                 { id: 'confirm-box' },
-                React.createElement(
+                _react2.default.createElement(
                     'p',
                     { id: 'confirm-msg' },
                     this.props.title
                 ),
-                this.props.type == 'yesno' ? React.createElement(
+                this.props.type == 'yesno' ? _react2.default.createElement(
                     'div',
                     null,
-                    React.createElement(
+                    _react2.default.createElement(
                         'button',
                         { onClick: function onClick() {
                                 return _this7.clicked(false);
                             }, className: 'cancel-button' },
                         this.props.noText || 'No'
                     ),
-                    React.createElement(
+                    _react2.default.createElement(
                         'button',
                         { onClick: function onClick() {
                                 return _this7.clicked(true);
                             }, className: 'confirm-button' },
                         this.props.yesText || 'Yes'
                     )
-                ) : React.createElement(
+                ) : _react2.default.createElement(
                     'button',
                     { onClick: function onClick() {
                             return _this7.clicked();
@@ -311,7 +330,7 @@ var ConfirmBox = function (_React$Component4) {
     }]);
 
     return ConfirmBox;
-}(React.Component);
+}(_react2.default.Component);
 
 var Panels = function (_React$Component5) {
     _inherits(Panels, _React$Component5);
@@ -325,15 +344,15 @@ var Panels = function (_React$Component5) {
     _createClass(Panels, [{
         key: 'render',
         value: function render() {
-            return React.createElement(
+            return _react2.default.createElement(
                 'div',
                 null,
-                React.createElement(QuizPanel, {
+                _react2.default.createElement(QuizPanel, {
                     showConfirm: this.props.showConfirm,
                     questions: this.props.questions,
                     quizzes: this.props.quizzes,
                     presentLive: this.props.presentLive }),
-                React.createElement(QuestionPanel, {
+                _react2.default.createElement(QuestionPanel, {
                     showConfirm: this.props.showConfirm,
                     questions: this.props.questions })
             );
@@ -341,7 +360,7 @@ var Panels = function (_React$Component5) {
     }]);
 
     return Panels;
-}(React.Component);
+}(_react2.default.Component);
 
 var QuizPanel = function (_React$Component6) {
     _inherits(QuizPanel, _React$Component6);
@@ -379,21 +398,21 @@ var QuizPanel = function (_React$Component6) {
         value: function render() {
             var _this10 = this;
 
-            return React.createElement(
+            return _react2.default.createElement(
                 'div',
                 { id: 'quiz-panel' },
-                React.createElement(
+                _react2.default.createElement(
                     'button',
                     { className: 'option-button', onClick: function onClick() {
                             return _this10.toggleQuizEditor();
                         } },
                     this.state.editQuiz ? 'Cancel' : 'Create Quiz'
                 ),
-                this.state.editQuiz ? React.createElement(QuizEditor, {
+                this.state.editQuiz ? _react2.default.createElement(QuizEditor, {
                     quiz: this.state.editQuiz,
                     questions: this.props.questions,
                     hideQuizEditor: this.hideQuizEditor.bind(this),
-                    showConfirm: this.props.showConfirm }) : React.createElement(QuizList, {
+                    showConfirm: this.props.showConfirm }) : _react2.default.createElement(QuizList, {
                     showConfirm: this.props.showConfirm,
                     quizzes: this.props.quizzes,
                     chooseQuiz: this.chooseQuiz.bind(this),
@@ -403,7 +422,7 @@ var QuizPanel = function (_React$Component6) {
     }]);
 
     return QuizPanel;
-}(React.Component);
+}(_react2.default.Component);
 
 var QuizEditor = function (_React$Component7) {
     _inherits(QuizEditor, _React$Component7);
@@ -445,9 +464,9 @@ var QuizEditor = function (_React$Component7) {
             };
 
             if (this.state.id) {
-                socket.send('update_quiz', { id: this.state.id, name: this.state.name, questions: this.state.questions }, callback);
+                _socket2.default.send('update_quiz', { id: this.state.id, name: this.state.name, questions: this.state.questions }, callback);
             } else {
-                socket.send('create_quiz', { name: this.state.name, questions: this.state.questions }, callback);
+                _socket2.default.send('create_quiz', { name: this.state.name, questions: this.state.questions }, callback);
             }
         }
     }, {
@@ -537,40 +556,40 @@ var QuizEditor = function (_React$Component7) {
         value: function render() {
             var _this13 = this;
 
-            return React.createElement(
+            return _react2.default.createElement(
                 'div',
                 { id: 'quiz-creator' },
-                React.createElement(
+                _react2.default.createElement(
                     'div',
                     { id: 'quiz-creator-header' },
-                    React.createElement(
+                    _react2.default.createElement(
                         'div',
                         { id: 'quiz-name' },
                         'Name: ',
-                        React.createElement('input', { type: 'text', id: 'quiz-name-field', value: this.state.name, onChange: this.onNameChange.bind(this) })
+                        _react2.default.createElement('input', { type: 'text', id: 'quiz-name-field', value: this.state.name, onChange: this.onNameChange.bind(this) })
                     ),
-                    React.createElement(
+                    _react2.default.createElement(
                         'div',
                         { id: 'submit-quiz' },
-                        React.createElement(
+                        _react2.default.createElement(
                             'button',
                             { id: 'submit-quiz-button', onClick: this.submitQuiz.bind(this) },
                             this.state.id ? 'Update' : 'Submit'
                         )
                     )
                 ),
-                React.createElement(
+                _react2.default.createElement(
                     'ol',
                     { id: 'quiz-question-list', onDrop: this.onDrop.bind(this), onDragOver: this.onDragOver.bind(this) },
                     this.state.questions.length > 0 ? [this.state.questions.map(function (id) {
-                        return React.createElement(
+                        return _react2.default.createElement(
                             Question,
                             { key: id,
                                 question: _this13.props.questions[id],
                                 draggable: true,
                                 onDragStart: _this13.onDragStart.bind(_this13, id),
                                 draggedOver: _this13.state.dragOverId == id },
-                            React.createElement(
+                            _react2.default.createElement(
                                 'button',
                                 { className: 'delete-button', onClick: function onClick() {
                                         return _this13.removeQuestion(id);
@@ -578,7 +597,7 @@ var QuizEditor = function (_React$Component7) {
                                 '\u2716'
                             )
                         );
-                    }), React.createElement('li', { key: 'hidden', style: { visibility: 'hidden', height: '100px' } })] : React.createElement(
+                    }), _react2.default.createElement('li', { key: 'hidden', style: { visibility: 'hidden', height: '100px' } })] : _react2.default.createElement(
                         'li',
                         { style: { listStyleType: 'none', textAlign: 'center' } },
                         'Drag questions here!'
@@ -589,7 +608,7 @@ var QuizEditor = function (_React$Component7) {
     }]);
 
     return QuizEditor;
-}(React.Component);
+}(_react2.default.Component);
 
 var QuizList = function (_React$Component8) {
     _inherits(QuizList, _React$Component8);
@@ -605,12 +624,12 @@ var QuizList = function (_React$Component8) {
         value: function render() {
             var _this15 = this;
 
-            return React.createElement(
+            return _react2.default.createElement(
                 'ol',
                 { className: 'quiz-list' },
                 Object.keys(this.props.quizzes).map(function (id) {
                     var quiz = _this15.props.quizzes[id];
-                    return React.createElement(Quiz, { key: id,
+                    return _react2.default.createElement(Quiz, { key: id,
                         quiz: quiz,
                         chooseQuiz: function chooseQuiz() {
                             return _this15.props.chooseQuiz(id);
@@ -625,7 +644,7 @@ var QuizList = function (_React$Component8) {
     }]);
 
     return QuizList;
-}(React.Component);
+}(_react2.default.Component);
 
 var Quiz = function (_React$Component9) {
     _inherits(Quiz, _React$Component9);
@@ -646,7 +665,7 @@ var Quiz = function (_React$Component9) {
                 title: 'Are you sure you want to delete this quiz?',
                 onAction: function onAction(choice) {
                     if (choice) {
-                        socket.send('delete_quiz', _this17.props.quiz.id, function (err, data) {
+                        _socket2.default.send('delete_quiz', _this17.props.quiz.id, function (err, data) {
                             if (err) {
                                 _this17.props.showConfirm({
                                     type: 'ok',
@@ -660,20 +679,20 @@ var Quiz = function (_React$Component9) {
     }, {
         key: 'render',
         value: function render() {
-            return React.createElement(
+            return _react2.default.createElement(
                 'li',
                 { className: 'quiz' },
-                React.createElement(
+                _react2.default.createElement(
                     'button',
                     { className: 'quiz-body', onClick: this.props.chooseQuiz },
-                    unescapeHTML(this.props.quiz.name)
+                    (0, _utils.unescapeHTML)(this.props.quiz.name)
                 ),
-                React.createElement(
+                _react2.default.createElement(
                     'button',
                     { className: 'delete-button', onClick: this.deleteQuiz.bind(this) },
                     '\u2716'
                 ),
-                React.createElement(
+                _react2.default.createElement(
                     'button',
                     { className: 'live-button', onClick: this.props.presentLive },
                     'L'
@@ -683,7 +702,7 @@ var Quiz = function (_React$Component9) {
     }]);
 
     return Quiz;
-}(React.Component);
+}(_react2.default.Component);
 
 var QuestionPanel = function (_React$Component10) {
     _inherits(QuestionPanel, _React$Component10);
@@ -714,24 +733,24 @@ var QuestionPanel = function (_React$Component10) {
     }, {
         key: 'render',
         value: function render() {
-            return React.createElement(
+            return _react2.default.createElement(
                 'div',
                 { id: 'question-panel' },
-                React.createElement(
+                _react2.default.createElement(
                     'button',
                     { className: 'option-button', onClick: this.toggleQuestionEditor.bind(this) },
                     this.state.editQuestion ? 'Cancel' : 'Create Question'
                 ),
-                this.state.editQuestion ? React.createElement(QuestionEditor, {
+                this.state.editQuestion ? _react2.default.createElement(QuestionEditor, {
                     question: this.state.editQuestion,
                     hideQuestionEditor: this.hideQuestionEditor.bind(this),
-                    showConfirm: this.props.showConfirm }) : React.createElement(QuestionList, { questions: this.props.questions, showConfirm: this.props.showConfirm })
+                    showConfirm: this.props.showConfirm }) : _react2.default.createElement(QuestionList, { questions: this.props.questions, showConfirm: this.props.showConfirm })
             );
         }
     }]);
 
     return QuestionPanel;
-}(React.Component);
+}(_react2.default.Component);
 
 var QuestionEditor = function (_React$Component11) {
     _inherits(QuestionEditor, _React$Component11);
@@ -852,7 +871,7 @@ var QuestionEditor = function (_React$Component11) {
                 return;
             }
 
-            socket.send('create_question', {
+            _socket2.default.send('create_question', {
                 name: this.state.title,
                 answers: answers,
                 correct: String(this.state.correct),
@@ -873,38 +892,38 @@ var QuestionEditor = function (_React$Component11) {
         value: function render() {
             var _this22 = this;
 
-            return React.createElement(
+            return _react2.default.createElement(
                 'div',
                 { id: 'question-creator' },
-                React.createElement(
+                _react2.default.createElement(
                     'label',
                     { className: 'question-creator-row' },
-                    React.createElement(
+                    _react2.default.createElement(
                         'span',
                         { className: 'question-creator-title' },
                         'Question: '
                     ),
-                    React.createElement('input', { type: 'text', value: this.state.title, size: '75', onChange: this.changeTitle.bind(this) })
+                    _react2.default.createElement('input', { type: 'text', value: this.state.title, size: '75', onChange: this.changeTitle.bind(this) })
                 ),
-                React.createElement(
+                _react2.default.createElement(
                     'ol',
                     { className: 'answer-list' },
                     this.state.answers.map(function (answer, idx) {
-                        return React.createElement(
+                        return _react2.default.createElement(
                             'li',
                             { key: idx, className: 'answer' },
-                            React.createElement('input', {
+                            _react2.default.createElement('input', {
                                 type: 'text',
                                 value: answer,
                                 size: '35',
                                 onChange: _this22.changeAnswer.bind(_this22, idx) }),
-                            React.createElement('input', {
+                            _react2.default.createElement('input', {
                                 type: 'radio',
                                 name: 'correct',
                                 checked: _this22.state.correct == idx,
                                 onChange: _this22.correctSelected.bind(_this22, idx) }),
                             'Correct',
-                            React.createElement(
+                            _react2.default.createElement(
                                 'button',
                                 { className: 'remove-answer-button', onClick: _this22.removeAnswer.bind(_this22, idx) },
                                 '\u2716'
@@ -912,30 +931,30 @@ var QuestionEditor = function (_React$Component11) {
                         );
                     })
                 ),
-                React.createElement(
+                _react2.default.createElement(
                     'div',
                     { className: 'question-creator-row' },
-                    React.createElement(
+                    _react2.default.createElement(
                         'button',
                         { onClick: this.addAnswer.bind(this) },
                         'Add answer'
                     )
                 ),
-                React.createElement(
+                _react2.default.createElement(
                     'div',
                     { className: 'question-creator-row' },
-                    React.createElement('input', { type: 'file', onChange: this.imageSelected.bind(this) }),
-                    this.state.image && React.createElement('input', { className: 'option-button', type: 'button', value: 'Clear image', onClick: this.clearImage.bind(this) })
+                    _react2.default.createElement('input', { type: 'file', onChange: this.imageSelected.bind(this) }),
+                    this.state.image && _react2.default.createElement('input', { className: 'option-button', type: 'button', value: 'Clear image', onClick: this.clearImage.bind(this) })
                 ),
-                this.state.image && React.createElement(
+                this.state.image && _react2.default.createElement(
                     'div',
                     { className: 'question-creator-row' },
-                    React.createElement('img', { id: 'image-input', src: this.state.image })
+                    _react2.default.createElement('img', { id: 'image-input', src: this.state.image })
                 ),
-                React.createElement(
+                _react2.default.createElement(
                     'div',
                     { className: 'question-creator-row' },
-                    React.createElement(
+                    _react2.default.createElement(
                         'button',
                         { className: 'option-button', onClick: this.submitQuestion.bind(this) },
                         'Submit'
@@ -946,7 +965,7 @@ var QuestionEditor = function (_React$Component11) {
     }]);
 
     return QuestionEditor;
-}(React.Component);
+}(_react2.default.Component);
 
 var QuestionList = function (_React$Component12) {
     _inherits(QuestionList, _React$Component12);
@@ -967,7 +986,7 @@ var QuestionList = function (_React$Component12) {
                 title: 'Are you sure you want to delete this question?',
                 onAction: function onAction(choice) {
                     if (choice) {
-                        socket.send('delete_question', id, function (err, data) {
+                        _socket2.default.send('delete_question', id, function (err, data) {
                             if (err) {
                                 _this24.props.showConfirm({
                                     type: 'ok',
@@ -988,14 +1007,14 @@ var QuestionList = function (_React$Component12) {
         value: function render() {
             var _this25 = this;
 
-            return React.createElement(
+            return _react2.default.createElement(
                 'ul',
                 { id: 'question-list' },
                 Object.keys(this.props.questions).map(function (id) {
-                    return React.createElement(
+                    return _react2.default.createElement(
                         Question,
                         { key: id, question: _this25.props.questions[id], draggable: true, onDragStart: _this25.onDragStart.bind(_this25, id) },
-                        React.createElement(
+                        _react2.default.createElement(
                             'button',
                             { className: 'delete-button', onClick: function onClick() {
                                     return _this25.deleteQuestion(id);
@@ -1009,7 +1028,7 @@ var QuestionList = function (_React$Component12) {
     }]);
 
     return QuestionList;
-}(React.Component);
+}(_react2.default.Component);
 
 var Question = function (_React$Component13) {
     _inherits(Question, _React$Component13);
@@ -1029,42 +1048,42 @@ var Question = function (_React$Component13) {
                 return null;
             }
 
-            return React.createElement(
+            return _react2.default.createElement(
                 'li',
                 { 'data-id': this.props.question.id,
                     className: 'question' + (this.props.draggable ? ' draggable' : '') + (this.props.draggedOver ? ' drag-over' : ''),
                     draggable: this.props.draggable,
                     onDragStart: this.props.onDragStart },
-                React.createElement(
+                _react2.default.createElement(
                     'div',
                     { className: 'question-body', style: this.props.question.image ? { width: '70%' } : {} },
-                    React.createElement(
+                    _react2.default.createElement(
                         'p',
                         { className: 'question-name' },
-                        unescapeHTML(this.props.question.name)
+                        (0, _utils.unescapeHTML)(this.props.question.name)
                     ),
-                    React.createElement(
+                    _react2.default.createElement(
                         'ol',
                         { className: 'answer-list' },
                         this.props.question.answers.map(function (answer, idx) {
-                            return React.createElement(
+                            return _react2.default.createElement(
                                 'li',
                                 { key: answer + idx, className: 'answer' },
-                                React.createElement('input', {
+                                _react2.default.createElement('input', {
                                     type: 'radio',
                                     value: idx,
                                     readOnly: true,
                                     checked: _this27.props.question.correct == idx }),
-                                unescapeHTML(answer)
+                                (0, _utils.unescapeHTML)(answer)
                             );
                         })
                     )
                 ),
-                this.props.question.image && React.createElement('img', { className: 'question-image', src: this.props.question.image }),
+                this.props.question.image && _react2.default.createElement('img', { className: 'question-image', src: this.props.question.image }),
                 this.props.children
             );
         }
     }]);
 
     return Question;
-}(React.Component);
+}(_react2.default.Component);

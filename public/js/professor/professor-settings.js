@@ -1,6 +1,22 @@
 'use strict';
 
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+var _socket = require('../socket.jsx');
+
+var _socket2 = _interopRequireDefault(_socket);
+
+var _utils = require('../utils.jsx');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -21,10 +37,10 @@ var SettingsPanels = function (_React$Component) {
             selectedUser: null
         };
 
-        if (socket.isLoggedIn()) {
+        if (_socket2.default.isLoggedIn()) {
             _this.getUsers();
         } else {
-            socket.on('login', _this.getUsers.bind(_this));
+            _socket2.default.on('login', _this.getUsers.bind(_this));
         }
         return _this;
     }
@@ -34,7 +50,7 @@ var SettingsPanels = function (_React$Component) {
         value: function getUsers() {
             var _this2 = this;
 
-            socket.send('get_users', function (err, users) {
+            _socket2.default.send('get_users', function (err, users) {
                 if (err) {
                     console.error('Error getting users: ' + err);
                 } else {
@@ -50,17 +66,19 @@ var SettingsPanels = function (_React$Component) {
     }, {
         key: 'render',
         value: function render() {
-            return React.createElement(
+            return _react2.default.createElement(
                 'div',
                 null,
-                React.createElement(StudentPanel, { users: this.state.users, selectUser: this.selectUser.bind(this) }),
-                React.createElement(PermissionPanel, { users: this.state.users, selectedUser: this.state.selectedUser })
+                _react2.default.createElement(StudentPanel, { users: this.state.users, selectUser: this.selectUser.bind(this) }),
+                _react2.default.createElement(PermissionPanel, { users: this.state.users, selectedUser: this.state.selectedUser })
             );
         }
     }]);
 
     return SettingsPanels;
-}(React.Component);
+}(_react2.default.Component);
+
+exports.default = SettingsPanels;
 
 var StudentPanel = function (_React$Component2) {
     _inherits(StudentPanel, _React$Component2);
@@ -91,92 +109,92 @@ var StudentPanel = function (_React$Component2) {
         value: function render() {
             var _this4 = this;
 
-            return React.createElement(
+            return _react2.default.createElement(
                 'div',
                 { className: 'panel', id: 'student-panel' },
-                React.createElement(
+                _react2.default.createElement(
                     'ul',
                     { className: 'tab' },
-                    React.createElement(
+                    _react2.default.createElement(
                         'li',
                         null,
-                        React.createElement(
+                        _react2.default.createElement(
                             'a',
                             { href: '#', className: 'tablinks' + (this.state.showStudents ? ' active' : ''), onClick: this.showStudents.bind(this) },
                             'Students'
                         )
                     ),
-                    React.createElement(
+                    _react2.default.createElement(
                         'li',
                         null,
-                        React.createElement(
+                        _react2.default.createElement(
                             'a',
                             { href: '#', className: 'tablinks' + (this.state.showStudents ? '' : ' active'), onClick: this.showTAs.bind(this) },
                             'TAs'
                         )
                     )
                 ),
-                this.state.showStudents ? React.createElement(
+                this.state.showStudents ? _react2.default.createElement(
                     'table',
                     { className: 'sortable tabcontent', id: 'student-list' },
-                    React.createElement(
+                    _react2.default.createElement(
                         'thead',
                         null,
-                        React.createElement(
+                        _react2.default.createElement(
                             'tr',
                             null,
-                            React.createElement(
+                            _react2.default.createElement(
                                 'th',
                                 null,
                                 'Users'
                             )
                         )
                     ),
-                    React.createElement(
+                    _react2.default.createElement(
                         'tbody',
                         { id: 'student-buttons' },
                         this.props.users.map(function (user) {
-                            return React.createElement(
+                            return _react2.default.createElement(
                                 'tr',
                                 { key: user.username },
-                                React.createElement(
+                                _react2.default.createElement(
                                     'td',
                                     null,
-                                    React.createElement(
+                                    _react2.default.createElement(
                                         'button',
                                         { className: 'list-button', onClick: function onClick() {
                                                 return _this4.props.selectUser(user);
                                             } },
-                                        unescapeHTML(user.username)
+                                        (0, _utils.unescapeHTML)(user.username)
                                     )
                                 )
                             );
                         })
                     )
-                ) : React.createElement(
+                ) : _react2.default.createElement(
                     'table',
                     { className: 'sortable tabcontent', id: 'ta-list' },
-                    React.createElement(
+                    _react2.default.createElement(
                         'thead',
                         null,
-                        React.createElement(
+                        _react2.default.createElement(
                             'tr',
                             null,
-                            React.createElement(
+                            _react2.default.createElement(
                                 'th',
                                 null,
                                 'Teaching Assistants'
                             )
                         )
                     ),
-                    React.createElement('tbody', { id: 'ta-buttons' })
+                    _react2.default.createElement('tbody', { id: 'ta-buttons' })
                 )
             );
         }
     }]);
 
     return StudentPanel;
-}(React.Component);
+}(_react2.default.Component);
 
 var PermissionPanel = function (_React$Component3) {
     _inherits(PermissionPanel, _React$Component3);
@@ -190,20 +208,20 @@ var PermissionPanel = function (_React$Component3) {
     _createClass(PermissionPanel, [{
         key: 'render',
         value: function render() {
-            return React.createElement(
+            return _react2.default.createElement(
                 'div',
                 { className: 'panel', id: 'permission-panel' },
-                React.createElement(
+                _react2.default.createElement(
                     'p',
                     null,
-                    this.props.selectedUser ? 'Selected ' + unescapeHTML(this.props.selectedUser.username) + '.' : 'Select a user from the side panel.'
+                    this.props.selectedUser ? 'Selected ' + (0, _utils.unescapeHTML)(this.props.selectedUser.username) + '.' : 'Select a user from the side panel.'
                 ),
-                React.createElement(
+                _react2.default.createElement(
                     'p',
                     null,
                     'What else are we going to put here?'
                 ),
-                React.createElement(
+                _react2.default.createElement(
                     'button',
                     { id: 'make-ta-button' },
                     'Make a TA'
@@ -213,4 +231,4 @@ var PermissionPanel = function (_React$Component3) {
     }]);
 
     return PermissionPanel;
-}(React.Component);
+}(_react2.default.Component);

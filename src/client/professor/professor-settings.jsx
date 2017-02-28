@@ -1,4 +1,8 @@
-class SettingsPanels extends React.Component {
+import React from 'react';
+import socket from '../socket.jsx';
+import { unescapeHTML } from '../utils.jsx';
+
+export default class SettingsPanels extends React.Component {
     constructor(props) {
         super(props);
 

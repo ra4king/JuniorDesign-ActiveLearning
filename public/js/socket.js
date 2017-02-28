@@ -1,6 +1,9 @@
 'use strict';
 
-var socket = new function () {
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.default = new function () {
     var listeners = {};
     var callbacks = {};
 
