@@ -84,7 +84,7 @@ module.exports = function(server, app, base_url) {
         res.render('login', {
             message: req.query.message,
             redirect: req.query.redirect,
-            register: req.query.register || false,
+            register: !!req.query.register,
             username: req.query.username,
             csurf: req.csrfToken()
         });
