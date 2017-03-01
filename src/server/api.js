@@ -11,7 +11,7 @@ module.exports = function(base_url, server, database) {
     function set_live_question_id(id) {
         live_question_id = id;
         if(live_question_id) {
-            database.get_question_by_id(live_question_id, function(err, question) {
+            database.get_question_by_id(live_question_id, false, function(err, question) {
                 if(!err && question) {
                     broadcast('live_question', question);
                 }
