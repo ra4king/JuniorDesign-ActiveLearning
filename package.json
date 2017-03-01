@@ -5,7 +5,8 @@
   "main": "src/site.js",
   "scripts": {
     "build": "webpack --colors --config webpack.config.prod.js",
-    "start": "node src/server/site.js"
+    "debug": "node src/server/debug.js",
+    "start": "node src/server/main.js"
   },
   "repository": {
     "type": "git",
@@ -36,7 +37,8 @@
     "babel-loader": "^6.3.2",
     "babel-preset-env": "^1.1.8",
     "babel-preset-react": "^6.23.0",
-    "webpack": "^2.2.1"
+    "webpack": "^2.2.1",
+    "webpack-dev-server": "^2.4.1"
   },
   "babel": {
     "presets": [

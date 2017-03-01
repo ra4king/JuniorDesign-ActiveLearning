@@ -687,7 +687,7 @@ class QuestionList extends React.Component {
         return (
             <ul id='question-list'>
                 {Object.keys(this.props.questions).map((id) => (
-                    <Question question={this.props.questions[id]} draggable onDragStart={this.onDragStart.bind(this, id)}>
+                    <Question key={id} question={this.props.questions[id]} draggable onDragStart={this.onDragStart.bind(this, id)}>
                         <button className='delete-button' onClick={() => this.deleteQuestion(id)}>&#10006;</button>
                         <button className='edit-button' onClick={() => this.props.chooseQuestion(id)}>E</button>
                     </Question>

@@ -148,6 +148,7 @@ ol, ul {
     color: black;
     background-color: white;
     padding: 10px;
+    padding-right: 25px;
     margin: 10px;
     vertical-align: top;;
     border: solid 1px #2C2C2C;
@@ -165,7 +166,6 @@ ol, ul {
 }
 
 .question-body {
-    width: 60%;
     display: inline-block;
     vertical-align: top;
 }

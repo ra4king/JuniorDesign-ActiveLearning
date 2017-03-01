@@ -1,147 +1,135 @@
 'use strict';
 
-var port = 1337;
-var base_url = '/active-learning';
+module.exports = function(server, app, base_url) {
+    const express = require('express');
+    const querystring = require('querystring');
 
-var database = require('./database.js');
+    const exphbs = require('express-handlebars');
+    app.engine('html', exphbs.create({ extname: '.html' }).engine);
+    app.set('view engine', 'html');
 
-var express = require('express');
-var exphbs = require('express-handlebars');
-var querystring = require('querystring');
+    const database = require('./database.js');
+    require('./api.js')(base_url, server, database);
 
-var main = express();
-var server = require('http').createServer(main);
+    app.use(require('cookie-parser')('A very important secret'));
+    app.use(require('body-parser').urlencoded({ extended: false }));
 
-var app = express();
-main.use(base_url, app);
+    app.use(express.static('public'));
 
-app.engine('html', exphbs.create({ extname: '.html' }).engine);
-app.set('view engine', 'html');
+    var check_login = function(req, res, next) {
+        var session_id = req.cookies['session_id'];
+        if(session_id) {
+            database.validate_session(session_id, function(err, user) {
+                if(err || !user) {
+                    console.log('Not validated: ' + err + ' ' + user);
+                    res.clearCookie('session_id');
+                    res.redirect(req.baseUrl + '/login?redirect=' + req.originalUrl);
+                } else {
+                    req.user = user;
+                    next();
+                }
+            });
+        } else {
+            res.redirect(req.baseUrl + '/login?redirect=' + req.originalUrl);
+        }
+    };
 
-require('./api.js')(base_url, server, database);
+    app.get('/', check_login, function(req, res) {
+        var user = req.user;
 
-app.use(require('cookie-parser')('A very important secret'));
-app.use(require('body-parser').urlencoded({ extended: false }));
+        if(user.admin) {
+            res.render('professor');
+        } else {
+            res.render('student');
+        }
+    });
 
-app.use(express.static('public'));
+    app.get('/admin', check_login, function(req, res) {
+        var user = req.user;
 
-var check_login = function(req, res, next) {
-    var session_id = req.cookies['session_id'];
-    if(session_id) {
-        database.validate_session(session_id, function(err, user) {
-            if(err || !user) {
-                console.log('Not validated: ' + err + ' ' + user);
-                res.clearCookie('session_id');
-                res.redirect(req.baseUrl + '/login?redirect=' + req.originalUrl);
+        if(user.admin) {
+            res.render('admin');
+        } else {
+            res.status(404).send('Not found');
+        }
+    });
+
+    app.get('/statistics', check_login, function(req, res) {
+        var user = req.user;
+        
+        if(user.admin) {
+            res.render('professor');
+        } else {
+            res.render('student');
+        }
+    });
+
+    app.get('/settings', check_login, function(req, res) {
+        var user = req.user;
+
+        if(user.admin) {
+            res.render('professor');
+        } else {
+            res.status(404).send('Not found');
+        }
+    });
+
+    app.use('/login', require('csurf')({ cookie: true }));
+    app.use('/login', function(err, req, res, next) {
+        if(err.code != 'EBADCSRFTOKEN') return next(err);
+        res.status(403).send('Form tampered with.');
+    });
+
+    app.get('/login', function(req, res) {
+        res.render('login', {
+            message: req.query.message,
+            redirect: req.query.redirect,
+            register: req.query.register || false,
+            username: req.query.username,
+            csurf: req.csrfToken()
+        });
+    });
+
+    app.post('/api/login', function(req, res) {
+        database.create_session(req.body.username, req.body.password, function(err, session_id) {
+            if(err) {
+                var message = 'message=' + querystring.escape(err.toString());
+                var redirect = req.query.redirect ? '&redirect=' + req.query.redirect : '';
+                var username = '&username=' + req.body.username;
+                var register = '&register=false'
+                res.redirect(req.baseUrl + '/login?' + message + redirect + username + register);
             } else {
-                req.user = user;
-                next();
+                res.cookie('session_id', session_id, { expires: new Date(Date.now() + 24 * 60 * 60 * 1000) });
+                res.redirect(req.query.redirect || req.baseUrl);
             }
         });
-    } else {
-        res.redirect(req.baseUrl + '/login?redirect=' + req.originalUrl);
-    }
-};
-
-app.get('/', check_login, function(req, res) {
-    var user = req.user;
-
-    if(user.admin) {
-        res.render('professor');
-    } else {
-        res.render('student');
-    }
-});
-
-app.get('/admin', check_login, function(req, res) {
-    var user = req.user;
-
-    if(user.admin) {
-        res.render('admin');
-    } else {
-        res.status(404).send('Not found');
-    }
-});
-
-app.get('/statistics', check_login, function(req, res) {
-    var user = req.user;
-    
-    if(user.admin) {
-        res.render('professor');
-    } else {
-        res.render('student');
-    }
-});
-
-app.get('/settings', check_login, function(req, res) {
-    var user = req.user;
-
-    if(user.admin) {
-        res.render('professor');
-    } else {
-        res.status(404).send('Not found');
-    }
-});
-
-app.use('/login', require('csurf')({ cookie: true }));
-app.use('/login', function(err, req, res, next) {
-    if(err.code != 'EBADCSRFTOKEN') return next(err);
-    res.status(403).send('Form tampered with.');
-});
-
-app.get('/login', function(req, res) {
-    res.render('login', {
-        message: req.query.message,
-        redirect: req.query.redirect,
-        register: req.query.register || false,
-        username: req.query.username,
-        csurf: req.csrfToken()
     });
-});
 
-app.post('/api/login', function(req, res) {
-    database.create_session(req.body.username, req.body.password, function(err, session_id) {
-        if(err) {
-            var message = 'message=' + querystring.escape(err.toString());
-            var redirect = req.query.redirect ? '&redirect=' + req.query.redirect : '';
-            var username = '&username=' + req.body.username;
-            var register = '&register=false'
-            res.redirect(req.baseUrl + '/login?' + message + redirect + username + register);
+    app.post('/api/logout', function(req, res) {
+        var session_id = req.cookies['session_id']
+        if(session_id) {
+            database.destroy_session(session_id, function(err) {
+                res.clearCookie('session_id');
+                res.redirect(req.baseUrl + '/');
+            });
         } else {
-            res.cookie('session_id', session_id, { expires: new Date(Date.now() + 24 * 60 * 60 * 1000) });
-            res.redirect(req.query.redirect || req.baseUrl);
-        }
-    });
-});
-
-app.post('/api/logout', function(req, res) {
-    var session_id = req.cookies['session_id']
-    if(session_id) {
-        database.destroy_session(session_id, function(err) {
-            res.clearCookie('session_id');
             res.redirect(req.baseUrl + '/');
-        });
-    } else {
-        res.redirect(req.baseUrl + '/');
-    }
-});
-
-app.post('/api/register', function(req, res) {
-    database.create_user(req.body.username, req.body.password, function(err) {
-        if(err) {
-            var message = 'message=' + querystring.escape(err.toString());
-            var redirect = req.query.redirect ? '&redirect=' + req.query.redirect : '';
-            var username = '&username=' + req.body.username;
-            var register = '&register=true'
-            res.redirect(req.baseUrl + '/login?' + message + redirect + username + register);
-        } else {
-            var message = 'message=' + querystring.escape('Register success, please login.');
-            var redirect = req.query.redirect ? '&redirect=' + req.query.redirect : '';
-            res.redirect(req.baseUrl + '/login?' + message + redirect);
         }
     });
-});
 
-server.listen(port, function() {
-    console.log('Site is up at port ' + port + '.');
-});
+    app.post('/api/register', function(req, res) {
+        database.create_user(req.body.username, req.body.password, function(err) {
+            if(err) {
+                var message = 'message=' + querystring.escape(err.toString());
+                var redirect = req.query.redirect ? '&redirect=' + req.query.redirect : '';
+                var username = '&username=' + req.body.username;
+                var register = '&register=true'
+                res.redirect(req.baseUrl + '/login?' + message + redirect + username + register);
+            } else {
+                var message = 'message=' + querystring.escape('Register success, please login.');
+                var redirect = req.query.redirect ? '&redirect=' + req.query.redirect : '';
+                res.redirect(req.baseUrl + '/login?' + message + redirect);
+            }
+        });
+    });
+}
