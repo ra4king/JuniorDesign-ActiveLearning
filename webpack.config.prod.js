@@ -25,7 +25,7 @@ module.exports = {
         }),
         new webpack.optimize.UglifyJsPlugin(),
         new webpack.optimize.CommonsChunkPlugin({
-            names: 'vendor',
+            name: 'vendor',
             minChunks: function(module) {
                 return module.context && module.context.indexOf('node_modules') != -1;
             }

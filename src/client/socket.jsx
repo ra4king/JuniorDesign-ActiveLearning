@@ -1,4 +1,4 @@
-import { readCookie } from './utils.jsx'
+import { readCookie } from './utils.jsx';
 
 export default new function() {
     var listeners = {};

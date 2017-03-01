@@ -18,9 +18,9 @@ window.onload = () => {
     ReactDOM.render(
         <Router history={browserHistory}>
             <Route path='/active-learning/' component={App}>
-                <IndexRoute component={Panels} page='home' />
-                <Route path='/active-learning/statistics' component={StatisticsPanels} page='statistics' />
-                <Route path='/active-learning/settings' component={SettingsPanels} page='settings' />
+                <IndexRoute component={Panels} />
+                <Route path='/active-learning/statistics' component={StatisticsPanels} />
+                <Route path='/active-learning/settings' component={SettingsPanels} />
             </Route>
         </Router>,
         document.getElementById('panels'));
