@@ -38,6 +38,11 @@
     margin-left: 20px;
 }
 
+
+#hierarchy-panel {
+    width: 40%;
+}
+
 .add-tag-button {
     margin-left: 10px;
 }
@@ -47,8 +52,17 @@
     max-height: 300px;
 }
 
+#question-hierarchy {
+    position: relative;
+    list-style-type: none;
+    left: 0px;
+    width: 100%;
+}
+
 #question-list {
     list-style-type: none;
+    right: 0px;
+    width: 60%;
 }
 
 #quiz-creator-header {
@@ -81,6 +95,33 @@
 #submit-quiz-button {
     background-color: #FFFFFF;
     border: none;
+}
+
+.parent-holder {
+    list-style-type: none;
+    margin-left: 10px;
+}
+
+.tree-node {
+    list-style-type: none;
+    padding-left: 5px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border: #000000;
+    border-style: solid;
+    border-width: 2px;
+    border-top: none;
+}
+
+.parent-node {
+    background-color: #FFFFFF;
+    color: #000000;
+    margin-left: 5px;
+    
+}
+
+.leaf-node {
+    margin-left: 15px;
 }
 
 .edit-button {
