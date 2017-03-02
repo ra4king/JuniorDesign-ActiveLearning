@@ -10,6 +10,9 @@ module.exports = {
     validate_session: validate_session,
     destroy_session: destroy_session,
 
+    create_resource: create_resource,
+    get_resource: get_resource,
+
     create_question: create_question,
     update_question: update_question,
     delete_question: delete_question,
@@ -56,6 +59,14 @@ var sessions;
 }
 */
 
+var resources;
+/*
+{
+    _id: ObjectID resource_id
+    data
+}
+*/
+
 var questions;
 /*
 {
@@ -63,7 +74,7 @@ var questions;
     name,
     answers: [String],
     correct: int index into answers array,
-    image: String base64-encoded image
+    image_id: String resource_id of an image
 }
 */
 
@@ -106,6 +117,7 @@ MongoClient.connect('mongodb://roiatalla.com:27017', function(err, db) {
     db.authenticate(config.user, config.pwd, function(err, result) {
         users = db.collection('users');
         sessions = db.collection('sessions');
+        resources = db.collection('resources');
         questions = db.collection('questions');
         quizzes = db.collection('quizzes');
         submissions = db.collection('submissions');
@@ -320,12 +332,49 @@ function get_all_users(callback) {
     });
 }
 
+function create_resource(resource, callback) {
+    if(!database) {
+        return callback('Not connected to the database.');
+    }
+
+    resources.insertOne({ data: resource }, function(err, result) {
+        if(err) {
+            console.error('Error when creating resource: ' + resource);
+            console.error(err);
+            return callback(err);
+        }
+
+        callback(null, result.ops[0]._id.toHexString());
+    });
+}
+
+function get_resource(resource_id, callback) {
+    if(!database) {
+        return callback('Not connected to the database.');
+    }
+
+    resources.findOne({ _id: new ObjectID(resource_id) }, function(err, resource) {
+        if(err) {
+            console.error('Error when getting resource: ' + resource_id);
+            console.error(err);
+            return callback(err);
+        }
+
+        if(resource) {
+            callback(null, resource.data);
+        } else {
+            callback('Resource not found with id: ' + resource_id);
+        }
+    });
+}
+
 function validate_question(question) {
     if(!question ||
         typeof question.name !== 'string' ||
         !Array.isArray(question.answers) ||
         (typeof question.correct !== 'string' && typeof question.correct !== 'number') ||
-        (question.image && typeof question.image !== 'string') ||
+        (question.image_id && typeof question.image_id !== 'string') ||
+        !Array.isArray(question.tags) ||
         question.answers.length < 2 ||
         (Number(question.correct) !== NaN &&
         (question.correct % 1 !== 0 ||
@@ -338,7 +387,8 @@ function validate_question(question) {
         name: question.name,
         answers: question.answers.map((ans) => String(ans)),
         correct: String(question.correct),
-        image: question.image
+        image_id: question.image_id,
+        tags: question.tags.map((tag) => String(tag))
     };
 }
 
@@ -413,7 +463,8 @@ function cleanup_question(question, include_correct) {
         name: question.name,
         answers: question.answers,
         correct: include_correct ? question.correct : undefined,
-        image: question.image || undefined
+        image_id: question.image_id,
+        tags: question.tags
     };
 }
 
@@ -429,7 +480,11 @@ function get_question_by_id(question_id, include_correct, callback) {
             return callback(err);
         }
 
-        callback(null, cleanup_question(question, include_correct));
+        if(question) {
+            callback(null, cleanup_question(question, include_correct));
+        } else {
+            return callback('Question not found with id: ' + question_id);
+        }
     });
 }
 
@@ -571,7 +626,7 @@ function get_quiz_by_id(quiz_id, callback) {
                 questions: quiz.questions,
             });
         } else {
-            callback(null, null);
+            callback('Quiz not found with id: ' + quiz_id);
         }
     });
 }

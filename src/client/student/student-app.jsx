@@ -22,6 +22,9 @@ class App extends React.Component {
         super(props);
 
         this.state = {
+            resources: {},
+            questions: {},
+            quizzes: {},
             showConfirm: null,
             showLiveQuestion: false,
             currentLiveQuestion: null,
@@ -32,7 +35,28 @@ class App extends React.Component {
                 this.setState({ user: user });
             }
         });
-        socket.on('live_question', (data) => this.setState({ currentLiveQuestion: data }));
+        
+        socket.on('questions', (questions) => this.setState({ questions: questions }));
+        socket.on('quizzes', (quizzes) => this.setState({ quizzes: quizzes }));
+        socket.on('live_question', (question) => this.setState({ currentLiveQuestion: question }));
+
+        this.refresh = this.refresh.bind(this);
+
+        if(socket.isLoggedIn()) {
+            this.refresh();
+        } else {
+            socket.on('login', this.refresh);
+        }
+    }
+
+    refresh() {
+        socket.send('get_quizzes', (err, data) => !err && socket.emit('quizzes', data));
+        socket.send('get_questions', (err, data) => !err && socket.emit('questions', data));
+        socket.send('get_live_question', (err, data) => !err && socket.emit('live_question', data));
+    }
+
+    componentWillUnmount() {
+        socket.remove('login', this.refresh);
     }
 
     toggleLiveQuiz() {
@@ -55,6 +79,34 @@ class App extends React.Component {
         this.setState({ showConfirm: null });
     }
 
+    getResource(resource_id, callback) {
+        if(this.state.resources[resource_id]) {
+            if(callback) {
+                callback(null, this.state.resources[resource_id]);
+            }
+
+            this.setState({ questions: this.state.questions });
+        } else {
+            socket.send('get_resource', resource_id, (err, resource) => {
+                if(err) {
+                    console.error('Failed to load image for question ' + question_id + ' with resource id ' + resource_id + ': ' + err);
+                    if(callback) {
+                        callback(err);
+                    }
+                } else {
+                    var resources = this.state.resources;
+                    resources[resource_id] = resource;
+
+                    if(callback) {
+                        callback(null, resource);
+                    }
+
+                    this.setState({ questions: this.state.questions, resources: resources });
+                }
+            });
+        }
+    }
+
     render() {
         return (
             <div>
@@ -63,6 +115,7 @@ class App extends React.Component {
                 {this.state.showLiveQuestion &&
                     <LiveQuizPanel
                         question={this.state.currentLiveQuestion}
+                        getResource={this.getResource.bind(this)}
                         toggleLiveQuiz={this.toggleLiveQuiz.bind(this)} />}
 
                 {this.state.showConfirm && <ConfirmBox hideConfirm={() => this.hideConfirm()} {...this.state.showConfirm} />}
@@ -73,6 +126,9 @@ class App extends React.Component {
                     {React.Children.map(this.props.children, (child) =>
                         React.cloneElement(child, {
                             user: this.state.user,
+                            questions: this.state.questions,
+                            quizzes: this.state.quizzes,
+                            getResource: this.getResource.bind(this),
                             showConfirm: this.showConfirm.bind(this),
                             toggleLiveQuiz: this.toggleLiveQuiz.bind(this)
                         }))}
@@ -105,7 +161,7 @@ class LiveQuizPanel extends React.Component {
         return (
             <div id='live-quiz'>
                 {this.props.question
-                    ? (<ul id='live-question'><Question question={this.props.question} /></ul>)
+                    ? (<ul id='live-question'><Question question={this.props.question} getResource={this.props.getResource} /></ul>)
                     : (<p id='live-question-msg'>Live question has ended.</p>)}
                 <button onClick={this.props.toggleLiveQuiz} className='delete-button'>&#10006;</button>
             </div>
@@ -143,31 +199,8 @@ class Panels extends React.Component {
         super(props);
         
         this.state = {
-            questions: {},
-            quizzes: {},
             selectedQuiz: null
         };
-
-        socket.on('questions', (data) => this.setState({ questions: data }));
-        socket.on('quizzes', (data) => this.setState({ quizzes: data }));
-
-        this.refresh = this.refresh.bind(this);
-
-        if(socket.isLoggedIn()) {
-            this.refresh();
-        } else {
-            socket.on('login', this.refresh);
-        }
-    }
-
-    refresh() {
-        socket.send('get_quizzes', (err, data) => !err && socket.emit('quizzes', data));
-        socket.send('get_questions', (err, data) => !err && socket.emit('questions', data));
-        socket.send('get_live_question', (err, data) => !err && socket.emit('live_question', data));
-    }
-
-    componentWillUnmount() {
-        socket.remove('login', this.refresh);
     }
 
     chooseQuiz(id) {
@@ -191,15 +224,16 @@ class Panels extends React.Component {
             <div>
                 <QuizPanel
                     showConfirm={this.props.showConfirm}
-                    quizzes={this.state.quizzes}
+                    quizzes={this.props.quizzes}
                     chooseQuiz={this.chooseQuiz.bind(this)}
                     toggleLiveQuiz={this.props.toggleLiveQuiz} />
 
                 <QuestionPanel
+                    getResource={this.props.getResource}
                     showConfirm={this.props.showConfirm}
                     hideQuiz={() => this.chooseQuiz(null)}
-                    questions={this.state.questions}
-                    quiz={this.state.selectedQuiz && this.state.quizzes[this.state.selectedQuiz]} />
+                    questions={this.props.questions}
+                    quiz={this.state.selectedQuiz && this.props.quizzes[this.state.selectedQuiz]} />
             </div>
         );
     }
@@ -243,6 +277,7 @@ class QuestionPanel extends React.Component {
                     ? (<QuestionList
                             quiz={this.props.quiz}
                             questions={this.props.questions}
+                            getResource={this.props.getResource}
                             showConfirm={this.props.showConfirm}
                             hideQuiz={this.props.hideQuiz} />)
                     : (<p id='choose-quiz-msg'>Choose a quiz from the left side!</p>)}
@@ -302,6 +337,7 @@ class QuestionList extends React.Component {
                         (<Question
                                 key={question_id}
                                 question={this.props.questions[question_id]}
+                                getResource={this.props.getResource}
                                 answerSelected={this.answerSelected.bind(this, question_id)} />))}
                 </ol>
                 <button id='submit-all' className='submit-all-button' onClick={this.submitClicked.bind(this)}>Submit All</button>
@@ -311,14 +347,32 @@ class QuestionList extends React.Component {
 }
 
 class Question extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            image: null
+        };
+    }
+
+    componentWillMount() {
+        if(this.props.question.image_id && !this.state.image) {
+            this.props.getResource(this.props.question.image_id, (err, resource) => this.setState({ image: resource }));
+        }
+    }
+
     answerSelected(e) {
         this.props.answerSelected(e.target.value);
     }
 
     render() {
+        if(!this.props.question) {
+            return null;
+        }
+
         return (
             <li className='question'>
-                <div className='question-body' style={this.props.question.image ? {width: '70%'} : {}}>
+                <div className='question-body' style={this.state.image || this.props.question.image_id ? {width: '70%'} : {}}>
                     <p className='question-name'>{unescapeHTML(this.props.question.name)}</p>
                     <ol className='answer-list'>
                         {this.props.question.answers.map((answer, idx) => (
@@ -333,7 +387,9 @@ class Question extends React.Component {
                         ))}
                     </ol>
                 </div>
-                <img className='question-image' src={this.props.question.image || null} />
+                {this.state.image
+                    ? (<img className='question-image' src={this.state.image} />)
+                    : this.props.question.image_id && (<p className='question-image'>Loading image</p>)}
             </li>
         );
     }

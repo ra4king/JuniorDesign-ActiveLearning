@@ -127,6 +127,15 @@ module.exports = function(base_url, server, database) {
                     }
                     break;
 
+                case 'create_resource':
+                    if(!verifyAdmin()) return;
+                    database.create_resource(data.data, reply);
+                    break;
+
+                case 'get_resource':
+                    database.get_resource(data.data, reply);
+                    break;
+
                 case 'create_question':
                     if(!verifyAdmin()) return;
 
@@ -223,7 +232,12 @@ module.exports = function(base_url, server, database) {
                     break;
 
                 case 'get_live_question':
-                    reply(null, live_question_id);
+                    if(live_question_id) {
+                        database.get_question_by_id(live_question_id, false, reply);
+                    } else {
+                        reply(null, null);
+                    }
+
                     break;
 
                 case 'broadcast_live_question':
