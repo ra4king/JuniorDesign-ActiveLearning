@@ -458,22 +458,79 @@ class QuestionPanel extends React.Component {
         this.setState({ editQuestion: null });
     }
 
+    getFolderHierarchy() {
+        return ([
+            {
+                name: "menu1",
+                id: 1,
+                isOpen: false,
+                children: [
+                    {
+                        name: "submenu1",
+                        id: 2,
+                        isOpen: false,
+                        children: [
+                            {
+                                name: "item1-1",
+                                id: 3
+                            },
+                            {
+                                name: "item1-2",
+                                id: 4
+                            }
+                        ]
+                    },
+                    {
+                        name: "submenu2",
+                        id: 5,
+                        isOpen: false,
+                        children: [
+                            {
+                                name:"subsubmenu2",
+                                id:5.5,
+                                isOpen:false,
+                                children: [{
+                                    name: "item2-1",
+                                    id: 6
+                                }]
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                name: "menu2",
+                id: 7,
+                isOpen: false,
+                children: [
+                    {
+                        name: "item3-1",
+                        id: 8
+                    }
+                ]
+            }
+        ]);
+    }
+
     render() {
         return (
+            
             <div id='question-panel'>
                 <button className='option-button' onClick={this.toggleQuestionEditor.bind(this)}>
                     {this.state.editQuestion ? 'Cancel' : 'Create Question'}
                 </button>
-
                 {this.state.editQuestion
                     ? (<QuestionEditor
                             question={this.state.editQuestion}
                             hideQuestionEditor={this.hideQuestionEditor.bind(this)}
                             showConfirm={this.props.showConfirm} />)
-                    : (<QuestionList
+                    : ( [<div key='hierarcy' id='hierarchy-panel'>
+                            <Hierarchy data={this.getFolderHierarchy()} />
+                        </div>,
+                        <QuestionList key='questions'
                             questions={this.props.questions}
                             chooseQuestion={this.chooseQuestion.bind(this)}
-                            showConfirm={this.props.showConfirm} />)
+                            showConfirm={this.props.showConfirm} />])
                 }
             </div>
         );
@@ -729,3 +786,84 @@ class Question extends React.Component {
         );
     }
 }
+
+class Hierarchy extends React.Component {
+    recursivelyOpen(that, treeArray) {
+        var listItems = []
+        treeArray.map(function(element) {
+            if(element.children && element.children.length > 0) {
+                var curr = [<li className='parent-node tree-node' key={element.name + element.id} onClick={() => that.openParentNode(element)}>{element.name}</li>]
+                if (element.isOpen) {
+                    curr = curr.concat(that.recursivelyOpen(that, element.children));
+                }
+                listItems.push(<ul key={element.name + element.id} className='parent-holder'>{curr}</ul>);
+            } else {
+                listItems.push(<li className='leaf-node tree-node' key={element.name + element.id} onClick={() => that.openLeafNode(element)}>{element.name}</li>);
+            }
+            });
+        return listItems;
+    }
+
+    openParentNode(node) {
+        node.isOpen = !node.isOpen;
+        this.forceUpdate();
+    }
+
+    openLeafNode(leaf) {
+        /*TODO - use this to display question*/
+        console.log("clicked " + leaf.name);
+    }
+
+    render() {
+        return(
+            <ul className="outer-tree"> {this.recursivelyOpen(this, this.props.data)}</ul>
+        )
+    }
+}
+
+
+/*[
+    {
+        name: "menu1",
+        id: 1,
+        isOpen: true,
+        children: [
+            {
+                name: "submenu1",
+                id: 1,
+                isOpen: true,
+                children: [
+                    {
+                        name: "item1-1",
+                        id: 1
+                    },
+                    {
+                        name: "item1-2",
+                        id: 2
+                    }
+                ]
+            },
+            {
+                name: "submenu2",
+                id: 2,
+                isOpen: true,
+                children: [
+                    {
+                        name: "item2-1",
+                        id: 1
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        name: "menu2",
+        isOpen: true,
+        children: [
+            {
+                name: "item3-1",
+                id: 1
+            }
+        ]
+    }
+]*/

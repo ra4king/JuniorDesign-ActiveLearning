@@ -81,10 +81,11 @@ module.exports = function(server, app, base_url) {
     });
 
     app.get('/login', function(req, res) {
+        console.log(req.query.register);
         res.render('login', {
             message: req.query.message,
             redirect: req.query.redirect,
-            register: !!req.query.register,
+            register: (req.query.register=='true'),
             username: req.query.username,
             csurf: req.csrfToken()
         });

@@ -296,16 +296,14 @@ class QuestionList extends React.Component {
 
     render() {
         return (
-            <div>
-                <ol id='question-list'>
-                    {this.props.quiz.questions.map((question_id) =>
-                        (<Question
-                                key={question_id}
-                                question={this.props.questions[question_id]}
-                                answerSelected={this.answerSelected.bind(this, question_id)} />))}
-                </ol>
-                <button id='submit-all' className='submit-all-button' onClick={this.submitClicked.bind(this)}>Submit All</button>
-            </div>
+            <ol id='question-list'>
+                {[this.props.quiz.questions.map((question_id) =>
+                    (<Question
+                            key={question_id}
+                            question={this.props.questions[question_id]}
+                            answerSelected={this.answerSelected.bind(this, question_id)} />)),
+                <li key='submit-all' className='submit-all'><button className='submit-all-button' onClick={this.submitClicked.bind(this)}>Submit All</button></li>]}
+            </ol>
         );
     }
 }
