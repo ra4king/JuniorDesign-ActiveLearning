@@ -505,62 +505,22 @@ class QuestionPanel extends React.Component {
     }
 
     getFolderHierarchy() {
-        return ([
-            {
-                name: "menu1",
-                id: 1,
-                isOpen: false,
-                children: [
-                    {
-                        name: "submenu1",
-                        id: 2,
-                        isOpen: false,
-                        children: [
-                            {
-                                name: "item1-1",
-                                id: 3
-                            },
-                            {
-                                name: "item1-2",
-                                id: 4
-                            }
-                        ]
-                    },
-                    {
-                        name: "submenu2",
-                        id: 5,
-                        isOpen: false,
-                        children: [
-                            {
-                                name:"subsubmenu2",
-                                id:5.5,
-                                isOpen:false,
-                                children: [{
-                                    name: "item2-1",
-                                    id: 6
-                                }]
-                            }
-                        ]
-                    }
-                ]
-            },
-            {
-                name: "menu2",
-                id: 7,
-                isOpen: false,
-                children: [
-                    {
-                        name: "item3-1",
-                        id: 8
-                    }
-                ]
-            }
-        ]);
+        var tags = [];
+
+        for(var id in this.props.questions) {
+            var question = this.props.questions[id];
+            question.tags && question.tags.forEach((tag) => {
+                if(tags.indexOf(tag) == -1) {
+                    tags.push(tag);
+                }
+            });
+        }
+
+        return [{ name: 'CS 2110', children: tags }];
     }
 
     render() {
         return (
-            
             <div id='question-panel'>
                 <button className='option-button' onClick={this.toggleQuestionEditor.bind(this)}>
                     {this.state.editQuestion ? 'Cancel' : 'Create Question'}
@@ -571,8 +531,8 @@ class QuestionPanel extends React.Component {
                             getResource={this.props.getResource}
                             hideQuestionEditor={this.hideQuestionEditor.bind(this)}
                             showConfirm={this.props.showConfirm} />)
-                    : ( [<div key='hierarcy' id='hierarchy-panel'>
-                            <Hierarchy data={this.getFolderHierarchy()} />
+                    : ([<div key='hierarchy' id='hierarchy-panel'>
+                            <Hierarchy tags={this.getFolderHierarchy()} />
                         </div>,
                         <QuestionList key='questions'
                             questions={this.props.questions}
@@ -873,8 +833,12 @@ class Question extends React.Component {
 
     componentWillMount() {
         if(this.props.question.image_id && !this.state.image) {
-            this.props.getResource(this.props.question.image_id, (err, resource) => this.setState({ image: resource }));
+            this.props.getResource(this.props.question.image_id, (err, resource) => !this.didUnmount && this.setState({ image: resource }));
         }
+    }
+
+    componentWillUnmount() {
+        this.didUnmount = true;
     }
 
     render() {
@@ -912,19 +876,43 @@ class Question extends React.Component {
 }
 
 class Hierarchy extends React.Component {
-    recursivelyOpen(that, treeArray) {
-        var listItems = []
-        treeArray.map(function(element) {
-            if(element.children && element.children.length > 0) {
-                var curr = [<li className='parent-node tree-node' key={element.name + element.id} onClick={() => that.openParentNode(element)}>{element.name}</li>]
-                if (element.isOpen) {
-                    curr = curr.concat(that.recursivelyOpen(that, element.children));
+    constructor(props) {
+        super(props);
+
+        function formatTags(tags) {
+            return tags.map((tag) => {
+                if(typeof tag === 'string') {
+                    return {
+                        name: tag
+                    }
+                } else {
+                    return {
+                        name: tag.name,
+                        isOpen: false,
+                        children: formatTags(tag.children)
+                    }
                 }
-                listItems.push(<ul key={element.name + element.id} className='parent-holder'>{curr}</ul>);
-            } else {
-                listItems.push(<li className='leaf-node tree-node' key={element.name + element.id} onClick={() => that.openLeafNode(element)}>{element.name}</li>);
-            }
             });
+        }
+
+        this.state = {
+            hierarchy: formatTags(props.tags)
+        }
+    }
+
+    recursivelyOpen(treeArray) {
+        var listItems = []
+        treeArray.map((element, idx) => {
+            if(element.children && element.children.length > 0) {
+                var curr = [<li className='parent-node tree-node' key={element.name + element.id} onClick={() => this.openParentNode(element)}>{element.name}</li>]
+                if (element.isOpen) {
+                    curr = curr.concat(this.recursivelyOpen(element.children));
+                }
+                listItems.push(<ul key={element.name + idx} className='parent-holder'>{curr}</ul>);
+            } else {
+                listItems.push(<li className='leaf-node tree-node' key={element.name + element.id} onClick={() => this.openLeafNode(element)}>{element.name}</li>);
+            }
+        });
         return listItems;
     }
 
@@ -940,7 +928,7 @@ class Hierarchy extends React.Component {
 
     render() {
         return(
-            <ul className="outer-tree"> {this.recursivelyOpen(this, this.props.data)}</ul>
+            <ul className="outer-tree">{this.recursivelyOpen(this.state.hierarchy)}</ul>
         )
     }
 }
