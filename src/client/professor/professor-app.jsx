@@ -545,8 +545,10 @@ class QuestionEditor extends React.Component {
             id: props.question.id,
             title: props.question.name || '',
             answers: props.question.answers || ['', '', '', ''],
-            correct: props.question.correct || null,
+            correct: props.question.correct || 0,
             image: props.question.image || null,
+            tags: props.question.tags || [],
+            tag: '',
         }
     }
 
@@ -652,15 +654,31 @@ class QuestionEditor extends React.Component {
                 name: this.state.title,
                 answers: answers,
                 correct: String(this.state.correct),
-                image: this.state.image || undefined
+                image: this.state.image || undefined,
+                tags: this.state.tags
             }, callback);
         } else {
             socket.send('create_question', {
                 name: this.state.title,
                 answers: answers,
                 correct: String(this.state.correct),
-                image: this.state.image || undefined
+                image: this.state.image || undefined,
+                tags: this.state.tags
             }, callback);
+        }
+    }
+
+    changeTag(e) {
+        this.setState({ tag: e.target.value });
+    }
+
+    addTag() {
+        if(this.state.tag) {
+            this.setState((prevState) => {
+                var tags = prevState.tags.slice();
+                tags.push(this.state.tag);
+                return { tags: tags, tag: '' };
+            });
         }
     }
 
@@ -707,6 +725,21 @@ class QuestionEditor extends React.Component {
                 {this.state.image &&
                     (<div className='question-creator-row'><img id='image-input' src={this.state.image} /></div>)}
 
+                <div className='question-creator-row'>
+                    <b>Tags:</b>
+                    <ol>
+                        {this.state.tags.map((tag, indx) => {
+                            return (
+                                <li key={indx}>
+                                    {this.state.tags[indx]}
+                                </li>
+                                );
+                            })
+                        }
+                    </ol>
+                    <input type='text' size='15' value={this.state.tag} onChange={this.changeTag.bind(this)} onKeyPress={(e) => e.key === 'Enter' && this.addTag()} />
+                    <button className='add-tag-button' onClick={this.addTag.bind(this)}>Add Tag</button>
+                </div>
                 <div className='question-creator-row'>
                     <button className='option-button' onClick={this.submitQuestion.bind(this)}>
                         {this.state.id ? 'Update' : 'Submit'}

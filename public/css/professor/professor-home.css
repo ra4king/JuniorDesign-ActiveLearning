@@ -33,8 +33,13 @@
     margin-left: 20px;
 }
 
+
 #hierarchy-panel {
     width: 40%;
+}
+
+.add-tag-button {
+    margin-left: 10px;
 }
 
 #image-input {
