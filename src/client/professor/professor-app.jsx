@@ -490,7 +490,11 @@ class QuestionEditor extends React.Component {
             answers: props.question.answers || ['', '', '', ''],
             correct: props.question.correct || null,
             image: props.question.image || null,
+            tags: props.question.tags || [],
+            tag: '',
         }
+
+
     }
 
     changeTitle(e) {
@@ -607,6 +611,17 @@ class QuestionEditor extends React.Component {
         }
     }
 
+    changeTag(e) {
+        this.setState({ tag: e.target.value });
+    }
+    addTag() {
+        this.setState((prevState) => {
+            var tags = prevState.tags.slice();
+            tags.push(this.state.tag);
+            return { tags: tags };
+        });
+    }
+
     render() {
         return (
             <div id='question-creator'>
@@ -649,7 +664,22 @@ class QuestionEditor extends React.Component {
 
                 {this.state.image &&
                     (<div className='question-creator-row'><img id='image-input' src={this.state.image} /></div>)}
-
+                
+                <div className='question-creator-row'>
+                    <b>Tags:</b>
+                    <ol>
+                        {this.state.tags.map((tag, indx) => {
+                            return (
+                                <li key={indx}>
+                                    {this.state.tags[indx]}
+                                </li>
+                                );
+                            })
+                        }
+                    </ol>
+                    <input type='text' size='15' onChange={this.changeTag.bind(this)}/>
+                    <button onClick={this.addTag.bind(this)}>Add Tag</button>
+                </div>
                 <div className='question-creator-row'>
                     <button className='option-button' onClick={this.submitQuestion.bind(this)}>
                         {this.state.id ? 'Update' : 'Submit'}
