@@ -33,6 +33,10 @@
     margin-left: 20px;
 }
 
+.add-tag-button {
+    margin-left: 10px;
+}
+
 #image-input {
     max-width: 80%;
     max-height: 300px;
