@@ -879,25 +879,44 @@ class Hierarchy extends React.Component {
     constructor(props) {
         super(props);
 
-        function formatTags(tags) {
-            return tags.map((tag) => {
-                if(typeof tag === 'string') {
-                    return {
-                        name: tag
-                    }
-                } else {
-                    return {
-                        name: tag.name,
-                        isOpen: false,
-                        children: formatTags(tag.children)
-                    }
-                }
-            });
-        }
-
         this.state = {
-            hierarchy: formatTags(props.tags)
-        }
+            tags: this.formatTags(props.tags)
+        };
+    }
+
+    formatTags(tags) {
+        return tags.map((tag) => {
+            if(typeof tag === 'string') {
+                return {
+                    name: tag
+                }
+            } else {
+                return {
+                    name: tag.name,
+                    isOpen: false,
+                    children: this.formatTags(tag.children)
+                }
+            }
+        });
+    }
+
+    mergeTags(oldTags, newTags) {
+        newTags.forEach((newTag) => {
+            var idx = oldTags.findIndex((tag) => tag.name == newTag.name);
+            if(idx != -1) {
+                var oldTag = oldTags[idx];
+                newTag.isOpen = oldTag.isOpen;
+                if(oldTag.children) {
+                    newTag.children = this.mergeTags(oldTag.children, newTag.children);
+                }
+            }
+        });
+
+        return newTags;
+    }
+
+    componentWillReceiveProps(nextProps) {
+        this.setState({ tags: this.mergeTags(this.state.tags, this.formatTags(nextProps.tags)) })
     }
 
     recursivelyOpen(treeArray) {
@@ -928,7 +947,7 @@ class Hierarchy extends React.Component {
 
     render() {
         return(
-            <ul className="outer-tree">{this.recursivelyOpen(this.state.hierarchy)}</ul>
+            <ul className="outer-tree">{this.recursivelyOpen(this.state.tags)}</ul>
         )
     }
 }
