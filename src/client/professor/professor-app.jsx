@@ -16,7 +16,7 @@ window.onload = () => {
                 <Route path='/active-learning/settings' component={SettingsPanels} />
             </Route>
         </Router>,
-        document.getElementById('panels'));
+        document.getElementById('page'));
 }
 
 class App extends React.Component {
@@ -118,7 +118,7 @@ class App extends React.Component {
                 {this.state.showConfirm &&
                     <ConfirmBox hide={() => this.hideConfirm()} {...this.state.showConfirm} />}
 
-                <div className={(this.state.currentLiveQuiz || this.state.showConfirm) && 'blur'}>
+                <div id='panels' className={(this.state.currentLiveQuiz || this.state.showConfirm) && 'blur'}>
                     <HeaderPanel user={this.state.user} page={this.state.page} />
 
                     {React.Children.map(this.props.children, (child) =>
@@ -142,13 +142,13 @@ class HeaderPanel extends React.Component {
             <div id='header-panel'>
                 <img id='logo' src='images/active_learning_logo_white.png' width='175' height='75' alt='logo'/>
                 <h2 id='name'>{this.props.user ? this.props.user.username : ''}</h2>
-                <nav>
+                <nav id='nav-links'>
                     <form method='post'>
+                        <IndexLink to='/active-learning/' className='header-nav-link' activeClassName='selected'>Home</IndexLink>
+                        <IndexLink to='/active-learning/statistics' className='header-nav-link' activeClassName='selected'>Statistics</IndexLink>
+                        <IndexLink to='/active-learning/settings' className='header-nav-link' activeClassName='selected'>Settings</IndexLink>
                         <button className='header-nav-link' formAction='api/logout'>Logout</button>
                     </form>
-                    <IndexLink to='/active-learning/settings' className='header-nav-link' activeClassName='selected'>Settings</IndexLink>
-                    <IndexLink to='/active-learning/statistics' className='header-nav-link' activeClassName='selected'>Statistics</IndexLink>
-                    <IndexLink to='/active-learning/' className='header-nav-link' activeClassName='selected'>Home</IndexLink>
                 </nav>
             </div>
         );
@@ -183,7 +183,7 @@ class LiveQuizPanel extends React.Component {
     render() {
         return (
             <div id='live-quiz'>
-                <ol id='live-questions-list'>
+                <ol id='live-question-list'>
                     {this.props.quiz.questions.map((id) => {
                         return (
                             <Question key={id} question={this.props.questions[id]} getResource={this.props.getResource}>
@@ -213,32 +213,48 @@ class ConfirmBox extends React.Component {
         return (
             <div id='confirm-box'>
                 <p id='confirm-msg'>{this.props.title}</p>
-                {this.props.type == 'yesno' ?
-                    (<div>
-                        <button onClick={() => this.clicked(false)} className='cancel-button'>{this.props.noText || 'No'}</button>
-                        <button onClick={() => this.clicked(true)} className='confirm-button'>{this.props.yesText || 'Yes'}</button>
-                    </div>) :
-                    (<button onClick={() => this.clicked()} id='ok-button'>{this.props.okText || 'Ok'}</button>)}
+                <div id='confirm-buttons'>
+                    {this.props.type == 'yesno'
+                        ? [(<button key='no' onClick={() => this.clicked(false)} className='confirm-button' id='yes-button'>{this.props.noText || 'No'}</button>),
+                            (<button key='ok' onClick={() => this.clicked(true)} className='confirm-button' id='no-button'>{this.props.yesText || 'Yes'}</button>)]
+                        : (<button onClick={() => this.clicked()} className='confirm-button' id='ok-button'>{this.props.okText || 'Ok'}</button>)}
+                </div>
             </div>
         );
     }
 }
 
 class Panels extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            creatingQuiz: false
+        };
+    }
+
+    setCreatingQuiz(creatingQuiz) {
+        if(this.state.creatingQuiz != creatingQuiz) {
+            this.setState({ creatingQuiz: creatingQuiz });
+        }
+    }
+
     render() {
         return (
-            <div>
+            <div id='home-panels'>
                 <QuizPanel
                     questions={this.props.questions}
                     quizzes={this.props.quizzes}
+                    setCreatingQuiz={this.setCreatingQuiz.bind(this)}
                     getResource={this.props.getResource}
                     showConfirm={this.props.showConfirm}
                     presentLive={this.props.presentLive} />
 
                 <QuestionPanel
+                    questions={this.props.questions}
+                    creatingQuiz={this.state.creatingQuiz}
                     getResource={this.props.getResource}
-                    showConfirm={this.props.showConfirm}
-                    questions={this.props.questions} />
+                    showConfirm={this.props.showConfirm} />
             </div>
         );
     }
@@ -253,21 +269,27 @@ class QuizPanel extends React.Component {
         };
     }
 
+    setCreatingQuiz() {
+        this.props.setCreatingQuiz(!!this.state.editQuiz);
+    }
+
     chooseQuiz(id) {
-        this.setState({ editQuiz: this.props.quizzes[id] });
+        this.setState({ editQuiz: this.props.quizzes[id] },
+            this.setCreatingQuiz.bind(this));
     }
 
     toggleQuizEditor() {
-        this.setState((prevState) => ({editQuiz: prevState.editQuiz ? null : {}}));
+        this.setState((prevState) => ({editQuiz: prevState.editQuiz ? null : {}}),
+            this.setCreatingQuiz.bind(this));
     }
 
     hideQuizEditor() {
-        this.setState({ editQuiz: null });
+        this.setState({ editQuiz: null }, this.setCreatingQuiz.bind(this));
     }
 
     render() {
         return (
-            <div id='quiz-panel'>
+            <div id='quiz-panel' className='panel'>
                 <button className='option-button' onClick={() => this.toggleQuizEditor()}>
                     {this.state.editQuiz ? 'Cancel' : 'Create Quiz'}
                 </button>
@@ -410,9 +432,7 @@ class QuizEditor extends React.Component {
                     <div id='quiz-name'>
                         Name: <input type='text' id='quiz-name-field' value={this.state.name} onChange={this.onNameChange.bind(this)}/>
                     </div>
-                    <div id='submit-quiz'>
-                        <button id='submit-quiz-button' onClick={this.submitQuiz.bind(this)}>{this.state.id ? 'Update' : 'Submit'}</button>
-                    </div>
+                    <button id='submit-quiz-button' onClick={this.submitQuiz.bind(this)}>{this.state.id ? 'Update' : 'Submit'}</button>
                 </div>
                 <ol id='quiz-question-list' onDrop={this.onDrop.bind(this)} onDragOver={this.onDragOver.bind(this)}>
                     {this.state.questions.length > 0
@@ -437,7 +457,7 @@ class QuizEditor extends React.Component {
 class QuizList extends React.Component {
     render() {
         return (
-            <ol className='quiz-list'>
+            <ol id='quiz-list' className='list'>
                 {Object.keys(this.props.quizzes).map((id) => {
                     var quiz = this.props.quizzes[id];
                     return (
@@ -521,7 +541,7 @@ class QuestionPanel extends React.Component {
 
     render() {
         return (
-            <div id='question-panel'>
+            <div id='question-panel' className='panel'>
                 <button className='option-button' onClick={this.toggleQuestionEditor.bind(this)}>
                     {this.state.editQuestion ? 'Cancel' : 'Create Question'}
                 </button>
@@ -531,14 +551,15 @@ class QuestionPanel extends React.Component {
                             getResource={this.props.getResource}
                             hideQuestionEditor={this.hideQuestionEditor.bind(this)}
                             showConfirm={this.props.showConfirm} />)
-                    : ([<div key='hierarchy' id='hierarchy-panel'>
+                    : (<div id='question-tags-list'>
                             <Hierarchy tags={this.getFolderHierarchy()} />
-                        </div>,
-                        <QuestionList key='questions'
-                            questions={this.props.questions}
-                            getResource={this.props.getResource}
-                            chooseQuestion={this.chooseQuestion.bind(this)}
-                            showConfirm={this.props.showConfirm} />])
+                            <QuestionList
+                                questions={this.props.questions}
+                                creatingQuiz={this.props.creatingQuiz}
+                                getResource={this.props.getResource}
+                                chooseQuestion={this.chooseQuestion.bind(this)}
+                                showConfirm={this.props.showConfirm} />
+                        </div>)
                 }
             </div>
         );
@@ -714,15 +735,15 @@ class QuestionEditor extends React.Component {
     render() {
         return (
             <div id='question-creator'>
-                <label className='question-creator-row'>
-                    <span className='question-creator-title'>Question: </span>
-                    <input type='text' value={this.state.title} size='75' onChange={this.changeTitle.bind(this)} />
+                <label id='question-creator-header'>
+                    <span id='question-creator-title'>Question: </span>
+                    <input id='question-creator-title-field' type='text' value={this.state.title} onChange={this.changeTitle.bind(this)} />
                 </label>
 
-                <ol className='answer-list'>
+                <ol id='question-creator-answer-list' className='question-creator-row'>
                     {this.state.answers.map((answer, idx) => {
                         return (
-                            <li key={idx} className='answer'>
+                            <li key={idx} className='question-creator-answer'>
                                 <input
                                     type='text'
                                     value={answer}
@@ -741,18 +762,19 @@ class QuestionEditor extends React.Component {
                     })}
                 </ol>
 
-                <div className='question-creator-row'>
-                    <button onClick={this.addAnswer.bind(this)}>Add answer</button>
-                </div>
+                <button className='question-creator-row option-button' onClick={this.addAnswer.bind(this)}>Add answer</button>
 
                 <div className='question-creator-row'>
-                    <input type='file' onChange={this.imageSelected.bind(this)} />
+                    <label className='option-button'>
+                        Select file
+                        <input type='file' onChange={this.imageSelected.bind(this)} />
+                    </label>
                     {this.state.image &&
-                        <input className='option-button' type='button' value='Clear image' onClick={this.clearImage.bind(this)} />}
+                        <button className='option-button clear-image-button' onClick={this.clearImage.bind(this)}>Clear image</button>}
                 </div>
 
                 {this.state.image &&
-                    (<div className='question-creator-row'><img id='image-input' src={this.state.image} /></div>)}
+                    (<img className='question-creator-row' id='image-input' src={this.state.image} />)}
 
                 <div className='question-creator-row'>
                     <b>Tags:</b>
@@ -767,13 +789,11 @@ class QuestionEditor extends React.Component {
                         }
                     </ol>
                     <input type='text' size='15' value={this.state.tag} onChange={this.changeTag.bind(this)} onKeyPress={(e) => e.key === 'Enter' && this.addTag()} />
-                    <button className='add-tag-button' onClick={this.addTag.bind(this)}>Add Tag</button>
+                    <button id='add-tag-button' className='option-button' onClick={this.addTag.bind(this)}>Add Tag</button>
                 </div>
-                <div className='question-creator-row'>
-                    <button className='option-button' onClick={this.submitQuestion.bind(this)}>
-                        {this.state.id ? 'Update' : 'Submit'}
-                    </button>
-                </div>
+                <button className='question-creator-row option-button' onClick={this.submitQuestion.bind(this)}>
+                    {this.state.id ? 'Update' : 'Submit'}
+                </button>
             </div>
         );
     }
@@ -804,13 +824,13 @@ class QuestionList extends React.Component {
 
     render() {
         return (
-            <ul id='question-list'>
+            <ul id='question-list' className='list'>
                 {Object.keys(this.props.questions).map((id) => (
                     <Question
                         key={id}
                         question={this.props.questions[id]}
                         getResource={this.props.getResource}
-                        draggable
+                        draggable={this.props.creatingQuiz}
                         onDragStart={this.onDragStart.bind(this, id)}>
 
                         <button className='delete-button' onClick={() => this.deleteQuestion(id)}>&#10006;</button>
@@ -947,7 +967,7 @@ class Hierarchy extends React.Component {
 
     render() {
         return(
-            <ul className="outer-tree">{this.recursivelyOpen(this.state.tags)}</ul>
+            <ul id='hierarchy-panel'>{this.recursivelyOpen(this.state.tags)}</ul>
         )
     }
 }
