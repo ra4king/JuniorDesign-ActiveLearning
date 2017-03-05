@@ -132,6 +132,11 @@ module.exports = function(base_url, server, database) {
                     database.create_resource(data.data, reply);
                     break;
 
+                case 'delete_resource':
+                    if(!verifyAdmin()) return;
+                    database.delete_resource(data.data, reply);
+                    break;
+
                 case 'get_resource':
                     database.get_resource(data.data, reply);
                     break;

@@ -220,6 +220,7 @@ button {
     flex-flow: row nowrap;
     justify-content: space-between;
     align-items: stretch;
+    overflow: hidden;
 }
 
 .panel {
@@ -234,7 +235,6 @@ button {
 
     background-color: #2C2C2C;
     color: white;
-    overflow: auto;
 }
 
 #quiz-panel {
@@ -274,6 +274,7 @@ button {
     flex-flow: row nowrap;
     justify-content: flex-start;
     align-items: stretch;
+    overflow: auto;
 }
 
 .parent-holder {
@@ -343,7 +344,7 @@ button {
 }
 
 #question-list {
-    list-style: decimal inside;
+    list-style: none;
     overflow: auto;
     margin-left: 10px;
 }
@@ -373,6 +374,7 @@ button {
 .question-body {
     display: inline-block;
     vertical-align: top;
+    width: 90%;
 }
 
 .question-name {
@@ -397,15 +399,6 @@ button {
     vertical-align: top;
 }
 
-.question-body {
-    display: inline-block;
-    vertical-align: top;
-}
-
-.question-name {
-    margin: 0px;
-}
-
 #quiz-creator {
     flex: 1 1 auto;
 
@@ -413,6 +406,7 @@ button {
     flex-flow: column nowrap;
     justify-content: flex-start;
     align-items: stretch;
+    overflow: auto;
 }
 
 #quiz-creator-header {
@@ -441,6 +435,8 @@ button {
 #quiz-question-list {
     flex: 1 1 auto;
     overflow: auto;
+
+    list-style: decimal inside;
 }
 
 #question-creator {
@@ -585,4 +581,15 @@ button {
 
 .edit-button:hover {
     background-color: #6666aa;
+}
+
+.hide-button {
+    position: absolute;
+    display: block;
+    height: 21px;
+    right: 6%;
+    top: 1px;
+    border: none;
+    text-align: center;
+    transition-duration: .6s;
 }

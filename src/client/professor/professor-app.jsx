@@ -83,7 +83,7 @@ class App extends React.Component {
         } else {
             socket.send('get_resource', resource_id, (err, resource) => {
                 if(err) {
-                    console.error('Failed to load image for question ' + question_id + ' with resource id ' + resource_id + ': ' + err);
+                    console.error('Failed to load image with resource id ' + resource_id + ': ' + err);
                     if(callback) {
                         callback(err);
                     }
@@ -99,6 +99,10 @@ class App extends React.Component {
                 }
             });
         }
+    }
+
+    deleteResource(resource_id) {
+        delete this.state.resources[resource_id];
     }
 
     render() {
@@ -127,6 +131,7 @@ class App extends React.Component {
                             questions: this.state.questions,
                             quizzes: this.state.quizzes,
                             getResource: this.getResource.bind(this),
+                            deleteResource: this.deleteResource.bind(this),
                             showConfirm: this.showConfirm.bind(this),
                             presentLive: this.presentLive.bind(this)
                         }))}
@@ -254,6 +259,7 @@ class Panels extends React.Component {
                     questions={this.props.questions}
                     creatingQuiz={this.state.creatingQuiz}
                     getResource={this.props.getResource}
+                    deleteResource={this.props.deleteResource}
                     showConfirm={this.props.showConfirm} />
             </div>
         );
@@ -549,6 +555,7 @@ class QuestionPanel extends React.Component {
                     ? (<QuestionEditor
                             question={this.state.editQuestion}
                             getResource={this.props.getResource}
+                            deleteResource={this.props.deleteResource}
                             hideQuestionEditor={this.hideQuestionEditor.bind(this)}
                             showConfirm={this.props.showConfirm} />)
                     : (<div id='question-tags-list'>
@@ -583,8 +590,12 @@ class QuestionEditor extends React.Component {
 
     componentWillMount() {
         if(this.state.image_id) {
-            this.props.getResource(this.state.image_id, (err, resource) => this.setState({ image: resource }));
+            this.props.getResource(this.state.image_id, (err, resource) => !this.didUnmount && this.setState({ image: resource }));
         }
+    }
+
+    componentWillUnmount() {
+        this.didUnmount = true;
     }
 
     changeTitle(e) {
@@ -696,7 +707,7 @@ class QuestionEditor extends React.Component {
                         name: this.state.title,
                         answers: answers,
                         correct: String(this.state.correct),
-                        image_id: resource_id,
+                        image_id: resource_id || null,
                         tags: this.state.tags
                     }, callback);
                 } else {
@@ -704,15 +715,20 @@ class QuestionEditor extends React.Component {
                         name: this.state.title,
                         answers: answers,
                         correct: String(this.state.correct),
-                        image_id: resource_id,
+                        image_id: resource_id || null,
                         tags: this.state.tags
                     }, callback);
                 }
             }
         }
 
-        if(this.state.image && !this.state.image_id) {
-            socket.send('create_resource', this.state.image, send_question);
+        if(!this.state.image_id) {
+            if(this.state.image) {
+                socket.send('create_resource', this.state.image, send_question);
+            } else {
+                socket.send('delete_resource', this.props.question.image_id, send_question);
+                this.props.deleteResource(this.props.question.image_id);
+            }
         } else {
             send_question(null, this.state.image_id);
         }
@@ -831,7 +847,8 @@ class QuestionList extends React.Component {
                         question={this.props.questions[id]}
                         getResource={this.props.getResource}
                         draggable={this.props.creatingQuiz}
-                        onDragStart={this.onDragStart.bind(this, id)}>
+                        onDragStart={this.onDragStart.bind(this, id)}
+                        initialHideAnswers={false}>
 
                         <button className='delete-button' onClick={() => this.deleteQuestion(id)}>&#10006;</button>
                         <button className='edit-button' onClick={() => this.props.chooseQuestion(id)}>E</button>
@@ -847,18 +864,37 @@ class Question extends React.Component {
         super(props);
 
         this.state = {
-            image: null
+            image_id: null,
+            image: null,
+            hideAnswers: props.initialHideAnswers
         };
     }
 
-    componentWillMount() {
-        if(this.props.question.image_id && !this.state.image) {
-            this.props.getResource(this.props.question.image_id, (err, resource) => !this.didUnmount && this.setState({ image: resource }));
+    loadImage(image_id) {
+        if(image_id) {
+            if(image_id != this.state.image_id) {
+                this.setState({ image_id: image_id });
+                this.props.getResource(image_id, (err, resource) => !this.didUnmount && this.setState({ image: resource }));
+            }
+        } else {
+            this.setState({ image_id: null, image: null });
         }
+    }
+
+    componentWillMount() {
+        this.loadImage(this.props.question.image_id);
+    }
+
+    componentWillReceiveProps(nextProps) {
+        this.loadImage(nextProps.question.image_id);
     }
 
     componentWillUnmount() {
         this.didUnmount = true;
+    }
+
+    toggleShowAnswers() {
+        this.setState({ hideAnswers: !this.state.hideAnswers });
     }
 
     render() {
@@ -873,23 +909,26 @@ class Question extends React.Component {
                 onDragStart={this.props.onDragStart}>
                 <div className='question-body' style={this.state.image || this.props.question.image_id ? {width: '70%'} : {}}>
                     <p className='question-name'>{unescapeHTML(this.props.question.name)}</p>
-                    <ol className='answer-list'>
-                        {this.props.question.answers.map((answer, idx) => (
-                            <li key={answer + idx} className='answer'>
-                                <input
-                                    type='radio'
-                                    value={idx}
-                                    readOnly
-                                    checked={this.props.question.correct == idx} />
-                                {unescapeHTML(answer)}
-                            </li>
-                        ))}
-                    </ol>
+                    {!this.state.hideAnswers &&
+                        (<ol className='answer-list'>
+                            {this.props.question.answers.map((answer, idx) => (
+                                <li key={answer + idx} className='answer'>
+                                    <input
+                                        type='radio'
+                                        value={idx}
+                                        readOnly
+                                        checked={this.props.question.correct == idx} />
+                                    {unescapeHTML(answer)}
+                                </li>
+                            ))}
+                        </ol>)}
                 </div>
-                {this.state.image
-                    ? (<img className='question-image' src={this.state.image} />)
-                    : this.props.question.image_id && (<p className='question-image'>Loading image</p>)}
+                {!this.state.hideAnswers &&
+                    (this.state.image
+                        ? (<img className='question-image' src={this.state.image} />)
+                        : this.props.question.image_id && (<p className='question-image'>Loading image</p>))}
                 {this.props.children}
+                <button className='hide-button' onClick={this.toggleShowAnswers.bind(this)}>{this.state.hideAnswers ? 'Show' : 'Hide'}</button>
             </li>
         );
     }

@@ -11,6 +11,7 @@ module.exports = {
     destroy_session: destroy_session,
 
     create_resource: create_resource,
+    delete_resource: delete_resource,
     get_resource: get_resource,
 
     create_question: create_question,
@@ -345,6 +346,21 @@ function create_resource(resource, callback) {
         }
 
         callback(null, result.ops[0]._id.toHexString());
+    });
+}
+
+function delete_resource(resource_id, callback) {
+    if(!database) {
+        return callback('Not connected to the database.');
+    }
+
+    resources.findOneAndDelete({ _id: new ObjectID(resource_id) }, function(err) {
+        if(err) {
+            console.error('Error when deleting resource: ' + resource_id);
+            console.error(err);
+        }
+
+        callback(err);
     });
 }
 
