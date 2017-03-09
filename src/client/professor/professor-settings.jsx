@@ -34,7 +34,7 @@ export default class SettingsPanels extends React.Component {
 
     render() {
         return (
-            <div>
+            <div id='panels'>
                 <StudentPanel users={this.state.users} selectUser={this.selectUser.bind(this)} />
 
                 <PermissionPanel users={this.state.users} selectedUser={this.state.selectedUser} />
@@ -63,43 +63,31 @@ class StudentPanel extends React.Component {
     render() {
         return (
             <div className='panel' id='student-panel'>
-                <ul className='tab'>
+                <ul id='tabs'>
                     <li>
-                        <a href='#' className={'tablinks' + (this.state.showStudents ? ' active' : '')} onClick={this.showStudents.bind(this)}>
+                        <a href='#' className={'tablinks' + (this.state.showStudents ? ' tablinks-active' : '')} onClick={this.showStudents.bind(this)}>
                             Students
                         </a>
                     </li>
                     <li>
-                        <a href='#' className={'tablinks' + (this.state.showStudents ? '' : ' active')} onClick={this.showTAs.bind(this)}>
+                        <a href='#' className={'tablinks' + (this.state.showStudents ? '' : ' tablinks-active')} onClick={this.showTAs.bind(this)}>
                             TAs
                         </a>
                     </li>
                 </ul>
 
                 {this.state.showStudents
-                    ? (<table className='sortable tabcontent' id='student-list'>
-                        <thead>
-                            <tr><th>Users</th></tr>
-                        </thead>
-                        <tbody id='student-buttons'>
-                            {this.props.users.map((user) => (
-                                <tr key={user.username}>
-                                    <td>
-                                        <button className='list-button' onClick={() => this.props.selectUser(user)}>
-                                            {unescapeHTML(user.username)}
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>)
-                    : (<table className='sortable tabcontent' id='ta-list'>
-                        <thead>
-                            <tr><th>Teaching Assistants</th></tr>
-                        </thead>
-                        <tbody id='ta-buttons'>
-                        </tbody>
-                    </table>)}
+                    ? (<div className='list'>
+                        {this.props.users.map((user) => (
+                            <li key={user.username}>
+                                <button className='list-button' onClick={() => this.props.selectUser(user)}>
+                                    {unescapeHTML(user.username)}
+                                </button>
+                            </li>
+                        ))}
+                    </div>)
+                    : (<div className='list'>
+                    </div>)}
             </div>
         );
     }
@@ -111,7 +99,7 @@ class PermissionPanel extends React.Component {
             <div className='panel' id='permission-panel'>
                 <p>{this.props.selectedUser ? 'Selected ' + unescapeHTML(this.props.selectedUser.username) + '.' : 'Select a user from the side panel.'}</p>
                 <p>What else are we going to put here?</p>
-                <button id='make-ta-button'>Make a TA</button>
+                <button className='option-button' id='make-ta-button'>Make a TA</button>
             </div>
         );
     }

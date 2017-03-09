@@ -87,8 +87,8 @@ export default class StatisticsPanels extends React.Component {
 
     render() {
         return (
-            <div>
-                <SidePanel
+            <div id='panels'>
+                <StudentPanel
                     showStudentStats={this.showStudentStats.bind(this)}
                     showQuizStats={this.showQuizStats.bind(this)}
                     showAllQuizStats={this.showAllQuizStats.bind(this)}
@@ -106,7 +106,7 @@ export default class StatisticsPanels extends React.Component {
     }
 }
 
-class SidePanel extends React.Component {
+class StudentPanel extends React.Component {
     constructor(props) {
         super(props);
 
@@ -144,52 +144,38 @@ class SidePanel extends React.Component {
     render() {
         return (
             <div className='panel' id='student-panel'>
-                <ul className='tab'>
+                <ul id='tabs'>
                     <li>
-                        <a href='#' className={'tablinks' + (this.state.showStudents ? ' active' : '')} onClick={this.showStudents.bind(this)}>
+                        <a href='#' className={'tablinks' + (this.state.showStudents ? ' tablinks-active' : '')} onClick={this.showStudents.bind(this)}>
                             Students
                         </a>
                     </li>
                     <li>
-                        <a href='#' className={'tablinks' + (this.state.showStudents ? '' : ' active')} onClick={this.showQuizzes.bind(this)}>
+                        <a href='#' className={'tablinks' + (this.state.showStudents ? '' : ' tablinks-active')} onClick={this.showQuizzes.bind(this)}>
                             Quizzes
                         </a>
                     </li>
                 </ul>
 
                 {this.state.showStudents
-                    ? (<table className='sortable tabcontent' id='student-list'>
-                        <thead>
-                            <tr><th>Students</th></tr>
-                        </thead>
-                        <tbody id='student-buttons'>
-                            {Object.keys(this.props.statistics).map((studentName) => (
-                                <tr key={studentName}>
-                                    <td>
-                                        <button className='list-button' onClick={() => this.props.showStudentStats(studentName)}>
-                                            {studentName}
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>)
-                    : (<table className='sortable tabcontent' id='quiz-list'>
-                        <thead>
-                            <tr><th>Quizzes</th></tr>
-                        </thead>
-                        <tbody id='quiz-buttons'>
-                            {this.getAllQuizNames().map((quizName, idx) => (
-                                <tr key={idx + '-' + quizName}>
-                                    <td>
-                                        <button className='list-button' onClick={() => this.props.showQuizStats(quizName)}>
-                                            {quizName}
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>)}
+                    ? (<ul className='list'>
+                        {Object.keys(this.props.statistics).map((studentName) => (
+                            <li key={studentName}>
+                                <button className='list-button' onClick={() => this.props.showStudentStats(studentName)}>
+                                    {studentName}
+                                </button>
+                            </li>
+                        ))}
+                    </ul>)
+                    : (<ul className='list'>
+                        {this.getAllQuizNames().map((quizName, idx) => (
+                            <li key={idx + '-' + quizName}>
+                                <button className='list-button' onClick={() => this.props.showQuizStats(quizName)}>
+                                    {quizName}
+                                </button>
+                            </li>
+                        ))}
+                    </ul>)}
             </div>
         );
     }
@@ -446,7 +432,7 @@ class GraphPanel extends React.Component {
 
     render() {
         return (
-            <div id='statistics-panel'>
+            <div className='panel' id='statistics-panel'>
                 <canvas ref={this.setupChart.bind(this)} id='statistics-chart'></canvas>
             </div>
         );

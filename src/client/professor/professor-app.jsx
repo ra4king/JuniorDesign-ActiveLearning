@@ -11,7 +11,7 @@ window.onload = () => {
     ReactDOM.render(
         <Router history={browserHistory}>
             <Route path='/active-learning/' component={App}>
-                <IndexRoute component={Panels} />
+                <IndexRoute component={HomePanels} />
                 <Route path='/active-learning/statistics' component={StatisticsPanels} />
                 <Route path='/active-learning/settings' component={SettingsPanels} />
             </Route>
@@ -122,7 +122,7 @@ class App extends React.Component {
                 {this.state.showConfirm &&
                     <ConfirmBox hide={() => this.hideConfirm()} {...this.state.showConfirm} />}
 
-                <div id='panels' className={(this.state.currentLiveQuiz || this.state.showConfirm) && 'blur'}>
+                <div id='content' className={(this.state.currentLiveQuiz || this.state.showConfirm) && 'blur'}>
                     <HeaderPanel user={this.state.user} page={this.state.page} />
 
                     {React.Children.map(this.props.children, (child) =>
@@ -149,9 +149,9 @@ class HeaderPanel extends React.Component {
                 <h2 id='name'>{this.props.user ? this.props.user.username : ''}</h2>
                 <nav id='nav-links'>
                     <form method='post'>
-                        <IndexLink to='/active-learning/' className='header-nav-link' activeClassName='selected'>Home</IndexLink>
-                        <IndexLink to='/active-learning/statistics' className='header-nav-link' activeClassName='selected'>Statistics</IndexLink>
-                        <IndexLink to='/active-learning/settings' className='header-nav-link' activeClassName='selected'>Settings</IndexLink>
+                        <IndexLink to='/active-learning/' className='header-nav-link' activeClassName='header-nav-link-selected'>Home</IndexLink>
+                        <IndexLink to='/active-learning/statistics' className='header-nav-link' activeClassName='header-nav-link-selected'>Statistics</IndexLink>
+                        <IndexLink to='/active-learning/settings' className='header-nav-link' activeClassName='header-nav-link-selected'>Settings</IndexLink>
                         <button className='header-nav-link' formAction='api/logout'>Logout</button>
                     </form>
                 </nav>
@@ -229,7 +229,7 @@ class ConfirmBox extends React.Component {
     }
 }
 
-class Panels extends React.Component {
+class HomePanels extends React.Component {
     constructor(props) {
         super(props);
 
@@ -246,7 +246,7 @@ class Panels extends React.Component {
 
     render() {
         return (
-            <div id='home-panels'>
+            <div id='panels'>
                 <QuizPanel
                     questions={this.props.questions}
                     quizzes={this.props.quizzes}
@@ -295,7 +295,7 @@ class QuizPanel extends React.Component {
 
     render() {
         return (
-            <div id='quiz-panel' className='panel'>
+            <div id='quiz-panel' className='panel home-panel'>
                 <button className='option-button' onClick={() => this.toggleQuizEditor()}>
                     {this.state.editQuiz ? 'Cancel' : 'Create Quiz'}
                 </button>
@@ -547,7 +547,7 @@ class QuestionPanel extends React.Component {
 
     render() {
         return (
-            <div id='question-panel' className='panel'>
+            <div id='question-panel' className='panel home-panel'>
                 <button className='option-button' onClick={this.toggleQuestionEditor.bind(this)}>
                     {this.state.editQuestion ? 'Cancel' : 'Create Question'}
                 </button>
