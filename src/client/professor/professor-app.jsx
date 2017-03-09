@@ -489,8 +489,12 @@ class QuestionPanel extends React.Component {
         super(props);
         this.state = {
             editQuestion: null,
-            questions: null,
+            questions: props.questions
         };
+    }
+
+    componentWillReceiveProps(nextProps) {
+        this.setState({questions: nextProps.questions});
     }
 
     chooseQuestion(id) {
@@ -520,26 +524,30 @@ class QuestionPanel extends React.Component {
         return [{ name: 'CS 2110', children: tags }];
     }
 
-    questionSearch(string) {
-        var questionMatches = new Array();
-        var questionList = Object.values(this.props.questions);
-        for (var i = 0; i < questionList.length; i++) {
-            var questionValues = Object.values(questionList[i]);
-            var questionName = questionValues[1];
-            var search = questionName.search(string);
-            if (search != -1) {
-                questionMatches.push(questionList[i])
+    questionSearch(e) {
+        var string = e.target.value;
+        if (string) {
+            var newQuestions = {};
+            for (var key in this.props.questions) {
+                var search = this.props.questions[key]['name'].search(new RegExp(string, 'i'));
+                var foundTag = false;
+                for (var tag in this.props.questions[key]['tags']) {
+                    if (this.props.questions[key]['tags'][tag] === string){
+                        foundTag = true;
+                        break;
+                    }
+                }
+                if (search != -1 || foundTag) {
+                    newQuestions[key] = this.props.questions[key];
+                } 
             }
+            this.setState({questions: newQuestions});
+        } else {
+            this.setState({questions: this.props.questions});
         }
-        var questionMatchesObject = {};
-        for (var i = 0; i < questionMatches.length; i++) {
-            questionMatchesObject[questionMatches[i].key] = questionMatches[i].value;
-        }
-        this.setState({ questions: questionMatchesObject });
     }
 
     render() {
-        this.state.questions = this.props.questions;
         return (
             <div id='question-panel'>
                 <button className='option-button' onClick={this.toggleQuestionEditor.bind(this)}>
