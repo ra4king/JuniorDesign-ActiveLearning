@@ -196,7 +196,7 @@ class LiveQuizPanel extends React.Component {
                         )
                     })}
                 </ol>
-                
+
                 <button onClick={this.props.hideLiveQuiz} className='delete-button'>&#10006;</button>
             </div>
         );
@@ -254,6 +254,7 @@ class QuizPanel extends React.Component {
     }
 
     chooseQuiz(id) {
+        console.log("chooseQuiz");
         this.setState({ editQuiz: this.props.quizzes[id] });
     }
 
@@ -356,7 +357,7 @@ class QuizEditor extends React.Component {
 
         e.preventDefault();
         var id = e.dataTransfer.getData('question-id');
-        
+
         if(id) {
             var dropTargetId = this.getDropTargetId(e);
 
@@ -486,9 +487,9 @@ class Quiz extends React.Component {
 class QuestionPanel extends React.Component {
     constructor(props) {
         super(props);
-
         this.state = {
-            editQuestion: null
+            editQuestion: null,
+            questions: null,
         };
     }
 
@@ -519,12 +520,34 @@ class QuestionPanel extends React.Component {
         return [{ name: 'CS 2110', children: tags }];
     }
 
+    questionSearch(string) {
+        var questionMatches = new Array();
+        var questionList = Object.values(this.props.questions);
+        for (var i = 0; i < questionList.length; i++) {
+            var questionValues = Object.values(questionList[i]);
+            var questionName = questionValues[1];
+            var search = questionName.search(string);
+            if (search != -1) {
+                questionMatches.push(questionList[i])
+            }
+        }
+        var questionMatchesObject = {};
+        for (var i = 0; i < questionMatches.length; i++) {
+            questionMatchesObject[questionMatches[i].key] = questionMatches[i].value;
+        }
+        this.setState({ questions: questionMatchesObject });
+    }
+
     render() {
+        this.state.questions = this.props.questions;
         return (
             <div id='question-panel'>
                 <button className='option-button' onClick={this.toggleQuestionEditor.bind(this)}>
                     {this.state.editQuestion ? 'Cancel' : 'Create Question'}
                 </button>
+
+                <input type="text" onChange={this.questionSearch.bind(this)} />
+
                 {this.state.editQuestion
                     ? (<QuestionEditor
                             question={this.state.editQuestion}
@@ -535,7 +558,7 @@ class QuestionPanel extends React.Component {
                             <Hierarchy tags={this.getFolderHierarchy()} />
                         </div>,
                         <QuestionList key='questions'
-                            questions={this.props.questions}
+                            questions={this.state.questions}
                             getResource={this.props.getResource}
                             chooseQuestion={this.chooseQuestion.bind(this)}
                             showConfirm={this.props.showConfirm} />])
