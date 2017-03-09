@@ -87,6 +87,12 @@
     float: left;
 }
 
+#set-date {
+    display: inline-block;
+    float: right;
+    margin-right: 10px;
+}
+
 #publish-quiz {
     display: inline-block;
     float: right;

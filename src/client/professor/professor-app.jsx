@@ -298,6 +298,7 @@ class QuizEditor extends React.Component {
             id: props.quiz.id,
             name: props.quiz.name || '',
             questions: props.quiz.questions || [],
+            date: null
         };
 
         this.questionsDOM = {};
@@ -338,7 +339,11 @@ class QuizEditor extends React.Component {
             }
         }
 
-        //socket.send('publish_quiz', {id: this.state.id, name: this.state.name, questions: this.state.questions }, callback);
+        //socket.send('publish_quiz', {id: this.state.id, name: this.state.name, questions: this.state.questions, due: this.state.date}, callback);
+    }
+
+    changeDate(e) {
+        this.setState({date: e.target.value});
     }
 
     removeQuestion(id) {
@@ -417,7 +422,6 @@ class QuizEditor extends React.Component {
             this.setState({ dragOverId: dragOverId });
         }
     }
-
     render() {
         return (
             <div id='quiz-creator'>
@@ -431,6 +435,11 @@ class QuizEditor extends React.Component {
                     </div>
                     <div id='publish-quiz'>
                         <button id='publish-quiz-button' onClick={this.publishQuiz.bind(this)}>Publish Quiz</button>
+                    </div>
+                    <div id='set-date'>
+                        Due Date: 
+
+                        <input type='date' onChange={this.changeDate.bind(this)}></input>
                     </div>
                 </div>
                 <ol id='quiz-question-list' onDrop={this.onDrop.bind(this)} onDragOver={this.onDragOver.bind(this)}>
