@@ -326,6 +326,21 @@ class QuizEditor extends React.Component {
         }
     }
 
+    publishQuiz() {
+        var callback = (err) => {
+            if(err) {
+                this.props.showConfirm({
+                    type: 'ok',
+                    title: err
+                });
+            } else{
+                this.props.hideQuizEditor();
+            }
+        }
+
+        //socket.send('publish_quiz', {id: this.state.id, name: this.state.name, questions: this.state.questions }, callback);
+    }
+
     removeQuestion(id) {
         this.setState((prevState) => {
             var questions = prevState.questions.slice();
@@ -410,8 +425,12 @@ class QuizEditor extends React.Component {
                     <div id='quiz-name'>
                         Name: <input type='text' id='quiz-name-field' value={this.state.name} onChange={this.onNameChange.bind(this)}/>
                     </div>
+
                     <div id='submit-quiz'>
                         <button id='submit-quiz-button' onClick={this.submitQuiz.bind(this)}>{this.state.id ? 'Update' : 'Submit'}</button>
+                    </div>
+                    <div id='publish-quiz'>
+                        <button id='publish-quiz-button' onClick={this.publishQuiz.bind(this)}>Publish Quiz</button>
                     </div>
                 </div>
                 <ol id='quiz-question-list' onDrop={this.onDrop.bind(this)} onDragOver={this.onDragOver.bind(this)}>
