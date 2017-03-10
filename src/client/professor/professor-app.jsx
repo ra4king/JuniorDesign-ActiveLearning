@@ -784,6 +784,14 @@ class QuestionEditor extends React.Component {
         }
     }
 
+    removeTag(idx) {
+        this.setState((prevState) => {
+            var tags = prevState.tags.slice();
+            tags.splice(idx, 1);
+            return { tags: tags };
+        });
+    }
+
     render() {
         return (
             <div id='question-creator'>
@@ -831,10 +839,12 @@ class QuestionEditor extends React.Component {
                 <div className='question-creator-row'>
                     <b>Tags:</b>
                     <ol>
-                        {this.state.tags.map((tag, indx) => {
+                        {this.state.tags.map((tag, idx) => {
                             return (
-                                <li key={indx}>
-                                    {this.state.tags[indx]}
+                                <li key={idx}>
+                                    {this.state.tags[idx]}
+
+                                    <button className='remove-tag-button' onClick={this.removeTag.bind(this, idx)}>&#10006;</button>
                                 </li>
                                 );
                             })
