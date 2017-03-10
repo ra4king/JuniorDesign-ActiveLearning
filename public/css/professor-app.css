@@ -1,5 +1,19 @@
 /* ========= HOME ========= */
 
+#question-panel-header {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: space-between;
+    align-items: center;
+
+    min-height: 30px;
+    margin-bottom: 10px;
+}
+
+#search-input {
+    margin-left: 5px;
+}
+
 #question-tags-list {
     flex: 1 1 auto;
 
@@ -74,7 +88,7 @@
     display: flex;
     flex-flow: row nowrap;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
 
     margin: 10px;
     min-height: 30px;
