@@ -87,13 +87,7 @@
     float: left;
 }
 
-#set-date {
-    display: inline-block;
-    float: right;
-    margin-right: 10px;
-}
-
-#publish-quiz {
+.quiz-creation {
     display: inline-block;
     float: right;
     margin-right: 10px;
@@ -102,11 +96,6 @@
 #publish-quiz-button {
     background-color: #FFFFFF;
     border: none;
-}
-
-#submit-quiz {
-    display: inline-block;
-    float: right;
 }
 
 #submit-quiz-button {

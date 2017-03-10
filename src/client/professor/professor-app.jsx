@@ -430,13 +430,13 @@ class QuizEditor extends React.Component {
                         Name: <input type='text' id='quiz-name-field' value={this.state.name} onChange={this.onNameChange.bind(this)}/>
                     </div>
 
-                    <div id='submit-quiz'>
+                    <div className='quiz-creation'>
                         <button id='submit-quiz-button' onClick={this.submitQuiz.bind(this)}>{this.state.id ? 'Update' : 'Submit'}</button>
                     </div>
-                    <div id='publish-quiz'>
+                    <div className='quiz-creation'>
                         <button id='publish-quiz-button' onClick={this.publishQuiz.bind(this)}>Publish Quiz</button>
                     </div>
-                    <div id='set-date'>
+                    <div className='quiz-creation'>
                         Due Date: 
 
                         <input type='date' onChange={this.changeDate.bind(this)}></input>
