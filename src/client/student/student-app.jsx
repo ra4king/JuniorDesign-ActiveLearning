@@ -10,11 +10,11 @@ window.onload = () => {
     ReactDOM.render(
         <Router history={browserHistory}>
             <Route path='/active-learning/' component={App}>
-                <IndexRoute component={Panels} />
+                <IndexRoute component={HomePanels} />
                 <Route path='/active-learning/statistics' component={StatisticsPanels} />
             </Route>
         </Router>,
-        document.getElementById('panels'));
+        document.getElementById('page'));
 }
 
 class App extends React.Component {
@@ -118,9 +118,9 @@ class App extends React.Component {
                         getResource={this.getResource.bind(this)}
                         toggleLiveQuiz={this.toggleLiveQuiz.bind(this)} />}
 
-                {this.state.showConfirm && <ConfirmBox hideConfirm={() => this.hideConfirm()} {...this.state.showConfirm} />}
+                {this.state.showConfirm && <ConfirmBox hide={() => this.hideConfirm()} {...this.state.showConfirm} />}
 
-                <div className={(this.state.showLiveQuestion || this.state.showConfirm) && 'blur'}>
+                <div id='content' className={(this.state.showLiveQuestion || this.state.showConfirm) && 'blur'}>
                     <HeaderPanel user={this.state.user} page={this.state.page} />
 
                     {React.Children.map(this.props.children, (child) =>
@@ -144,12 +144,12 @@ class HeaderPanel extends React.Component {
             <div id='header-panel'>
                 <img id='logo' src='images/active_learning_logo_white.png' width='175' height='75' alt='logo'/>
                 <h2 id='name'>{this.props.user ? this.props.user.username : ''}</h2>
-                <nav>
+                <nav id='nav-links'>
                     <form method='post'>
+                        <IndexLink to='/active-learning/' className='header-nav-link' activeClassName='header-nav-link-selected'>Home</IndexLink>
+                        <IndexLink to='/active-learning/statistics' className='header-nav-link' activeClassName='header-nav-link-selected'>Statistics</IndexLink>
                         <button className='header-nav-link' formAction='api/logout'>Logout</button>
                     </form>
-                    <IndexLink to='/active-learning/statistics' className='header-nav-link' activeClassName='selected'>Statistics</IndexLink>
-                    <IndexLink to='/active-learning/' className='header-nav-link' activeClassName='selected'>Home</IndexLink>
                 </nav>
             </div>
         );
@@ -171,7 +171,7 @@ class LiveQuizPanel extends React.Component {
 
 class ConfirmBox extends React.Component {
     clicked(value) {
-        this.props.hideConfirm();
+        this.props.hide();
         this.props.onAction && this.props.onAction(value);
     }
 
@@ -179,22 +179,18 @@ class ConfirmBox extends React.Component {
         return (
             <div id='confirm-box'>
                 <p id='confirm-msg'>{this.props.title}</p>
-                {this.props.type == 'yesno' ?
-                    (<div>
-                        <button
-                            onClick={() => this.clicked(false)}
-                            className='cancel-button'>{this.props.noText || 'No'}</button>
-                        <button
-                            onClick={() => this.clicked(true)}
-                            className='confirm-button'>{this.props.yesText || 'Yes'}</button>
-                    </div>) :
-                    (<button onClick={() => this.clicked()} id='ok-button'>{this.props.okText || 'Ok'}</button>)}
+                <div id='confirm-buttons'>
+                    {this.props.type == 'yesno'
+                        ? [(<button key='no' onClick={() => this.clicked(false)} className='confirm-button' id='yes-button'>{this.props.noText || 'No'}</button>),
+                            (<button key='ok' onClick={() => this.clicked(true)} className='confirm-button' id='no-button'>{this.props.yesText || 'Yes'}</button>)]
+                        : (<button onClick={() => this.clicked()} className='confirm-button' id='ok-button'>{this.props.okText || 'Ok'}</button>)}
+                </div>
             </div>
         );
     }
 }
 
-class Panels extends React.Component {
+class HomePanels extends React.Component {
     constructor(props) {
         super(props);
         
@@ -221,7 +217,7 @@ class Panels extends React.Component {
 
     render() {
         return (
-            <div>
+            <div id='panels'>
                 <QuizPanel
                     showConfirm={this.props.showConfirm}
                     quizzes={this.props.quizzes}
@@ -242,7 +238,7 @@ class Panels extends React.Component {
 class QuizPanel extends React.Component {
     render() {
         return (
-            <div id='quiz-panel'>
+            <div id='quiz-panel' className='panel home-panel'>
                 <button className='option-button' onClick={this.props.toggleLiveQuiz}>Live Quiz</button>
                 <QuizList quizzes={this.props.quizzes} chooseQuiz={this.props.chooseQuiz} />
             </div>
@@ -253,12 +249,12 @@ class QuizPanel extends React.Component {
 class QuizList extends React.Component {
     render() {
         return (
-            <ol className='quiz-list'>
+            <ol id='quiz-list' className='list'>
                 {Object.keys(this.props.quizzes).map((id) => {
                     var quiz = this.props.quizzes[id];
                     var chooseQuizId = this.props.chooseQuiz.bind(null, id);
                     return (
-                        <li key={id} id={'quiz-' + id} className='quiz'>
+                        <li key={id} className='quiz'>
                             <button className='quiz-body' onClick={chooseQuizId}>{unescapeHTML(quiz.name)}</button>
                         </li>
                     );
@@ -271,7 +267,7 @@ class QuizList extends React.Component {
 class QuestionPanel extends React.Component {
     render() {
         return (
-            <div id='question-panel'>
+            <div id='question-panel' className='panel home-panel'>
                 <h2 id='quiz-title'>{this.props.quiz ? this.props.quiz.name : 'Quiz'}</h2>
                 {this.props.quiz
                     ? (<QuestionList
@@ -331,7 +327,7 @@ class QuestionList extends React.Component {
 
     render() {
         return (
-            <ol id='question-list'>
+            <ol id='question-list' className='list'>
                 {[this.props.quiz.questions.map((question_id) =>
                     (<Question
                             key={question_id}

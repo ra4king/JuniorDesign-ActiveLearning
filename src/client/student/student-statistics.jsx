@@ -56,7 +56,7 @@ export default class StatisticsPanels extends React.Component {
 
     render() {
         return (
-            <div>
+            <div id='panels'>
                 <GraphPanel statistics={this.state.statistics} />
             </div>
         );
@@ -117,7 +117,7 @@ class GraphPanel extends React.Component {
 
     render() {
         return (
-            <div id='statistics-panel'>
+            <div id='statistics-panel' className='panel'>
                 <canvas ref={this.setupChart.bind(this)} id='statistics-chart'></canvas>
             </div>
         );
