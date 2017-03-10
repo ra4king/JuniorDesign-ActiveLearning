@@ -37,7 +37,11 @@ export default class SettingsPanels extends React.Component {
             <div id='panels'>
                 <StudentPanel users={this.state.users} selectUser={this.selectUser.bind(this)} />
 
-                <PermissionPanel users={this.state.users} selectedUser={this.state.selectedUser} />
+                <PermissionPanel
+                    users={this.state.users}
+                    getUsers={this.getUsers.bind(this)}
+                    selectedUser={this.state.selectedUser}
+                    showConfirm={this.props.showConfirm} />
             </div>
         );
     }
@@ -79,14 +83,23 @@ class StudentPanel extends React.Component {
                 {this.state.showStudents
                     ? (<div className='list'>
                         {this.props.users.map((user) => (
-                            <li key={user.username}>
-                                <button className='list-button' onClick={() => this.props.selectUser(user)}>
-                                    {unescapeHTML(user.username)}
-                                </button>
-                            </li>
+                            (!user.permissions || !user.permissions.is_ta) &&
+                                (<li key={user.username}>
+                                    <button className='list-button' onClick={() => this.props.selectUser(user)}>
+                                        {unescapeHTML(user.username)}
+                                    </button>
+                                </li>)
                         ))}
                     </div>)
                     : (<div className='list'>
+                        {this.props.users.map((user) => (
+                            user.permissions && user.permissions.is_ta &&
+                                (<li key={user.username}>
+                                    <button className='list-button' onClick={() => this.props.selectUser(user)}>
+                                        {unescapeHTML(user.username)}
+                                    </button>
+                                </li>)
+                        ))}
                     </div>)}
             </div>
         );
@@ -94,12 +107,28 @@ class StudentPanel extends React.Component {
 }
 
 class PermissionPanel extends React.Component {
+    makeTa() {
+        if(this.props.selectedUser) {
+            socket.send('set_permissions', { username: this.props.selectedUser.username, permissions: { is_ta: true }}, (err) => {
+                if(err) {
+                    this.props.showConfirm({
+                        type: 'ok',
+                        title: 'Could not set permissions: ' + err
+                    });
+                } else {
+                    console.log('success!')
+                    this.props.getUsers();
+                }
+            });
+        }
+    }
+
     render() {
         return (
             <div className='panel' id='permission-panel'>
                 <p>{this.props.selectedUser ? 'Selected ' + unescapeHTML(this.props.selectedUser.username) + '.' : 'Select a user from the side panel.'}</p>
                 <p>What else are we going to put here?</p>
-                <button className='option-button' id='make-ta-button'>Make a TA</button>
+                <button className='option-button' id='make-ta-button' onClick={this.makeTa.bind(this)}>Make a TA</button>
             </div>
         );
     }

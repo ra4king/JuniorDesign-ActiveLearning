@@ -334,6 +334,11 @@ function get_all_users(callback) {
 }
 
 function set_permissions(user_info, callback) {
+    if(typeof user_info.username !== 'string' ||
+        typeof user_info.permissions !== 'object') {
+        return callback('Invalid username or permissions object.');
+    }
+
     users.updateOne({ username: user_info.username }, { $set: { permissions: user_info.permissions }}, function(err, result) {
         if(err) {
             console.error('Error when setting user permissions: ' + user_info);

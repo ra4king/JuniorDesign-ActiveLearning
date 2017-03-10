@@ -894,7 +894,7 @@ class QuestionList extends React.Component {
                         getResource={this.props.getResource}
                         draggable={this.props.creatingQuiz}
                         onDragStart={this.onDragStart.bind(this, id)}
-                        initialHideAnswers={false}>
+                        initialHideAnswers={true}>
 
                         <button className='delete-button' onClick={() => this.deleteQuestion(id)}>&#10006;</button>
                         <button className='edit-button' onClick={() => this.props.chooseQuestion(id)}>E</button>
@@ -912,7 +912,7 @@ class Question extends React.Component {
         this.state = {
             image_id: null,
             image: null,
-            hideAnswers: props.initialHideAnswers
+            hideAnswers: true
         };
     }
 
