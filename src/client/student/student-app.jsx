@@ -286,7 +286,14 @@ class QuestionList extends React.Component {
     constructor(props) {
         super(props);
 
+        this.id = props.quiz.id;
         this.answers = {};
+    }
+
+    componentWillReceiveProps(nextProps) {
+        if(nextProps.quiz.id != this.id) {
+            this.answers = {};
+        }
     }
 
     answerSelected(id, value) {
@@ -318,6 +325,8 @@ class QuestionList extends React.Component {
                             });
 
                             this.props.hideQuiz();
+                            this.answers = {};
+                            this.id = null;
                         }
                     );
                 }

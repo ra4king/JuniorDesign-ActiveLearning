@@ -558,7 +558,7 @@ class QuestionPanel extends React.Component {
             var filtered = {};
             for (var key in this.props.questions) {
                 var match = this.props.questions[key]['name'].toLowerCase().indexOf(searchTerm) != -1 ||
-                            this.props.questions[key].tags.indexOf(searchTerm) != -1;
+                            this.props.questions[key].tags.map((t) => t.toLowerCase()).indexOf(searchTerm) != -1;
 
                 if (match) {
                     filtered[key] = this.props.questions[key];
