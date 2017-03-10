@@ -6,6 +6,8 @@ module.exports = {
     get_user: get_user,
     get_all_users: get_all_users,
 
+    set_permissions: set_permissions,
+
     create_session: create_session,
     validate_session: validate_session,
     destroy_session: destroy_session,
@@ -168,8 +170,6 @@ function create_user(username, passwords, callback) {
 
             var salt = buf.toString('base64');
             var iterations = 100000;
-            console.log('password:');
-            console.log(password);
             crypto.pbkdf2(password, salt, iterations, 512, 'sha512', function(err, buf) {
                 var hash = buf.toString('base64');
 
@@ -330,6 +330,18 @@ function get_all_users(callback) {
         });
 
         callback(null, students);
+    });
+}
+
+function set_permissions(user_info, callback) {
+    users.updateOne({ username: user_info.username }, { $set: { permissions: user_info.permissions }}, function(err, result) {
+        if(err) {
+            console.error('Error when setting user permissions: ' + user_info);
+            console.error(err);
+            return callback(err);
+        }
+
+        callback(result.matchedCount != 1 ? 'Did not find user: ' + user_info.username : null);
     });
 }
 

@@ -552,10 +552,12 @@ class QuestionPanel extends React.Component {
     }
 
     updateShownQuestions(searchTerm, questions) {
+        searchTerm = searchTerm.toLowerCase();
+
         if(searchTerm) {
             var filtered = {};
             for (var key in this.props.questions) {
-                var match = this.props.questions[key]['name'].indexOf(searchTerm) != -1 ||
+                var match = this.props.questions[key]['name'].toLowerCase().indexOf(searchTerm) != -1 ||
                             this.props.questions[key].tags.indexOf(searchTerm) != -1;
 
                 if (match) {

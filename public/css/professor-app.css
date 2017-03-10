@@ -7,6 +7,7 @@
     align-items: center;
 
     min-height: 30px;
+    max-height: 30px;
     margin-bottom: 10px;
 }
 

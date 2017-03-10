@@ -50,7 +50,7 @@ module.exports = function(base_url, server, database) {
         console.log('Accepted connection');
 
         var session_id = null;
-        var user_data = null;
+        var user = null;
 
         (function ping() {
             if(is_open(socket)) {
@@ -82,16 +82,16 @@ module.exports = function(base_url, server, database) {
             console.log('Received: ' + JSON.stringify(data, null, 4));
 
             if(session_id == null && data.command === 'login') {
-                return database.validate_session(data.data, function(err, user) {
+                return database.validate_session(data.data, function(err, u) {
                     if(!is_open(socket))
                         return;
 
-                    if(err || !user) {
+                    if(err || !u) {
                         return reply(err || 'Not validated');
                     }
 
                     session_id = data.data;
-                    user_data = user;
+                    user = u;
 
                     connections[session_id] = { send: send, socket: socket, session_id: session_id, user: user };
 
@@ -105,7 +105,7 @@ module.exports = function(base_url, server, database) {
             }
 
             function verifyAdmin() {
-                if(!user_data || !user_data.admin) {
+                if(!user || !user.admin) {
                     reply('Permission denied.');
                     return false;
                 }
@@ -114,16 +114,27 @@ module.exports = function(base_url, server, database) {
             }
 
             switch(data.command) {
+                case 'get_user':
+                    if(user.username != data.data && !verifyAdmin()) return;
+
+                    database.get_user(data.data, reply);
+                    break;
+
                 case 'get_users':
                     if(!verifyAdmin()) return;
                     database.get_all_users(reply);
                     break;
 
+                case 'set_permissions':
+                    if(!verifyAdmin()) return;
+                    database.set_permissions(data.data, reply);
+                    break;
+
                 case 'get_stats':
-                    if(user_data.admin) {
+                    if(user.admin) {
                         database.get_stats(reply);
                     } else {
-                        database.get_stats(user_data.username, reply);
+                        database.get_stats(user.username, reply);
                     }
                     break;
 
@@ -179,7 +190,7 @@ module.exports = function(base_url, server, database) {
                     break;
 
                 case 'get_questions':
-                    database.get_questions(user_data.admin, function(err, questions) {
+                    database.get_questions(user.admin, function(err, questions) {
                         if(is_open(socket)) {
                             reply(null, questions);
                         } else {
@@ -231,7 +242,7 @@ module.exports = function(base_url, server, database) {
                     break;
 
                 case 'submit_quiz':
-                    database.submit_quiz(user_data, data.data, function(err) {
+                    database.submit_quiz(user, data.data, function(err) {
                         reply(err);
                     });
                     break;
@@ -272,7 +283,7 @@ module.exports = function(base_url, server, database) {
                 delete connections[session_id];
             }
 
-            if(user_data && user_data.admin) {
+            if(user && user.admin) {
                 set_live_question_id(null);
             }
         });
