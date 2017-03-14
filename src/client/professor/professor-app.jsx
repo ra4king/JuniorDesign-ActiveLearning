@@ -298,7 +298,8 @@ class QuizEditor extends React.Component {
             id: props.quiz.id,
             name: props.quiz.name || '',
             questions: props.quiz.questions || [],
-            date: null
+            date: null,
+            open: null
         };
 
         this.questionsDOM = {};
@@ -339,11 +340,14 @@ class QuizEditor extends React.Component {
             }
         }
 
-        //socket.send('publish_quiz', {id: this.state.id, name: this.state.name, questions: this.state.questions, due: this.state.date}, callback);
+        //socket.send('publish_quiz', {id: this.state.id, name: this.state.name, questions: this.state.questions, due: this.state.date, open: this.state.open}, callback);
     }
 
     changeDate(e) {
         this.setState({date: e.target.value});
+    }
+    changeOpenDate(e) {
+        this.setState({open: e.target.value});
     }
 
     removeQuestion(id) {
@@ -437,9 +441,14 @@ class QuizEditor extends React.Component {
                         <button id='publish-quiz-button' onClick={this.publishQuiz.bind(this)}>Publish Quiz</button>
                     </div>
                     <div className='quiz-creation'>
-                        Due Date: 
+                        Due: 
 
                         <input type='date' onChange={this.changeDate.bind(this)}></input>
+                    </div>
+                    <div className='quiz-creation'>
+                        Open: 
+
+                        <input type='date' onChange={this.changeOpenDate.bind(this)}></input>
                     </div>
                 </div>
                 <ol id='quiz-question-list' onDrop={this.onDrop.bind(this)} onDragOver={this.onDragOver.bind(this)}>
