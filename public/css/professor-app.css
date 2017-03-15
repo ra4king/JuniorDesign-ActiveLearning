@@ -101,8 +101,12 @@
 
 #submit-quiz-button {
     flex: 0 1 auto;
+    width: 100px;
+    height: 40px;
+    font-size: 20px;
 
-    background-color: #FFFFFF;
+    background-color: #176d18;
+    color: white;
     border: none;
 }
 
@@ -152,6 +156,7 @@
 .question-creator-row {
     flex: 0 1 auto;
     margin-bottom: 10px;
+    background-color: 
 }
 
 .question-creator-row input[type=file] {
