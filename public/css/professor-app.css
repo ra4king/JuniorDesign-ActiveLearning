@@ -195,6 +195,9 @@
 }
 
 .remove-answer-button {
+    background-color: #FF2222;
+    color: white;
+    border: none;
     margin-left: 10px;
 }
 
@@ -203,6 +206,9 @@
 }
 
 .remove-tag-button {
+    background-color: #FF2222;
+    color: white;
+    border: none;
     margin-left: 10px;
 }
 
