@@ -125,9 +125,9 @@ const usersSchema = new Schema({
     },
     lastSelectedTerm: {
         type: {
-            term_id: { type: Schema.Types.ObjectId, required: true },
-            course_id: { type: Schema.Types.ObjectId, required: true },
-            school_id: { type: Schema.Types.ObjectId, required: true },
+            term_id: { type: Schema.Types.ObjectId, ref: 'Term', required: true },
+            course_id: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
+            school_id: { type: Schema.Types.ObjectId, ref: 'School', required: true },
             name: { type: String, required: true }
         },
         default: null
@@ -393,7 +393,23 @@ function getAllUsers(term_id, callback) {
                     console.error(err);
                 }
 
-                callback(err, results.map(cleanupUser));
+                var users = [];
+                results.forEach((user) => {
+                    var idx = user.permissions.findIndex((perms) => String(perms.term_id) == term_id);
+                    if(idx == -1) {
+                        console.error('Inconsistency found with user ' + user._id + ', missing permissions for term ' + term_id);
+                        return;
+                    }
+
+                    if(user.permissions[idx].isCreator) {
+                        return;
+                    }
+
+                    user.permissions = user.permissions[idx];
+                    users.push(cleanupUser(user));
+                });
+
+                callback(err, users);
             });
     });
 }
@@ -567,22 +583,48 @@ function addUser(term_id, username, permissions, callback) {
         }
 
         if(term.users.indexOf(username) != -1) {
-            return callback('User already in the course.');
+            return callback('User already in the term.');
         }
 
-        term.users.push(username);
-        term.save((err) => {
-            if(err) {
-                console.error('Error when adding user: ' + term_id + ', ' + username);
-                console.error(err);
-                callback(err);
-            } else {
-                permissions.term_id = term.id;
-                permissions.course_id = term.course_id;
-                permissions.school_id = term.school_id;
+        permissions.term_id = term.id;
+        permissions.course_id = term.course_id;
+        permissions.school_id = term.school_id;
 
-                setPermissions(username, permissions, callback);
+        User.findById(username, '-auth', (err, user) => {
+            if(err) {
+                console.error('Error when getting user: ' + username);
+                console.error(err);
+                return callback(err);
             }
+
+            if(!user) {
+                return callback('Did not find user ' + username);
+            }
+
+            var idx = user.permissions.findIndex((perm) => perm.term_id == term_id);
+            if(idx != -1) {
+                console.error('User "' + username + '" already has permissions for term ' + term_id);
+                return setPermissions(username, permissions, callback);
+            }
+
+            term.users.push(username);
+            term.save((err) => {
+                if(err) {
+                    console.error('Error when adding user: ' + term_id + ', ' + username);
+                    console.error(err);
+                    callback(err);
+                } else {
+                    user.permissions.push(permissions);
+                    user.save((err) => {
+                        if(err) {
+                            console.error('Error when saving user permissions for ' + username);
+                            console.error(err);
+                        }
+
+                        callback(err);
+                    });
+                }
+            });
         });
     });
 }
@@ -639,9 +681,9 @@ function removeUser(term_id, username, callback) {
 }
 
 function setPermissions(username, permissions, callback) {
-    User.findByid(user_info.username, '-auth', (err, user) => {
+    User.findById(username, '-auth', (err, user) => {
         if(err) {
-            console.error('Error when finding user: ' + user_info);
+            console.error('Error when finding user: ' + username);
             console.error(err);
             return callback(err);
         }
@@ -650,16 +692,16 @@ function setPermissions(username, permissions, callback) {
             return callback('Did not find user: ' + username);
         }
 
-        var idx = user.permissions.findIndex((perm) => perm.term_id == user_info.permissions.term_id);
+        var idx = user.permissions.findIndex((perm) => perm.term_id == permissions.term_id);
         if(idx == -1) {
             return callback('User not in the class.');
         }
 
-        Object.assign(user.permissions[idx], user_info.permissions);
+        Object.assign(user.permissions[idx], permissions);
 
         user.save((err) => {
             if(err) {
-                console.error('Error when saving user permissions: ' + user_info);
+                console.error('Error when saving user permissions for user ' + username);
                 console.error(err);
             }
 
@@ -668,9 +710,8 @@ function setPermissions(username, permissions, callback) {
     });
 }
 
-function selectTerm(username, with_users, term_id, callback) {
+function selectTerm(username, term_id, callback) {
     Term.findById(new ObjectID(term_id))
-        .select(with_users ? '' : '-users')
         .lean()
         .exec((err, term) => {
             if(err) {

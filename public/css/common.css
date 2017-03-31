@@ -182,8 +182,15 @@ button {
     color: white;
 }
 
-#header-panel #nav-links {
+#header-panel {
     flex: 0 1 auto;
+}
+
+#nav-links {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: space-between;
+    align-self: center;
 }
 
 .header-nav-link {

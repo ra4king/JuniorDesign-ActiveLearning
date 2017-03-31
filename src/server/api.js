@@ -145,11 +145,11 @@ module.exports = function(base_url, server, database) {
     });
 
     commands.on('selectTerm', (connection, term_id, reply) => {
-        var permissions = connection.user.permissions[term_id];
+        var permissions = connection.user.permissions.find((permissions) => permissions.term_id == term_id);
         if(connection.user.admin || permissions) {
             var termAdmin = connection.user.admin || permissions.isCreator || permissions.isTA;
 
-            database.selectTerm(connection.user.username, termAdmin, term_id, (err, term) => {
+            database.selectTerm(connection.user.username, term_id, (err, term) => {
                 if(err) {
                     return reply(err);
                 }
@@ -183,39 +183,83 @@ module.exports = function(base_url, server, database) {
         }
     });
 
+    commands.on('getAllUsers', (connection, arg, reply) => {
+        var [permissions, admin] = getPermissions(connection);
+        if(connection.user.admin || (permissions && (permissions.isCreator || (permissions.isTA && permissions.canManageRoster)))) {
+            database.getAllUsers(permissions.term_id, reply);
+        } else {
+            reply('Permission denied.');
+        }
+    });
+
+    commands.on('addUser', (connection, username, reply) => {
+        var [permissions, admin] = getPermissions(connection);
+        if(connection.user.admin || (permissions && (permissions.isCreator || (permissions.isTA && permissions.canManageRoster)))) {
+            database.addUser(permissions.term_id, username, {}, reply);
+        } else {
+            reply('Permission denied.');
+        }
+    });
+
+    commands.on('setPermissions', (connection, info, reply) => {
+        var [permissions, admin] = getPermissions(connection);
+        if(connection.user.admin || (permissions && (permissions.isCreator || (permissions.isTA && permissions.canManageTAs)))) {
+            info.permissions.term_id = permissions.term_id;
+            database.setPermissions(info.username, info.permissions, reply);
+        } else {
+            reply('Permission denied.');
+        }
+    });
+
     commands.on('createQuestion', (connection, question, reply) => {
         var [permissions, admin] = getPermissions(connection);
         if(connection.user.admin || (permissions && (permissions.isCreator || (permissions.isTA && permissions.canCreateQuestions)))) {
-            database.createQuestion(question, reply);
+            if(permissions.course_id != question.course_id) {
+                reply('Incorrect course_id');
+            } else {
+                database.createQuestion(question, reply);
+            }
         } else {
-            reply('Permission denied');
+            reply('Permission denied.');
         }
     });
 
     commands.on('updateQuestion', (connection, question, reply) => {
         var [permissions, admin] = getPermissions(connection);
         if(connection.user.admin || (permissions && (permissions.isCreator || (permissions.isTA && permissions.canEditQuestions)))) {
-            database.updateQuestion(question, reply);
+            if(permissions.course_id != question.course_id) {
+                reply('Incorrect course_id');
+            } else {
+                database.updateQuestion(question, reply);
+            }
         } else {
-            reply('Permission denied');
+            reply('Permission denied.');
         }
     });
 
     commands.on('createQuiz', (connection, quiz, reply) => {
         var [permissions, admin] = getPermissions(connection);
         if(connection.user.admin || (permissions && (permissions.isCreator || (permissions.isTA && permissions.canCreateQuizzes)))) {
-            database.createQuiz(quiz, reply);
+            if(permissions.term_id != quiz.term_id) {
+                reply('Incorrect term_id');
+            } else {
+                database.createQuiz(quiz, reply);
+            }
         } else {
-            reply('Permission denied');
+            reply('Permission denied.');
         }
     });
 
     commands.on('updateQuiz', (connection, quiz, reply) => {
         var [permissions, admin] = getPermissions(connection);
         if(connection.user.admin || (permissions && (permissions.isCreator || (permissions.isTA && permissions.canEditQuizzes)))) {
-            database.updateQuiz(quiz, reply);
+            if(permissions.term_id != quiz.term_id) {
+                reply('Incorrect term_id');
+            } else {
+                database.updateQuiz(quiz, reply);
+            }
         } else {
-            reply('Permission denied');
+            reply('Permission denied.');
         }
     });
 

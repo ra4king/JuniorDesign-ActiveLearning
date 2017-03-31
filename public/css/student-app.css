@@ -1,5 +1,10 @@
 /* ========= HOME ========= */
 
+#quizzes-title {
+    text-align: center;
+    margin-bottom: 16px;
+}
+
 #quiz-title {
     text-align: center;
     margin-bottom: 16px;
@@ -26,6 +31,6 @@ li.submit-all {
 
 /* ========= STATISTICS ========= */
 
-#statistics-panel {
+#student-statistics-panel {
     flex: 1 1 auto;
 }

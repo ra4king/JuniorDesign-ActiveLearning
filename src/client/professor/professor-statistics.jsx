@@ -28,25 +28,8 @@ export default class StatisticsPanels extends React.Component {
         super(props);
 
         this.state = {
-            statistics: {},
             showAllStudents: true
         }
-
-        if(socket.isLoggedIn()) {
-            this.getStats();
-        } else {
-            socket.on('login', this.getStats.bind(this));
-        }
-    }
-
-    getStats() {
-        socket.send('get_stats', (err, stats) => {
-            if(err) {
-                console.error('Error getting stats: ' + err);
-            } else {
-                this.setState({ statistics: stats });
-            }
-        });
     }
 
     showStudentStats(studentName) {
@@ -93,14 +76,14 @@ export default class StatisticsPanels extends React.Component {
                     showQuizStats={this.showQuizStats.bind(this)}
                     showAllQuizStats={this.showAllQuizStats.bind(this)}
                     showAllStudentStats={this.showAllStudentStats.bind(this)}
-                    statistics={this.state.statistics} />
+                    submissions={this.props.submissions} />
 
                 <GraphPanel
                     showStudent={this.state.showStudent}
                     showQuiz={this.state.showQuiz}
                     showAllQuizzes={this.state.showAllQuizzes}
                     showAllStudents={this.state.showAllStudents}
-                    statistics={this.state.statistics} />
+                    submissions={this.props.submissions} />
             </div>
         );
     }
@@ -126,15 +109,13 @@ class StudentPanel extends React.Component {
     }
 
     getAllQuizNames() {
-        var statistics = this.props.statistics;
+        var submissions = this.props.submissions;
 
         var quizNames = [];
-        for(var username in statistics) {
-            for(var quiz_id in statistics[username]) {
-                var quizName = statistics[username][quiz_id].name;
-                if(quizNames.indexOf(quizName) == -1) {
-                    quizNames.push(quizName);
-                }
+        for(var username in submissions) {
+            var quizName = submissions[username].quiz_name;
+            if(quizNames.indexOf(quizName) == -1) {
+                quizNames.push(quizName);
             }
         }
 
@@ -158,8 +139,8 @@ class StudentPanel extends React.Component {
                 </ul>
 
                 {this.state.showStudents
-                    ? (<ul className='list'>
-                        {Object.keys(this.props.statistics).map((studentName) => (
+                    ? (<ul className='student-list'>
+                        {Object.keys(this.props.submissions).map((studentName) => (
                             <li key={studentName}>
                                 <button className='list-button' onClick={() => this.props.showStudentStats(studentName)}>
                                     {studentName}
@@ -167,7 +148,7 @@ class StudentPanel extends React.Component {
                             </li>
                         ))}
                     </ul>)
-                    : (<ul className='list'>
+                    : (<ul className='student-list'>
                         {this.getAllQuizNames().map((quizName, idx) => (
                             <li key={idx + '-' + quizName}>
                                 <button className='list-button' onClick={() => this.props.showQuizStats(quizName)}>
@@ -419,15 +400,15 @@ class GraphPanel extends React.Component {
     setupChart(canvas) {
         this.canvas = this.canvas || canvas;
 
-        if(this.props.showStudent) {
-            this.displayStudentStatistics(this.props.showStudent);
-        } else if(this.props.showQuiz) {
-            this.displayQuizStatistics(this.props.showQuiz);
-        } else if(this.props.showAllQuizzes) {
-            this.displayAllQuizStatistics();
-        } else {
-            this.displayAllStudentStatistics();
-        }
+        // if(this.props.showStudent) {
+        //     this.displayStudentStatistics(this.props.showStudent);
+        // } else if(this.props.showQuiz) {
+        //     this.displayQuizStatistics(this.props.showQuiz);
+        // } else if(this.props.showAllQuizzes) {
+        //     this.displayAllQuizStatistics();
+        // } else {
+        //     this.displayAllStudentStatistics();
+        // }
     }
 
     render() {

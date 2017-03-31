@@ -7,7 +7,7 @@ import ProfessorStatistics from './professor/professor-statistics.jsx';
 import ProfessorSettings from './professor/professor-settings.jsx';
 
 import StudentHome from './student/student-app.jsx';
-import StudentStatistics from './student/student-app.jsx';
+import StudentStatistics from './student/student-statistics.jsx';
 
 import { Router, Route, IndexRoute, IndexLink, browserHistory } from 'react-router';
 
@@ -126,7 +126,7 @@ class App extends React.Component {
             return { permissions: null, isTermAdmin: this.state.user.admin };
         }
 
-        var permissions = connection.user.permissions[idx];
+        var permissions = this.state.user.permissions[idx];
         return { permissions: permissions, isTermAdmin: permissions.isCreator || permissions.isTA };
     }
 
@@ -228,8 +228,8 @@ class HeaderPanel extends React.Component {
             <div id='header-panel'>
                 <img id='logo' src='images/active_learning_logo_white.png' width='175' height='75' alt='logo'/>
                 <h2 id='name'>{this.props.user ? this.props.user.username : ''}</h2>
-                <nav id='nav-links'>
-                    <form method='post'>
+                <nav>
+                    <form method='post' id='nav-links'>
                         <IndexLink to='/active-learning/select-term' className='header-nav-link' activeClassName='header-nav-link-selected'>Change Term</IndexLink>
                         <IndexLink to='/active-learning/' className='header-nav-link' activeClassName='header-nav-link-selected'>Home</IndexLink>
                         <IndexLink to='/active-learning/statistics' className='header-nav-link' activeClassName='header-nav-link-selected'>Statistics</IndexLink>
@@ -387,6 +387,8 @@ class HomePanels extends React.Component {
 class StatisticsPanels extends React.Component {
     render() {
         var permissions = this.props.getPermissions();
+
+        console.log('Statistics');
 
         return !permissions
             ? <div>Logging in...</div>

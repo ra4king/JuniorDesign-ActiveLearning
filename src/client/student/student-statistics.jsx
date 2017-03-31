@@ -117,7 +117,7 @@ class GraphPanel extends React.Component {
 
     render() {
         return (
-            <div id='statistics-panel' className='panel'>
+            <div id='student-statistics-panel' className='panel'>
                 <canvas ref={this.setupChart.bind(this)} id='statistics-chart'></canvas>
             </div>
         );
