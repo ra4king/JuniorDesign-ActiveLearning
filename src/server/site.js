@@ -40,54 +40,19 @@ module.exports = function(server, app, base_url, debug) {
 
     app.get('/', check_login, (req, res) => {
         console.log('Getting home');
-
-        var user = req.user;
-
-        if(user.admin) {
-            res.render('professor');
-        } else {
-            res.render('student');
-        }
-    });
-
-    app.get('/admin', check_login, (req, res) => {
-        var user = req.user;
-
-        if(user.admin) {
-            res.render('admin');
-        } else {
-            res.status(404).send('Not found');
-        }
+        res.render('app');
     });
 
     app.get('/select-term', check_login, (req, res) => {
-        var user = req.user;
-        
-        if(user.admin) {
-            res.render('professor');
-        } else {
-            res.render('student');
-        }
+        res.render('app');
     });
 
     app.get('/statistics', check_login, (req, res) => {
-        var user = req.user;
-        
-        if(user.admin) {
-            res.render('professor');
-        } else {
-            res.render('student');
-        }
+        res.render('app');
     });
 
     app.get('/settings', check_login, (req, res) => {
-        var user = req.user;
-
-        if(user.admin) {
-            res.render('professor');
-        } else {
-            res.status(404).send('Not found');
-        }
+        res.render('app');
     });
 
     app.use('/login', require('csurf')({ cookie: true }));

@@ -78,7 +78,7 @@ ul.tab {
     padding: 0;
     overflow: hidden;
     border: 1px solid #000000;
-    background-color: #2C2C2B;
+    background-color: #CCCCCC;
 }
 ul.tab li {
     float: left;
@@ -97,5 +97,5 @@ ul.tab li a:hover {
     background-color: #3c6668;
 }
 ul.tab li a:focus, .active {
-    background-color: #CCCCCC;
+    background-color: #2C2C2B;
 }
