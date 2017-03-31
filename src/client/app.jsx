@@ -227,7 +227,7 @@ class HeaderPanel extends React.Component {
         return (
             <div id='header-panel'>
                 <img id='logo' src='images/active_learning_logo_white.png' width='175' height='75' alt='logo'/>
-                <h2 id='name'>{this.props.user ? this.props.user.username : ''}</h2>
+                <h2 id='name'>{this.props.user && this.props.user.username ? ('Welcome, ' + this.props.user.username + '!') : ''}</h2>
                 <nav>
                     <form method='post' id='nav-links'>
                         <IndexLink to='/active-learning/select-term' className='header-nav-link' activeClassName='header-nav-link-selected'>Change Term</IndexLink>

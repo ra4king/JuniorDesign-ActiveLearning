@@ -104,16 +104,24 @@
 
 #save-quiz-button {
     flex: 0 1 auto;
+    width: 100px;
+    height: 40px;
+    font-size: 20px;
 
-    background-color: #FFFFFF;
+    background-color: #456789;
+    color: white;
     border: none;
     margin-right: 5px;
 }
 
 #publish-quiz-buton {
     flex: 0 1 auto;
+    width: 100px;
+    height: 40px;
+    font-size: 20px;
 
-    background-color: #FFFFFF;
+    background-color: #176d18;
+    color: white;
     border: none;
     margin-left: 5px;
 }
@@ -211,6 +219,9 @@
 }
 
 .remove-answer-button {
+    background-color: #FF2222;
+    color: white;
+    border: none;
     margin-left: 10px;
 }
 
@@ -219,6 +230,9 @@
 }
 
 .remove-tag-button {
+    background-color: #FF2222;
+    color: white;
+    border: none;
     margin-left: 10px;
 }
 
