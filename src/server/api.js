@@ -9,6 +9,8 @@ module.exports = function(base_url, server, database) {
     var subscriptions = {};
 
     function subscribe(event, connection) {
+        console.log('Subscribing to event ' + event + ' for connection ' + connection.user.username);
+
         if(subscriptions[event]) {
             subscriptions[event].push(connection);
         } else {
@@ -17,6 +19,8 @@ module.exports = function(base_url, server, database) {
     }
 
     function unsubscribe(event, connection) {
+        console.log('UNSUBscribing to event ' + event + ' for connection + ' + connection.user.username);
+
         if(subscriptions[event]) {
             let idx = subscriptions[event].findIndex((conn) => conn == connection);
             if(idx != -1) {
@@ -57,10 +61,26 @@ module.exports = function(base_url, server, database) {
         let name = quiz.term_id + '-quizzes';
 
         if(subscriptions[name]) {
-            // TODO: Students need questions in quizzes, not IDs
+            console.log('Sending quizzes to ' + subscriptions[name].length + ' subscibers.');
 
-            subscriptions[name].forEach((connection) => {
-                connection.socket.sendEvent('quizzes', [quiz]);
+            database.getQuizById(false, String(quiz._id), (err, quizWithQuestions) => {
+                if(err) {
+                    console.error('Error when getting quiz with questions');
+                    console.error(err);
+                } else {
+                    console.log(quizWithQuestions);
+                }
+
+                subscriptions[name].forEach((connection) => {
+                    var [permissions, admin] = getPermissions(connection);
+                    if(admin) {
+                        console.log('Sending professor quiz');
+                        connection.socket.sendEvent('quizzes', [quiz]);
+                    } else if(quizWithQuestions) {
+                        console.log('Sending student quiz');
+                        connection.socket.sendEvent('quizzes', [quizWithQuestions]);
+                    }
+                });
             });
         }
     });
@@ -263,6 +283,15 @@ module.exports = function(base_url, server, database) {
         }
     });
 
+    commands.on('updateLiveQuiz', (connection, live_quiz, reply) => {
+        var [permissions, admin] = getPermissions(connection);
+        if(connection.user.admin || (permissions && (permissions.isCreator || (permissions.isTA && permissions.canEditQuizzes)))) {
+            database.updateLiveQuiz(live_quiz.quiz_id, live_quiz.question_idx, reply);
+        } else {
+            reply('Permission denied.');
+        }
+    });
+
     commands.on('submitQuiz', (connection, submission, reply) => {
 
     });
@@ -336,112 +365,6 @@ module.exports = function(base_url, server, database) {
             if(!commands.emit(msg.command, connection, msg.data, reply)) {
                 reply('Unknown command.');
             }
-
-            // switch(msg.command) {
-            //     case 'getUser':
-            //         database.getUser(user.username, reply);
-            //         break;
-            //     case 'getUsers':
-            //         database.getAllUsers(msg.data, reply);
-            //         break;
-            //     case 'setPermissions':
-            //         database.setPermissions(msg.data, reply);
-            //         break;
-            //     case 'createSchool':
-            //         database.createSchool(msg.data, reply);
-            //         break;
-            //     case 'updateSchool':
-            //         database.updateSchool(msg.data, reply);
-            //         break;
-            //     case 'createCourse':
-            //         database.createCourse(msg.data, reply);
-            //         break;
-            //     case 'updateCourse':
-            //         database.updateCourse(msg.data, reply);
-            //         break;
-            //     case 'createTerm':
-            //         database.createTerm(msg.data, reply);
-            //         break;
-            //     case 'updateTerm':
-            //         database.updateTerm(msg.data, reply);
-            //         break;
-            //     case 'addUser':
-            //         database.addUser(msg.data, reply);
-            //         break;
-            //     case 'removeUser':
-            //         database.removeUser(msg.data, reply);
-            //         break;
-            //     case 'createResource':
-            //         database.createResource(msg.data, reply);
-            //         break;
-            //     case 'deleteResource':
-            //         database.deleteResource(msg.data, reply);
-            //         break;
-            //     case 'getResource':
-            //         database.getResource(msg.data, reply);
-            //         break;
-            //     case 'createQuestion':
-            //         database.createQuestion(msg.data, (err) => reply(err) && !err && broadcast_questions());
-            //         break;
-            //     case 'updateQuestion':
-            //         database.updateQuestion(msg.data, (err) => reply(err) && !err && broadcast_questions());
-            //         break;
-            //     case 'deleteQuestion':
-            //         database.deleteQuestion(msg.data, (err) => reply(err) && !err && broadcast_questions() && broadcast_quizzes());
-            //         break;
-            //     case 'getQuestionById':
-            //         database.getQuestionById(user.admin, msg.data, reply);
-            //         break;
-            //     case 'getQuestionsByTerm':
-            //         database.getQuestionsByTerm(user.admin, msg.data, reply);
-            //         break;
-            //     case 'getQuestionsByQuiz':
-            //         database.getQuestionsByQuiz(user.admin, msg.data, reply);
-            //         break;
-            //     case 'createQuiz':
-            //         database.createQuiz(msg.data, (err) => reply(err) && !err && broadcast_quizzes());
-            //         break;
-            //     case 'updateQuiz':
-            //         database.updateQuiz(msg.data, (err) => reply(err) && !err && broadcast_quizzes());
-            //         break;
-            //     case 'deleteQuiz':
-            //         database.deleteQuiz(msg.data, (err) => reply(err) && !err && broadcast_quizzes());
-            //         break;
-            //     case 'getQuizById':
-            //         database.getQuizById(user.admin, msg.data, reply);
-            //         break;
-            //     case 'getQuizzesByTerm':
-            //         database.getQuizzesByTerm(user.admin, msg.data, reply);
-            //         break;
-            //     case 'submitQuiz':
-            //         database.submitQuiz(user, msg.data, reply);
-            //         break;
-            //     case 'getSubmissionsByUser':
-            //         database.getSubmissionsByUser(user, msg.data, reply);
-            //         break;
-            //     case 'getSubmissionsByTerm':
-            //         database.getSubmissionsByTerm(user, msg.data, reply);
-            //         break;
-
-            //     case 'getLiveQuestion':
-            //         if(live_question_id) {
-            //             database.get_question_by_id(live_question_id, false, reply);
-            //         } else {
-            //             reply(null, null);
-            //         }
-
-            //         break;
-
-            //     case 'broadcastLiveQuestion':
-            //         reply();
-            //         set_live_question_id(msg.data);
-            //         break;
-
-            //     case 'endLiveQuestion':
-            //         reply();
-            //         set_live_question_id(null);
-            //         break;
-            // }
         });
 
         socket.on('error', function(error) {
@@ -453,6 +376,12 @@ module.exports = function(base_url, server, database) {
 
             if(connection.user) {
                 delete allConnections[connection.user.username];
+            }
+
+            if(connection.selectedTerm) {
+                unsubscribe(connection.selectedTerm.course_id + '-questions', connection);
+                unsubscribe(connection.selectedTerm.term_id + '-quizzes', connection);
+                unsubscribe(connection.selectedTerm.term_id + '-submissions', connection);
             }
         });
     });

@@ -27,8 +27,7 @@ export default class HomePanels extends React.Component {
                     quizzes={this.props.quizzes}
                     setCreatingQuiz={this.setCreatingQuiz.bind(this)}
                     getResource={this.props.getResource}
-                    showConfirm={this.props.showConfirm}
-                    presentLive={this.props.presentLive} />
+                    showConfirm={this.props.showConfirm} />
 
                 <QuestionPanel
                     user={this.props.user}
@@ -49,6 +48,14 @@ class QuizPanel extends React.Component {
         this.state = {
             editQuiz: null
         };
+    }
+
+    componentWillReceiveProps(newProps) {
+        this.setState((prevState) => {
+            if(prevState.editQuiz && prevState.editQuiz._id) {
+                return { editQuiz: newProps.quizzes[prevState.editQuiz._id] || null };
+            }
+        });
     }
 
     setCreatingQuiz() {
@@ -91,8 +98,7 @@ class QuizPanel extends React.Component {
                     : (<QuizList
                         showConfirm={this.props.showConfirm}
                         quizzes={this.props.quizzes}
-                        chooseQuiz={this.chooseQuiz.bind(this)}
-                        presentLive={this.props.presentLive} />)
+                        chooseQuiz={this.chooseQuiz.bind(this)} />)
                 }
             </div>
         );
@@ -109,8 +115,10 @@ class QuizEditor extends React.Component {
             _id: props.quiz._id,
             name: props.quiz.name || '',
             is_published: props.quiz.is_published || false,
+            is_live: props.quiz.is_live || false,
             questions: props.quiz.questions || [],
             settings: {
+                live_question: settings.live_question,
                 open_date: new Date(settings.open_date || Date.now()).toISOString().substring(0, 10),
                 close_date: new Date(settings.close_date || Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().substring(0, 10), // 1 week
                 max_submission: settings.max_submission || 0,
@@ -118,6 +126,29 @@ class QuizEditor extends React.Component {
                 allow_answer_review: settings.allow_answer_review || false,
             }
         };
+    }
+
+    componentWillReceiveProps(newProps) {
+        console.log('editor received new props');
+        console.log(newProps);
+
+        let settings = newProps.quiz.settings || {};
+
+        this.setState({
+            _id: newProps.quiz._id,
+            name: newProps.quiz.name || '',
+            is_published: newProps.quiz.is_published || false,
+            is_live: newProps.quiz.is_live || false,
+            questions: newProps.quiz.questions || [],
+            settings: {
+                live_question: settings.live_question,
+                open_date: new Date(settings.open_date || Date.now()).toISOString().substring(0, 10),
+                close_date: new Date(settings.close_date || Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().substring(0, 10), // 1 week
+                max_submission: settings.max_submission || 0,
+                allow_question_review: settings.allow_question_review || false,
+                allow_answer_review: settings.allow_answer_review || false,
+            }
+        });
     }
 
     onNameChange(e) {
@@ -178,6 +209,7 @@ class QuizEditor extends React.Component {
                 term_id: this.props.user.lastSelectedTerm.term_id,
                 name: this.state.name,
                 is_published: publish,
+                is_live: this.state.is_live,
                 questions: this.state.questions,
                 settings: this.state.settings
             }, callback);
@@ -186,6 +218,7 @@ class QuizEditor extends React.Component {
                 term_id: this.props.user.lastSelectedTerm.term_id,
                 name: this.state.name,
                 is_published: publish,
+                is_live: this.state.is_live,
                 questions: this.state.questions,
                 settings: this.state.settings
             }, callback);
@@ -203,6 +236,22 @@ class QuizEditor extends React.Component {
                 return {};
             }
         });
+    }
+
+    presentLive(id) {
+        if(!this.state.is_published || !this.state.is_live) {
+            return console.error('Cannot present live.');
+        }
+
+        var idx = this.state.questions.indexOf(id);
+        if(idx != -1) {
+            socket.send('updateLiveQuiz', { quiz_id: this.state._id, question_idx: idx }, (err) => {
+                if(err) {
+                    console.error('Error when presenting live.');
+                    console.error(err);
+                }
+            });
+        }
     }
 
     onDragStart(id, e) {
@@ -289,6 +338,9 @@ class QuizEditor extends React.Component {
                         <p className='quiz-creator-header-entry'>Close Date:&nbsp;
                             {this.state.is_published ? this.state.settings.close_date : <input type='date' value={this.state.settings.close_date} onChange={this.onCloseDateChange.bind(this)} />}</p>
                     </div>
+                    <div>
+                        Live Quiz: {this.state.is_published ? String(this.state.is_live) : <input type='checkbox' checked={this.state.is_live} onChange={() => this.setState((prevState) => ({ is_live: !prevState.is_live }))} />}
+                    </div>
                     <div className='quiz-creator-header-entry'>
                         Submissions allowed: {this.state.is_published ? (this.state.settings.max_submission || 'Unlimited') : <input type='number' size='2' value={this.state.settings.max_submission} onChange={this.onMaxSubmissionChange.bind(this)} />}
                         {!this.state.is_published && ' 0 for unlimited'}
@@ -296,7 +348,7 @@ class QuizEditor extends React.Component {
                 </div>
                 <ol id='quiz-question-list' onDrop={this.onDrop.bind(this)} onDragOver={this.onDragOver.bind(this)}>
                     {this.state.questions.length > 0
-                        ? [this.state.questions.map((id) => (
+                        ? [this.state.questions.map((id, idx) => (
                             <Question key={id}
                                 question={this.props.questions[id]}
                                 getResource={this.props.getResource}
@@ -305,6 +357,10 @@ class QuizEditor extends React.Component {
                                 draggedOver={this.state.dragOverId == id}>
 
                                 <button className='delete-button' onClick={() => this.removeQuestion(id)}>&#10006;</button>
+                                {this.state.is_live && this.state.is_published &&
+                                    <button
+                                        className={'live-button' + (this.state.settings.live_question == idx ? ' is-live' : '')}
+                                        onClick={() => this.presentLive(id)}>L</button>}
                             </Question>)),
                             (<li key='hidden' style={{ visibility: 'hidden', height: '100px' }}></li>)]
                         : (<li style={{ listStyleType: 'none', textAlign: 'center' }}>Drag questions here!</li>)}
@@ -324,7 +380,6 @@ class QuizList extends React.Component {
                         <Quiz key={id}
                             quiz={quiz}
                             chooseQuiz={() => this.props.chooseQuiz(id)}
-                            presentLive={() => this.props.presentLive(id)}
                             showConfirm={this.props.showConfirm} />
                     );
                 })}
@@ -357,7 +412,6 @@ class Quiz extends React.Component {
             <li className='quiz'>
                 <button className='quiz-body' onClick={this.props.chooseQuiz}>{unescapeHTML(this.props.quiz.name)}</button>
                 <button className='delete-button' onClick={this.deleteQuiz.bind(this)}>&#10006;</button>
-                <button className='live-button' onClick={this.props.presentLive}>L</button>
             </li>
         );
     }

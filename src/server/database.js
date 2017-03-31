@@ -44,6 +44,7 @@ module.exports = {
 
     createQuiz: createQuiz,
     updateQuiz: updateQuiz,
+    updateLiveQuiz: updateLiveQuiz,
     deleteQuiz: deleteQuiz,
     getQuizById: getQuizById,
     getQuizzesByTerm: getQuizzesByTerm,
@@ -168,16 +169,17 @@ const quizzesSchema = new Schema({
     term_id: { type: Schema.Types.ObjectId, required: true, index: true },
     name: { type: String, required: true },
     is_published: { type: Boolean, required: true },
+    is_live: { type: Boolean, default: false },
     questions: {
         type: [{ type: Schema.Types.ObjectId, ref: 'Question' }],
         validate: (q) => q.length > 0
     },
     settings: {
         type: {
-            live_question: { type: Number, default: null, validate: function(n) { return n >= 0 && n < this.questions.length; } },
+            live_question: { type: Number, default: -1, validate: function(n) { return n >= 0 && n < this.questions.length; } },
             open_date: { type: Date, required: true },
-            close_date: { type: Date, required: true },
-            max_submission: { type: Number, default: 1 },
+            close_date: { type: Date, required: true, validate: function(close_date) { return this.settings.open_date < close_date } },
+            max_submission: { type: Number, default: 0 },
             allow_question_review: { type: Boolean, default: false },
             allow_answer_review: { type: Boolean, default: false },
         },
@@ -190,8 +192,8 @@ const Quiz = mongoose.model('Quiz', quizzesSchema, 'quizzes');
 const submissionsSchema = new Schema({
     timestamp: { type: Date, default: Date.now },
     user: { type: String, ref: 'User', required: true },
-    term_id: { type: Schema.Types.ObjectId, required: true },
-    quiz_id: { type: Schema.Types.ObjectId, required: true },
+    term_id: { type: Schema.Types.ObjectId, ref: 'Term', required: true },
+    quiz_id: { type: Schema.Types.ObjectId, ref: 'Quiz', required: true },
     quiz_name: { type: String, required: true },
     answers: [
         {
@@ -967,6 +969,30 @@ function updateQuiz(quiz, callback) {
     }
 }
 
+function updateLiveQuiz(quiz_id, question_idx, callback) {
+    Quiz.findById(new ObjectID(quiz_id), (err, quiz) => {
+        if(err) {
+            console.error('Error when getting live quiz: ' + quiz_id);
+            console.error(err);
+            return callback(err);
+        }
+
+        if(!quiz.is_live) {
+            return callback('Not a live a quiz.');
+        }
+
+        quiz.set('settings.live_question', question_idx);
+        quiz.save((err) => {
+            if(err) {
+                console.error('Error when updating live quiz: ' + quiz_id);
+                console.error(err);
+            }
+
+            callback(err);
+        });
+    });
+}
+
 function deleteQuiz(quiz_id, callback) {
     Quiz.findByIdAndRemove(new ObjectID(quiz_id), (err) => {
         if(err) {
@@ -976,6 +1002,19 @@ function deleteQuiz(quiz_id, callback) {
 
         callback(err);
     });
+}
+
+function processQuiz(is_admin, quiz) {
+    if(!is_admin && quiz.is_live) {
+        var live_idx = quiz.settings.live_question;
+        if(live_idx == -1) {
+            delete quiz.questions;
+        } else {
+            quiz.questions = [quiz.questions[live_idx]];
+        }
+    }
+
+    return quiz;
 }
 
 function getQuizById(is_admin, quiz_id, callback) {
@@ -993,7 +1032,7 @@ function getQuizById(is_admin, quiz_id, callback) {
         }
 
         if(quiz && (is_admin || quiz.is_published)) {
-            callback(null, quiz);
+            callback(null, processQuiz(is_admin, quiz));
         } else {
             callback('Quiz not found with id: ' + quiz_id);
         }
@@ -1014,7 +1053,7 @@ function getQuizzesByTerm(is_admin, term_id, callback) {
             return callback(err);
         }
 
-        callback(null, quizzes);
+        callback(null, quizzes.map((q) => processQuiz(is_admin, q)));
     });
 }
 

@@ -430,7 +430,7 @@ button {
     height: 21px;
     right: 1px;
     bottom: 1px;
-    background-color: #008800;
+    background-color: #222222;
     color: white;
     border: none;
     text-align: center;
@@ -438,7 +438,11 @@ button {
 }
 
 .live-button:hover {
-    background-color: #66aa66;
+    background-color: #444444;
+}
+
+.is-live {
+    background-color: #008800;
 }
 
 .edit-button {
