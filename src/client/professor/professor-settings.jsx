@@ -93,7 +93,7 @@ class StudentPanel extends React.Component {
                     </div>)
                     : (<div className='list'>
                         {this.props.users.map((user) => (
-                            user.permissions && user.permissions.is_ta &&
+                            (user.permissions && user.permissions.is_ta) &&
                                 (<li key={user.username}>
                                     <button className='list-button' onClick={() => this.props.selectUser(user)}>
                                         {unescapeHTML(user.username)}

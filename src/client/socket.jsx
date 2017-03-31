@@ -48,8 +48,8 @@ export default new function() {
                 cb.callback(data.err, data.data, cb.request);
                 delete callbacks[data.id];
             }
-            else if(!data.err) {
-                this.emit(data.id, data.data);
+            else if(data.event) {
+                this.emit(data.event, data.data);
             }
         };
         s.onclose = () => {
@@ -83,7 +83,7 @@ export default new function() {
     this.once = (command, callback) => {
         var func = (data) => {
             callback(data);
-            this.remove(func);
+            this.remove(command, func);
         };
 
         this.on(command, func);

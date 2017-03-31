@@ -1,68 +1,142 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
 import socket from '../socket.jsx';
 import { unescapeHTML } from '../utils.jsx';
+
 import StatisticsPanels from './professor-statistics.jsx';
 import SettingsPanels from './professor-settings.jsx';
 
 import { Router, Route, IndexRoute, IndexLink, browserHistory } from 'react-router';
 
-window.onload = () => {
-    ReactDOM.render(
-        <Router history={browserHistory}>
-            <Route path='/active-learning/' component={App}>
-                <IndexRoute component={HomePanels} />
-                <Route path='/active-learning/statistics' component={StatisticsPanels} />
-                <Route path='/active-learning/settings' component={SettingsPanels} />
-            </Route>
-        </Router>,
-        document.getElementById('page'));
+export default class ProfessorApp extends React.Component {
+    render() {
+        return (
+            <Router history={browserHistory}>
+                <Route path='/active-learning/' component={ProfessorHome}>
+                    <IndexRoute component={HomePanels} />
+                    <Route path='/active-learning/select-term' component={SelectTermPanels} />
+                    <Route path='/active-learning/statistics' component={StatisticsPanels} />
+                    <Route path='/active-learning/settings' component={SettingsPanels} />
+                </Route>
+            </Router>
+        );
+    }
 }
 
-class App extends React.Component {
+class ProfessorHome extends React.Component {
     constructor(props) {
         super(props);
 
         this.state = {
+            user: null,
             resources: {},
             questions: {},
             quizzes: {},
-            showConfirm: null,
-            currentLiveQuiz: null
+            submissions: {},
+            showConfirm: null
         };
 
         socket.on('login', (user) => {
             if(user) {
                 this.setState({ user: user });
+
+                if(user.lastSelectedTerm) {
+                    this.selectTerm(user.lastSelectedTerm.term_id);
+                }
             }
         });
-        socket.on('questions', (data) => this.setState({ questions: data }));
-        socket.on('quizzes', (data) => this.setState({ quizzes: data }));
+        socket.on('user', (user) => {
+            console.log('USER')
+            console.log(user);
 
-        this.refresh = this.refresh.bind(this);
+            this.setState({ user: user });
+        });
 
-        if(socket.isLoggedIn()) {
-            this.refresh();
-        } else {
-            socket.on('login', this.refresh);
+        socket.on('questions', (data) => {
+            console.log('QUESTIONS');
+            console.log(data);
+
+            this.setState((prevState) => {
+                var questions = {};
+                Object.assign(questions, prevState.questions);
+
+                data.forEach((question) => {
+                    if(question.removed) {
+                        delete questions[question._id];
+                    } else {
+                        questions[question._id] = question;
+                    }
+                });
+
+                return { questions: questions };
+            });
+        });
+        socket.on('quizzes', (data) => {
+            console.log('QUIZZES');
+            console.log(data);
+
+            this.setState((prevState) => {
+                var quizzes = {};
+                Object.assign(quizzes, prevState.quizzes);
+
+                data.forEach((quiz) => {
+                    if(quiz.removed) {
+                        delete quizzes[quiz._id];
+                    } else {
+                        quizzes[quiz._id] = quiz;
+                    }
+                });
+
+                return { quizzes: quizzes };
+            });
+        });
+        socket.on('submissions', (data) => {
+            console.log('SUBMISSIONS');
+            console.log(data);
+
+            this.setState((prevState) => {
+                var submissions = {};
+                Object.assign(submissions, prevState.submissions);
+
+                data.forEach((submission) => {
+                    if(submission.removed) {
+                        delete submissions[submission._id];
+                    } else {
+                        submissions[submission._id] = submission;
+                    }
+                });
+
+                return { submissions: submissions };
+            });
+        });
+    }
+
+    // { permissions, isTermAdmin }
+    getPermissions() {
+        if(!this.state.user || !this.state.selectedTerm) {
+            return;
         }
+
+        var idx = this.state.user.permissions.findIndex((permission) =>
+                        String(permission.term_id) === String(this.state.selectedTerm._id));
+        if(idx === -1) {
+            return { permissions: null, isTermAdmin: this.state.user.admin };
+        }
+
+        var permissions = connection.user.permissions[idx];
+        return { permissions: permissions, isTermAdmin: permissions.isCreator || permissions.isTA };
     }
 
-    refresh() {
-        socket.send('get_quizzes', (err, data) => !err && socket.emit('quizzes', data));
-        socket.send('get_questions', (err, data) => !err && socket.emit('questions', data));
-    }
+    selectTerm(term_id) {
+        this.setState({ questions: {}, quizzes: {}, submissions: {} }, () =>
+            socket.send('selectTerm', term_id, (err, term) => {
+                if(err) {
+                    this.showConfirm({ type: 'ok', title: 'Error selecting term: ' + err });
 
-    componentWillUnmount() {
-        socket.remove('login', this.refresh);
-    }
-
-    presentLive(quizId) {
-        this.setState({ currentLiveQuiz: this.state.quizzes[quizId] });
-    }
-
-    hideLiveQuiz() {
-        this.setState({ currentLiveQuiz: null });
+                    this.setState({ selectedTerm: null });
+                } else {
+                    this.setState({ selectedTerm: term });
+                }
+            }));
     }
 
     showConfirm(options) {
@@ -123,17 +197,18 @@ class App extends React.Component {
                     <ConfirmBox hide={() => this.hideConfirm()} {...this.state.showConfirm} />}
 
                 <div id='content' className={(this.state.currentLiveQuiz || this.state.showConfirm) && 'blur'}>
-                    <HeaderPanel user={this.state.user} page={this.state.page} />
+                    <HeaderPanel user={this.state.user} />
 
                     {React.Children.map(this.props.children, (child) =>
                         React.cloneElement(child, {
                             user: this.state.user,
+                            selectTerm: this.selectTerm.bind(this),
                             questions: this.state.questions,
                             quizzes: this.state.quizzes,
+                            submissions: this.state.submissions,
                             getResource: this.getResource.bind(this),
                             deleteResource: this.deleteResource.bind(this),
-                            showConfirm: this.showConfirm.bind(this),
-                            presentLive: this.presentLive.bind(this)
+                            showConfirm: this.showConfirm.bind(this)
                         }))}
                 </div>
             </div>
@@ -149,60 +224,13 @@ class HeaderPanel extends React.Component {
                 <h2 id='name'>{this.props.user ? this.props.user.username : ''}</h2>
                 <nav id='nav-links'>
                     <form method='post'>
+                        <IndexLink to='/active-learning/select-term' className='header-nav-link' activeClassName='header-nav-link-selected'>Change Term</IndexLink>
                         <IndexLink to='/active-learning/' className='header-nav-link' activeClassName='header-nav-link-selected'>Home</IndexLink>
                         <IndexLink to='/active-learning/statistics' className='header-nav-link' activeClassName='header-nav-link-selected'>Statistics</IndexLink>
                         <IndexLink to='/active-learning/settings' className='header-nav-link' activeClassName='header-nav-link-selected'>Settings</IndexLink>
                         <button className='header-nav-link' formAction='api/logout'>Logout</button>
                     </form>
                 </nav>
-            </div>
-        );
-    }
-}
-
-class LiveQuizPanel extends React.Component {
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            currentLiveQuestion: null,
-            onLoginFunc: (success) => {
-                if(this.state.currentLiveQuestion != null)
-                    socket.send('broadcast_live_question', this.state.currentLiveQuestion)
-            }
-        };
-
-        socket.on('login', this.state.onLoginFunc);
-    }
-
-    componentWillUnmount() {
-        socket.remove('login', this.state.onLoginFunc);
-        socket.send('end_live_question');
-    }
-
-    presentLiveQuestion(id) {
-        this.setState({ currentLiveQuestion: id });
-        socket.send('broadcast_live_question', id)
-    }
-
-    render() {
-        return (
-            <div id='live-quiz'>
-                <ol id='live-question-list'>
-                    {this.props.quiz.questions.map((id) => {
-                        return (
-                            <Question key={id} question={this.props.questions[id]} getResource={this.props.getResource}>
-                                <button
-                                    className={'presenting-live-button' +
-                                        (id == this.state.currentLiveQuestion
-                                            ? ' presenting-live-button-selected' : '')}
-                                    onClick={() => this.presentLiveQuestion(id)}>L</button>
-                            </Question>
-                        )
-                    })}
-                </ol>
-
-                <button onClick={this.props.hideLiveQuiz} className='delete-button'>&#10006;</button>
             </div>
         );
     }
@@ -229,6 +257,115 @@ class ConfirmBox extends React.Component {
     }
 }
 
+class SelectTermPanels extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            schools: [],
+            courses: [],
+            terms: []
+        };
+
+        var getSchools = () => {
+            socket.send('getSchools', (err, schools) => {
+                if(err) {
+                    props.showConfirm({ type: 'ok', title: 'Error getting schools: ' + err });
+                } else {
+                    this.setState({ schools: schools });
+                }
+            });
+        };
+
+        if(socket.isLoggedIn()) {
+            getSchools();
+        } else {
+            socket.on('login', (user) => {
+                if(user.lastSelectedTerm) {
+                    this.props.selectTerm(user.lastSelectedTerm.term_id);
+                    browserHistory.push('/active-learning/');
+                } else {
+                    getSchools();
+                }
+            });
+        }
+    }
+
+    selectSchool(school_id) {
+        if(this.state.school_id == school_id) {
+            return;
+        }
+
+        this.setState({ selectedSchool: school_id, selectedCourse: null });
+
+        socket.send('getCourses', school_id, (err, courses) => {
+            if(err) {
+                this.props.showConfirm({ type: 'ok', title: 'Error getting courses: ' + err });
+            } else {
+                this.setState({ courses: courses });
+            }
+        });
+    }
+
+    selectCourse(course_id) {
+        if(this.state.course_id == course_id) {
+            return;
+        }
+
+        this.setState({ selectedCourse: course_id });
+
+        socket.send('getTerms', course_id, (err, terms) => {
+            if(err) {
+                this.props.showConfirm({ type: 'ok', title: 'Error getting terms: ' + err });
+            } else {
+                this.setState({ terms: terms });
+            }
+        });
+    }
+
+    render() {
+        return (
+            <div id='panels'>
+                <div className='panel select-panel' id='school-select-panel'>
+                    <p className='select-title'>Schools</p>
+                    <ol className='select-list'>
+                        {this.state.schools.map((school) =>
+                            (<li key={school._id}>
+                                <button
+                                    className={'select-list-button' + (this.state.selectedSchool === school._id ? ' select-list-button-selected' : '')}
+                                    onClick={() => this.selectSchool(school._id)}>{school.name}</button>
+                            </li>))}
+                    </ol>
+                </div>
+
+                <div className='panel select-panel' id='course-select-panel'>
+                    <p className='select-title'>Courses</p>
+                    <ol className='select-list'>
+                        {this.state.courses.map((course) =>
+                            (<li key={course._id}>
+                                <button
+                                    className={'select-list-button' + (this.state.selectedCourse === course._id ? ' select-list-button-selected' : '')}
+                                    onClick={() => this.selectCourse(course._id)}>{course.name}</button>
+                            </li>))}
+                    </ol>
+                </div>
+
+                <div className='panel select-panel' id='term-select-panel'>
+                    <p className='select-title'>Terms</p>
+                    <ol className='select-list'>
+                        {this.state.terms.map((term) =>
+                            (<li key={term._id}>
+                                <button
+                                    className='select-list-button'
+                                    onClick={() => this.props.selectTerm(term._id) || browserHistory.push('/active-learning/')}>{term.name}</button>
+                            </li>))}
+                    </ol>
+                </div>
+            </div>
+        );
+    }
+}
+
 class HomePanels extends React.Component {
     constructor(props) {
         super(props);
@@ -248,6 +385,7 @@ class HomePanels extends React.Component {
         return (
             <div id='panels'>
                 <QuizPanel
+                    user={this.props.user}
                     questions={this.props.questions}
                     quizzes={this.props.quizzes}
                     setCreatingQuiz={this.setCreatingQuiz.bind(this)}
@@ -256,6 +394,7 @@ class HomePanels extends React.Component {
                     presentLive={this.props.presentLive} />
 
                 <QuestionPanel
+                    user={this.props.user}
                     questions={this.props.questions}
                     creatingQuiz={this.state.creatingQuiz}
                     getResource={this.props.getResource}
@@ -276,6 +415,10 @@ class QuizPanel extends React.Component {
     }
 
     setCreatingQuiz() {
+        if(this.state.editQuiz && this.state.editQuiz.is_published) {
+            return;
+        }
+
         this.props.setCreatingQuiz(!!this.state.editQuiz);
     }
 
@@ -302,6 +445,7 @@ class QuizPanel extends React.Component {
 
                 {this.state.editQuiz
                     ? (<QuizEditor
+                        user={this.props.user}
                         quiz={this.state.editQuiz}
                         questions={this.props.questions}
                         hideQuizEditor={this.hideQuizEditor.bind(this)}
@@ -322,35 +466,92 @@ class QuizEditor extends React.Component {
     constructor(props) {
         super(props);
 
-        this.state = {
-            id: props.quiz.id,
-            name: props.quiz.name || '',
-            questions: props.quiz.questions || [],
-        };
+        let settings = props.quiz.settings || {};
 
-        this.questionsDOM = {};
+        this.state = {
+            _id: props.quiz._id,
+            name: props.quiz.name || '',
+            is_published: props.quiz.is_published || false,
+            questions: props.quiz.questions || [],
+            settings: {
+                open_date: new Date(settings.open_date || Date.now()).toISOString().substring(0, 10),
+                close_date: new Date(settings.close_date || Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().substring(0, 10), // 1 week
+                max_submission: settings.max_submission || 0,
+                allow_question_review: settings.allow_question_review || false,
+                allow_answer_review: settings.allow_answer_review || false,
+            }
+        };
     }
 
     onNameChange(e) {
         this.setState({ name: e.target.value });
     }
 
-    submitQuiz() {
+    onOpenDateChange(e) {
+        let value = e.target.value;
+
+        this.setState((prevState) => {
+            var newSettings = {}
+            Object.assign(newSettings, prevState.settings);
+
+            newSettings.open_date = new Date(value).toISOString().substring(0, 10);
+            return { settings: newSettings };
+        });
+    }
+
+    onCloseDateChange(e) {
+        let value = e.target.value;
+
+        this.setState((prevState) => {
+            var newSettings = {}
+            Object.assign(newSettings, prevState.settings);
+
+            newSettings.close_date = new Date(value).toISOString().substring(0, 10);
+            return { settings: newSettings };
+        });
+    }
+
+    onMaxSubmissionChange(e) {
+        let value = e.target.value;
+
+        this.setState((prevState) => {
+            var newSettings = {}
+            Object.assign(newSettings, prevState.settings);
+
+            newSettings.max_submission = value;
+            return { settings: newSettings };
+        });
+    }
+
+    submitQuiz(publish) {
         var callback = (err) => {
             if(err) {
                 this.props.showConfirm({
                     type: 'ok',
-                    title: err
+                    title: 'Error when submitting quiz: ' + err
                 });
             } else {
                 this.props.hideQuizEditor();
             }
         }
 
-        if(this.state.id) {
-            socket.send('update_quiz', { id: this.state.id, name: this.state.name, questions: this.state.questions }, callback);
+        if(this.state._id) {
+            socket.send('updateQuiz', {
+                _id: this.state._id,
+                term_id: this.props.user.lastSelectedTerm.term_id,
+                name: this.state.name,
+                is_published: publish,
+                questions: this.state.questions,
+                settings: this.state.settings
+            }, callback);
         } else {
-            socket.send('create_quiz', { name: this.state.name, questions: this.state.questions }, callback);
+            socket.send('createQuiz', {
+                term_id: this.props.user.lastSelectedTerm.term_id,
+                name: this.state.name,
+                is_published: publish,
+                questions: this.state.questions,
+                settings: this.state.settings
+            }, callback);
         }
     }
 
@@ -436,9 +637,25 @@ class QuizEditor extends React.Component {
             <div id='quiz-creator'>
                 <div id='quiz-creator-header'>
                     <div id='quiz-name'>
-                        Name: <input type='text' id='quiz-name-field' value={this.state.name} onChange={this.onNameChange.bind(this)}/>
+                        Name: {this.state.is_published
+                                    ? this.state.name
+                                    : (<input type='text' id='quiz-name-field' value={this.state.name} onChange={this.onNameChange.bind(this)}/>)}
                     </div>
-                    <button id='submit-quiz-button' onClick={this.submitQuiz.bind(this)}>{this.state.id ? 'Update' : 'Submit'}</button>
+                    {!this.state.is_published &&
+                        <div>
+                            <button id='save-quiz-button' onClick={this.submitQuiz.bind(this, false)}>Save</button>
+                            <button id='publish-quiz-buton' onClick={this.submitQuiz.bind(this, true)}>Publish</button>
+                        </div>}
+                    <div>
+                        <p className='quiz-creator-header-entry'>Open Date:&nbsp;
+                            {this.state.is_published ? this.state.settings.open_date : <input type='date' value={this.state.settings.open_date} onChange={this.onOpenDateChange.bind(this)} />}</p>
+                        <p className='quiz-creator-header-entry'>Close Date:&nbsp;
+                            {this.state.is_published ? this.state.settings.close_date : <input type='date' value={this.state.settings.close_date} onChange={this.onCloseDateChange.bind(this)} />}</p>
+                    </div>
+                    <div className='quiz-creator-header-entry'>
+                        Submissions allowed: {this.state.is_published ? (this.state.settings.max_submission || 'Unlimited') : <input type='number' size='2' value={this.state.settings.max_submission} onChange={this.onMaxSubmissionChange.bind(this)} />}
+                        {!this.state.is_published && ' 0 for unlimited'}
+                    </div>
                 </div>
                 <ol id='quiz-question-list' onDrop={this.onDrop.bind(this)} onDragOver={this.onDragOver.bind(this)}>
                     {this.state.questions.length > 0
@@ -446,7 +663,7 @@ class QuizEditor extends React.Component {
                             <Question key={id}
                                 question={this.props.questions[id]}
                                 getResource={this.props.getResource}
-                                draggable
+                                draggable={!this.state.is_published}
                                 onDragStart={this.onDragStart.bind(this, id)}
                                 draggedOver={this.state.dragOverId == id}>
 
@@ -486,7 +703,7 @@ class Quiz extends React.Component {
             title: 'Are you sure you want to delete this quiz?',
             onAction: (choice) => {
             if(choice) {
-                socket.send('delete_quiz', this.props.quiz.id, (err, data) => {
+                socket.send('delete_quiz', this.props.quiz._id, (err, data) => {
                     if(err) {
                         this.props.showConfirm({
                             type: 'ok',
@@ -548,7 +765,7 @@ class QuestionPanel extends React.Component {
             });
         }
 
-        return [{ name: 'CS 2110', children: tags }];
+        return [{ name: this.props.user ? this.props.user.lastSelectedTerm.name : '', children: tags }];
     }
 
     updateShownQuestions(searchTerm, questions) {
@@ -589,6 +806,7 @@ class QuestionPanel extends React.Component {
 
                 {this.state.editQuestion
                     ? (<QuestionEditor
+                            user={this.props.user}
                             question={this.state.editQuestion}
                             getResource={this.props.getResource}
                             deleteResource={this.props.deleteResource}
@@ -614,8 +832,8 @@ class QuestionEditor extends React.Component {
         super(props);
 
         this.state = {
-            id: props.question.id,
-            title: props.question.name || '',
+            _id: props.question._id,
+            title: props.question.title || '',
             answers: props.question.answers || ['', '', '', ''],
             correct: props.question.correct || 0,
             image_id: props.question.image_id || null,
@@ -730,43 +948,42 @@ class QuestionEditor extends React.Component {
             }
         };
 
-        var send_question = (err, resource_id) => {
+        var sendQuestion = (err, resource_id) => {
             if(err) {
                 this.props.showConfirm({
                     type: 'ok',
                     title: 'Error uploading image: ' + err
                 });
             } else {
-                if(this.state.id) {
-                    socket.send('update_question', {
-                        id: this.state.id,
-                        name: this.state.title,
-                        answers: answers,
-                        correct: String(this.state.correct),
-                        image_id: resource_id || null,
-                        tags: this.state.tags
-                    }, callback);
+                var toSend = {
+                    course_id: this.props.user.lastSelectedTerm.course_id,
+                    title: this.state.title,
+                    answers: answers,
+                    correct: String(this.state.correct),
+                    image_id: resource_id || null,
+                    tags: this.state.tags
+                };
+
+                if(this.state._id) {
+                    toSend._id = this.state._id;
+                    socket.send('updateQuestion', toSend, callback);
                 } else {
-                    socket.send('create_question', {
-                        name: this.state.title,
-                        answers: answers,
-                        correct: String(this.state.correct),
-                        image_id: resource_id || null,
-                        tags: this.state.tags
-                    }, callback);
+                    socket.send('createQuestion', toSend, callback);
                 }
             }
         }
 
         if(!this.state.image_id) {
             if(this.state.image) {
-                socket.send('create_resource', this.state.image, send_question);
-            } else {
-                socket.send('delete_resource', this.props.question.image_id, send_question);
+                socket.send('create_resource', this.state.image, sendQuestion);
+            } else if(this.props.question.image_id) {
+                socket.send('delete_resource', this.props.question.image_id, sendQuestion);
                 this.props.deleteResource(this.props.question.image_id);
+            } else {
+                sendQuestion(null, null);
             }
         } else {
-            send_question(null, this.state.image_id);
+            sendQuestion(null, this.state.image_id);
         }
     }
 
@@ -854,7 +1071,7 @@ class QuestionEditor extends React.Component {
                     <button id='add-tag-button' className='option-button' onClick={this.addTag.bind(this)}>Add Tag</button>
                 </div>
                 <button className='question-creator-row option-button' onClick={this.submitQuestion.bind(this)}>
-                    {this.state.id ? 'Update' : 'Submit'}
+                    {this.state._id ? 'Update' : 'Submit'}
                 </button>
             </div>
         );
@@ -912,7 +1129,7 @@ class Question extends React.Component {
         this.state = {
             image_id: null,
             image: null,
-            hideAnswers: true
+            hideAnswers: false,//true
         };
     }
 
@@ -949,12 +1166,12 @@ class Question extends React.Component {
         }
 
         return (
-            <li data-id={this.props.question.id}
+            <li data-id={this.props.question._id}
                 className={'question' + (this.props.draggable ? ' draggable' : '') + (this.props.draggedOver ? ' drag-over' : '')}
                 draggable={this.props.draggable}
                 onDragStart={this.props.onDragStart}>
                 <div className='question-body' style={this.state.image || this.props.question.image_id ? {width: '70%'} : {}}>
-                    <p className='question-name'>{unescapeHTML(this.props.question.name)}</p>
+                    <p className='question-title'>{unescapeHTML(this.props.question.title)}</p>
                     {!this.state.hideAnswers &&
                         (<ol className='answer-list'>
                             {this.props.question.answers.map((answer, idx) => (

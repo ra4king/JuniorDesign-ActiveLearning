@@ -21,7 +21,7 @@ const express = require('express')
 const app = express();
 server.use(base_url, app);
 
-require('./site.js')(server.listeningApp, app, base_url);
+require('./site.js')(server.listeningApp, app, base_url, true);
 
 server.listen(port, function() {
     console.log('Debug site is up at port ' + port + '.');

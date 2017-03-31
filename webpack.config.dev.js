@@ -3,10 +3,8 @@ const path = require('path');
 
 module.exports = {
     entry: {
-        professor: './src/client/professor/professor-app.jsx',
-        student: './src/client/student/student-app.jsx',
+        app: './src/client/app.jsx',
         login: './src/client/login.jsx',
-        admin: './src/client/admin-app.jsx'
     },
     output: {
         filename: '[name]-bundle.js',

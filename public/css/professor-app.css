@@ -37,6 +37,7 @@
 .tree-node {
     list-style-type: none;
     padding-left: 5px;
+    padding-right: 5px;
     padding-top: 10px;
     padding-bottom: 10px;
 
@@ -66,6 +67,8 @@
 }
 
 .draggable {
+    padding: 9px;
+    padding-right: 24px;
     border: dashed 2px red;
 }
 
@@ -87,11 +90,11 @@
     flex: 0 1 auto;
 
     display: flex;
-    flex-flow: row nowrap;
+    flex-flow: row wrap;
     justify-content: space-between;
     align-items: center;
 
-    margin: 10px;
+    margin-bottom: 10px;
     min-height: 30px;
 }
 
@@ -99,11 +102,24 @@
     flex: 0 1 auto;
 }
 
-#submit-quiz-button {
+#save-quiz-button {
     flex: 0 1 auto;
 
     background-color: #FFFFFF;
     border: none;
+    margin-right: 5px;
+}
+
+#publish-quiz-buton {
+    flex: 0 1 auto;
+
+    background-color: #FFFFFF;
+    border: none;
+    margin-left: 5px;
+}
+
+.quiz-creator-header-entry {
+    margin-top: 10px;
 }
 
 #quiz-question-list {

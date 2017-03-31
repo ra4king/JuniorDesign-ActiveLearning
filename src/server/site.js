@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = function(server, app, base_url) {
+module.exports = function(server, app, base_url, debug) {
     const express = require('express');
     const querystring = require('querystring');
 
@@ -9,17 +9,21 @@ module.exports = function(server, app, base_url) {
     app.set('view engine', 'html');
 
     const database = require('./database.js');
-    require('./api.js')(base_url, server, database);
+    if(!debug) {
+        require('./api.js')(base_url, server, database);
+    }
 
     app.use(require('cookie-parser')('A very important secret'));
     app.use(require('body-parser').urlencoded({ extended: false }));
 
     app.use(express.static('public'));
 
-    var check_login = function(req, res, next) {
+    var check_login = (req, res, next) => {
+        console.log('Checking login');
+
         var session_id = req.cookies['session_id'];
         if(session_id) {
-            database.validate_session(session_id, function(err, user) {
+            database.validateSession(session_id, (err, user) => {
                 if(err || !user) {
                     console.log('Not validated: ' + err + ' ' + user);
                     res.clearCookie('session_id');
@@ -34,7 +38,9 @@ module.exports = function(server, app, base_url) {
         }
     };
 
-    app.get('/', check_login, function(req, res) {
+    app.get('/', check_login, (req, res) => {
+        console.log('Getting home');
+
         var user = req.user;
 
         if(user.admin) {
@@ -44,7 +50,7 @@ module.exports = function(server, app, base_url) {
         }
     });
 
-    app.get('/admin', check_login, function(req, res) {
+    app.get('/admin', check_login, (req, res) => {
         var user = req.user;
 
         if(user.admin) {
@@ -54,7 +60,7 @@ module.exports = function(server, app, base_url) {
         }
     });
 
-    app.get('/statistics', check_login, function(req, res) {
+    app.get('/select-term', check_login, (req, res) => {
         var user = req.user;
         
         if(user.admin) {
@@ -64,7 +70,17 @@ module.exports = function(server, app, base_url) {
         }
     });
 
-    app.get('/settings', check_login, function(req, res) {
+    app.get('/statistics', check_login, (req, res) => {
+        var user = req.user;
+        
+        if(user.admin) {
+            res.render('professor');
+        } else {
+            res.render('student');
+        }
+    });
+
+    app.get('/settings', check_login, (req, res) => {
         var user = req.user;
 
         if(user.admin) {
@@ -75,24 +91,23 @@ module.exports = function(server, app, base_url) {
     });
 
     app.use('/login', require('csurf')({ cookie: true }));
-    app.use('/login', function(err, req, res, next) {
+    app.use('/login', (err, req, res, next) => {
         if(err.code != 'EBADCSRFTOKEN') return next(err);
         res.status(403).send('Form tampered with.');
     });
 
-    app.get('/login', function(req, res) {
-        console.log(req.query.register);
+    app.get('/login', (req, res) => {
         res.render('login', {
             message: req.query.message,
             redirect: req.query.redirect,
-            register: (req.query.register=='true'),
+            register: req.query.register == 'true',
             username: req.query.username,
             csurf: req.csrfToken()
         });
     });
 
-    app.post('/api/login', function(req, res) {
-        database.create_session(req.body.username, req.body.password, function(err, session_id) {
+    app.post('/api/login', (req, res) => {
+        database.createSession(req.body.username, req.body.password, (err, session_id) => {
             if(err) {
                 var message = 'message=' + querystring.escape(err.toString());
                 var redirect = req.query.redirect ? '&redirect=' + req.query.redirect : '';
@@ -106,10 +121,10 @@ module.exports = function(server, app, base_url) {
         });
     });
 
-    app.post('/api/logout', function(req, res) {
+    app.post('/api/logout', (req, res) => {
         var session_id = req.cookies['session_id']
         if(session_id) {
-            database.destroy_session(session_id, function(err) {
+            database.destroySession(session_id, (err) => {
                 res.clearCookie('session_id');
                 res.redirect(req.baseUrl + '/');
             });
@@ -118,8 +133,8 @@ module.exports = function(server, app, base_url) {
         }
     });
 
-    app.post('/api/register', function(req, res) {
-        database.create_user(req.body.username, req.body.password, function(err) {
+    app.post('/api/register', (req, res) => {
+        database.createUser(req.body.username, req.body.password, (err) => {
             if(err) {
                 var message = 'message=' + querystring.escape(err.toString());
                 var redirect = req.query.redirect ? '&redirect=' + req.query.redirect : '';

@@ -2,274 +2,402 @@
 
 module.exports = function(base_url, server, database) {
     var ws = require('ws');
+    var EventEmitter = require('events');
 
     var websocket = new ws.Server({ server: server, path: base_url + '/api', perMessageDeflate: false });
 
-    var connections = {};
-    var live_question_id = null;
+    var subscriptions = {};
 
-    function set_live_question_id(id) {
-        live_question_id = id;
-        if(live_question_id) {
-            database.get_question_by_id(live_question_id, false, function(err, question) {
-                if(!err && question) {
-                    broadcast('live_question', question);
-                }
-            });
+    function subscribe(event, connection) {
+        if(subscriptions[event]) {
+            subscriptions[event].push(connection);
         } else {
-            broadcast('live_question', null);
+            subscriptions[event] = [connection];
         }
     }
 
-    function broadcast(command, data) {
-        for(var conn_id in connections) {
-            var conn = connections[conn_id];
-            if(is_open(conn.socket)) {
-                conn.send(command, null, data);
+    function unsubscribe(event, connection) {
+        if(subscriptions[event]) {
+            let idx = subscriptions[event].findIndex((conn) => conn == connection);
+            if(idx != -1) {
+                subscriptions[event].splice(idx, 1);
             }
         }
     }
 
-    function broadcast_questions() {
-        database.get_questions(true, function(err, questions) {
-            broadcast('questions', questions);
+    var allConnections = {};
+
+    database.events.on('users', (user) => {
+        if(allConnections[user.username]) {
+            console.log('SAVED USER:');
+            console.log(user);
+
+            allConnections[user.username].user = user;
+
+            allConnections[user.username].socket.sendEvent('user', user);
+        }
+    });
+
+    database.events.on('questions', (question) => {
+        console.log('SAVED QUESTION:');
+        console.log(question);
+
+        let name = question.course_id + '-questions';
+
+        if(subscriptions[name]) {
+            subscriptions[name].forEach((connection) => {
+                connection.socket.sendEvent('questions', [question]);
+            });
+        }
+    });
+    database.events.on('quizzes', (quiz) => {
+        console.log('SAVE QUIZ:');
+        console.log(quiz);
+
+        let name = quiz.term_id + '-quizzes';
+
+        if(subscriptions[name]) {
+            // TODO: Students need questions in quizzes, not IDs
+
+            subscriptions[name].forEach((connection) => {
+                connection.socket.sendEvent('quizzes', [quiz]);
+            });
+        }
+    });
+    database.events.on('submissions', (submission) => {
+        console.log('SUBMISSION SAVED:');
+        console.log(submission);
+
+        let name = submission.term_id + '-submissions';
+
+        if(subscriptions[name]) {
+            // process submission object here
+
+            subscriptions[name].forEach((connection) => {
+                connection.socket.sendEvent('submissions', [submission]);
+            });
+        }
+    });
+
+    function getPermissions(connection) {
+        if(!connection.user.lastSelectedTerm) {
+            return [null, false];
+        }
+
+        var idx = connection.user.permissions.findIndex((permission) =>
+                        String(permission.term_id) === String(connection.user.lastSelectedTerm.term_id));
+        if(idx === -1) {
+            return [connection.user.lastSelectedTerm, connection.user.admin];
+        }
+
+        var permissions = connection.user.permissions[idx];
+        return [permissions, permissions.isCreator || permissions.isTA];
+    }
+
+    function sendQuestions(connection) {
+        var [permissions, admin] = getPermissions(connection);
+        if(admin) {
+            database.getQuestionsByCourse(permissions.course_id, (err, questions) => {
+                if(!err) {
+                    connection.socket.sendEvent('questions', questions);
+                }
+            });
+        }
+    }
+
+    function sendQuizzes(connection) {
+        var [permissions, admin] = getPermissions(connection);
+        database.getQuizzesByTerm(admin, permissions.term_id, (err, quizzes) => {
+            if(!err) {
+                connection.socket.sendEvent('quizzes', quizzes);
+            }
         });
     }
 
-    function broadcast_quizzes() {
-        database.get_quizzes(function(err, quizzes) {
-            broadcast('quizzes', quizzes);
-        });
+    function sendSubmissions(connection) {
+        var [permissions, admin] = getPermissions(connection);
+
+        var send = (err, submissions) => {
+            if(!err) {
+                connection.socket.sendEvent('submissions', submissions);
+            }
+        };
+
+        if(admin) {
+            database.getSubmissionsByTerm(permissions.term_id, send);
+        } else {
+            database.getSubmissionsByUser(connection.user.username, permissions.term_id, send);
+        }
     }
 
-    function is_open(socket) {
-        return socket.readyState == 1;
-    }
+
+    var commands = new EventEmitter();
+    commands.on('getSchools', (connection, arg, reply) => {
+        database.getSchools(reply);
+    });
+
+    commands.on('getCourses', (connection, school_id, reply) => {
+        database.getCourses(school_id, reply);
+    });
+
+    commands.on('getTerms', (connection, course_id, reply) => {
+        database.getTerms(course_id, reply);
+    });
+
+    commands.on('selectTerm', (connection, term_id, reply) => {
+        var permissions = connection.user.permissions[term_id];
+        if(connection.user.admin || permissions) {
+            var termAdmin = connection.user.admin || permissions.isCreator || permissions.isTA;
+
+            database.selectTerm(connection.user.username, termAdmin, term_id, (err, term) => {
+                if(err) {
+                    return reply(err);
+                }
+
+                if(connection.selectedTerm) {
+                    unsubscribe(connection.selectedTerm.course_id + '-questions', connection);
+                    unsubscribe(connection.selectedTerm.term_id + '-quizzes', connection);
+                    unsubscribe(connection.selectedTerm.term_id + '-submissions', connection);
+                }
+
+                connection.selectedTerm = {
+                    term_id: term_id,
+                    course_id: term.course_id
+                };
+
+                if(termAdmin) {
+                    subscribe(term.course_id + '-questions', connection);
+                }
+
+                subscribe(term_id + '-quizzes', connection);
+                subscribe(term_id + '-submissions', connection);
+
+                reply(null, term);
+
+                sendQuestions(connection);
+                sendQuizzes(connection);
+                sendSubmissions(connection);
+            });
+        } else {
+            return reply('Permission denied.');
+        }
+    });
+
+    commands.on('createQuestion', (connection, question, reply) => {
+        var [permissions, admin] = getPermissions(connection);
+        if(connection.user.admin || (permissions && (permissions.isCreator || (permissions.isTA && permissions.canCreateQuestions)))) {
+            database.createQuestion(question, reply);
+        } else {
+            reply('Permission denied');
+        }
+    });
+
+    commands.on('updateQuestion', (connection, question, reply) => {
+        var [permissions, admin] = getPermissions(connection);
+        if(connection.user.admin || (permissions && (permissions.isCreator || (permissions.isTA && permissions.canEditQuestions)))) {
+            database.updateQuestion(question, reply);
+        } else {
+            reply('Permission denied');
+        }
+    });
+
+    commands.on('createQuiz', (connection, quiz, reply) => {
+        var [permissions, admin] = getPermissions(connection);
+        if(connection.user.admin || (permissions && (permissions.isCreator || (permissions.isTA && permissions.canCreateQuizzes)))) {
+            database.createQuiz(quiz, reply);
+        } else {
+            reply('Permission denied');
+        }
+    });
+
+    commands.on('updateQuiz', (connection, quiz, reply) => {
+        var [permissions, admin] = getPermissions(connection);
+        if(connection.user.admin || (permissions && (permissions.isCreator || (permissions.isTA && permissions.canEditQuizzes)))) {
+            database.updateQuiz(quiz, reply);
+        } else {
+            reply('Permission denied');
+        }
+    });
+
+    commands.on('submitQuiz', (connection, submission, reply) => {
+
+    });
+
 
     websocket.on('connection', function(socket) {
         console.log('Accepted connection');
 
-        var session_id = null;
-        var user = null;
+        function isOpen() {
+            return socket.readyState == 1;
+        }
 
         (function ping() {
-            if(is_open(socket)) {
+            if(isOpen()) {
                 socket.ping();
                 setTimeout(ping, 1000);
             }
         })();
 
-        var send = function(command, err, data) {
-            if(is_open(socket)) {
-                var to_send = JSON.stringify({id: command, err: err || undefined, data: data}, null, 4);
-                socket.send(to_send);
+        socket.sendEvent = function(event, data) {
+            if(isOpen()) {
+                socket.send(JSON.stringify({event: event, data: data}));
             }
         };
 
+        var connection = {
+            session_id: null,
+            user: null,
+            socket: socket
+        };
+
         socket.on('message', function(msg) {
-            var data;
             try {
-                data = JSON.parse(msg);
+                msg = JSON.parse(msg);
             } catch(e) {
-                console.error('Could not parse: ' + msg);
+                console.error('Could not parse: ' + JSON.stringify(msg));
                 return;
             }
 
-            var reply = function(err, args) {
-                send(data.id, err, args);
+            var reply = function(err, data) {
+                if(isOpen()) {
+                    socket.send(JSON.stringify({id: msg.id, err: err || undefined, data: data}));
+                }
             };
 
-            console.log('Received: ' + JSON.stringify(data, null, 4));
+            console.log('Received: ' + JSON.stringify(msg, null, 4));
 
-            if(session_id == null && data.command === 'login') {
-                return database.validate_session(data.data, function(err, u) {
-                    if(!is_open(socket))
+            if(connection.session_id == null && msg.command === 'login') {
+                return database.validateSession(msg.data, function(err, user) {
+                    if(!isOpen())
                         return;
 
-                    if(err || !u) {
+                    if(err || !user) {
                         return reply(err || 'Not validated');
                     }
 
-                    session_id = data.data;
-                    user = u;
+                    connection.session_id = msg.data;
+                    connection.user = user;
 
-                    connections[session_id] = { send: send, socket: socket, session_id: session_id, user: user };
+                    allConnections[user.username] = connection;
 
                     reply(null, user);
                 });
             }
 
-            if(session_id == null) {
+            if(connection.session_id == null) {
                 reply('Not logged in.');
                 return;
             }
 
-            function verifyAdmin() {
-                if(!user || !user.admin) {
-                    reply('Permission denied.');
-                    return false;
-                }
-
-                return true;
+            if(!commands.emit(msg.command, connection, msg.data, reply)) {
+                reply('Unknown command.');
             }
 
-            switch(data.command) {
-                case 'get_user':
-                    if(user.username != data.data && !verifyAdmin()) return;
+            // switch(msg.command) {
+            //     case 'getUser':
+            //         database.getUser(user.username, reply);
+            //         break;
+            //     case 'getUsers':
+            //         database.getAllUsers(msg.data, reply);
+            //         break;
+            //     case 'setPermissions':
+            //         database.setPermissions(msg.data, reply);
+            //         break;
+            //     case 'createSchool':
+            //         database.createSchool(msg.data, reply);
+            //         break;
+            //     case 'updateSchool':
+            //         database.updateSchool(msg.data, reply);
+            //         break;
+            //     case 'createCourse':
+            //         database.createCourse(msg.data, reply);
+            //         break;
+            //     case 'updateCourse':
+            //         database.updateCourse(msg.data, reply);
+            //         break;
+            //     case 'createTerm':
+            //         database.createTerm(msg.data, reply);
+            //         break;
+            //     case 'updateTerm':
+            //         database.updateTerm(msg.data, reply);
+            //         break;
+            //     case 'addUser':
+            //         database.addUser(msg.data, reply);
+            //         break;
+            //     case 'removeUser':
+            //         database.removeUser(msg.data, reply);
+            //         break;
+            //     case 'createResource':
+            //         database.createResource(msg.data, reply);
+            //         break;
+            //     case 'deleteResource':
+            //         database.deleteResource(msg.data, reply);
+            //         break;
+            //     case 'getResource':
+            //         database.getResource(msg.data, reply);
+            //         break;
+            //     case 'createQuestion':
+            //         database.createQuestion(msg.data, (err) => reply(err) && !err && broadcast_questions());
+            //         break;
+            //     case 'updateQuestion':
+            //         database.updateQuestion(msg.data, (err) => reply(err) && !err && broadcast_questions());
+            //         break;
+            //     case 'deleteQuestion':
+            //         database.deleteQuestion(msg.data, (err) => reply(err) && !err && broadcast_questions() && broadcast_quizzes());
+            //         break;
+            //     case 'getQuestionById':
+            //         database.getQuestionById(user.admin, msg.data, reply);
+            //         break;
+            //     case 'getQuestionsByTerm':
+            //         database.getQuestionsByTerm(user.admin, msg.data, reply);
+            //         break;
+            //     case 'getQuestionsByQuiz':
+            //         database.getQuestionsByQuiz(user.admin, msg.data, reply);
+            //         break;
+            //     case 'createQuiz':
+            //         database.createQuiz(msg.data, (err) => reply(err) && !err && broadcast_quizzes());
+            //         break;
+            //     case 'updateQuiz':
+            //         database.updateQuiz(msg.data, (err) => reply(err) && !err && broadcast_quizzes());
+            //         break;
+            //     case 'deleteQuiz':
+            //         database.deleteQuiz(msg.data, (err) => reply(err) && !err && broadcast_quizzes());
+            //         break;
+            //     case 'getQuizById':
+            //         database.getQuizById(user.admin, msg.data, reply);
+            //         break;
+            //     case 'getQuizzesByTerm':
+            //         database.getQuizzesByTerm(user.admin, msg.data, reply);
+            //         break;
+            //     case 'submitQuiz':
+            //         database.submitQuiz(user, msg.data, reply);
+            //         break;
+            //     case 'getSubmissionsByUser':
+            //         database.getSubmissionsByUser(user, msg.data, reply);
+            //         break;
+            //     case 'getSubmissionsByTerm':
+            //         database.getSubmissionsByTerm(user, msg.data, reply);
+            //         break;
 
-                    database.get_user(data.data, reply);
-                    break;
+            //     case 'getLiveQuestion':
+            //         if(live_question_id) {
+            //             database.get_question_by_id(live_question_id, false, reply);
+            //         } else {
+            //             reply(null, null);
+            //         }
 
-                case 'get_users':
-                    if(!verifyAdmin()) return;
-                    database.get_all_users(reply);
-                    break;
+            //         break;
 
-                case 'set_permissions':
-                    if(!verifyAdmin()) return;
-                    database.set_permissions(data.data, reply);
-                    break;
+            //     case 'broadcastLiveQuestion':
+            //         reply();
+            //         set_live_question_id(msg.data);
+            //         break;
 
-                case 'get_stats':
-                    if(user.admin) {
-                        database.get_stats(reply);
-                    } else {
-                        database.get_stats(user.username, reply);
-                    }
-                    break;
-
-                case 'create_resource':
-                    if(!verifyAdmin()) return;
-                    database.create_resource(data.data, reply);
-                    break;
-
-                case 'delete_resource':
-                    if(!verifyAdmin()) return;
-                    database.delete_resource(data.data, reply);
-                    break;
-
-                case 'get_resource':
-                    database.get_resource(data.data, reply);
-                    break;
-
-                case 'create_question':
-                    if(!verifyAdmin()) return;
-
-                    database.create_question(data.data, function(err) {
-                        reply(err);
-
-                        if(!err) {
-                            broadcast_questions();
-                        }
-                    });
-                    break;
-
-                case 'update_question':
-                    if(!verifyAdmin()) return;
-
-                    database.update_question(data.data, function(err) {
-                        reply(err);
-
-                        if(!err) {
-                            broadcast_questions();
-                        }
-                    });
-                    break;
-
-                case 'delete_question':
-                    if(!verifyAdmin()) return;
-
-                    database.delete_question(data.data, function(err, quiz_modified) {
-                        reply(err);
-
-                        broadcast_questions();
-                        if(quiz_modified) {
-                            broadcast_quizzes();
-                        }
-                    });
-                    break;
-
-                case 'get_questions':
-                    database.get_questions(user.admin, function(err, questions) {
-                        if(is_open(socket)) {
-                            reply(null, questions);
-                        } else {
-                            reply(err);
-                        }
-                    });
-                    break;
-
-                case 'create_quiz':
-                    if(!verifyAdmin()) return;
-
-                    database.create_quiz(data.data, function(err) {
-                        reply(err);
-
-                        if(!err) {
-                            broadcast_quizzes()
-                        }
-                    });
-                    break;
-
-                case 'update_quiz':
-                    if(!verifyAdmin()) return;
-
-                    database.update_quiz(data.data, function(err) {
-                        reply(err);
-
-                        if(!err) {
-                            broadcast_quizzes();
-                        }
-                    });
-                    break;
-
-                case 'delete_quiz':
-                    if(!verifyAdmin()) return;
-
-                    database.delete_quiz(data.data, function(err) {
-                        reply(err);
-
-                        if(!err) {
-                            broadcast_quizzes();
-                        }
-                    });
-                    break;
-
-                case 'get_quizzes':
-                    database.get_quizzes(function(err, quizzes) {
-                        reply(null, quizzes);
-                    });
-                    break;
-
-                case 'submit_quiz':
-                    database.submit_quiz(user, data.data, function(err) {
-                        reply(err);
-                    });
-                    break;
-
-                case 'get_live_question':
-                    if(live_question_id) {
-                        database.get_question_by_id(live_question_id, false, reply);
-                    } else {
-                        reply(null, null);
-                    }
-
-                    break;
-
-                case 'broadcast_live_question':
-                    if(!verifyAdmin()) return;
-
-                    reply();
-                    set_live_question_id(data.data);
-                    break;
-
-                case 'end_live_question':
-                    if(!verifyAdmin()) return;
-
-                    reply();
-                    set_live_question_id(null);
-                    break;
-            }
+            //     case 'endLiveQuestion':
+            //         reply();
+            //         set_live_question_id(null);
+            //         break;
+            // }
         });
 
         socket.on('error', function(error) {
@@ -279,12 +407,8 @@ module.exports = function(base_url, server, database) {
         socket.on('close', function() {
             console.log('Connection closed.');
 
-            if(session_id != null) {
-                delete connections[session_id];
-            }
-
-            if(user && user.admin) {
-                set_live_question_id(null);
+            if(connection.user) {
+                delete allConnections[connection.user.username];
             }
         });
     });
