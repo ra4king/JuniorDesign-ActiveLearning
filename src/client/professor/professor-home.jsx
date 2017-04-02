@@ -495,9 +495,7 @@ class QuestionPanel extends React.Component {
             });
         }
 
-        return [{ name: this.props.user
-                    ? this.props.selectedTerm.course.name + ' - ' + this.props.selectedTerm.name
-                    : '',
+        return [{ name: this.props.user ? this.props.selectedTerm.course.name : '',
                 children: tags.sort((a,b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: 'base'})) }];
     }
 
