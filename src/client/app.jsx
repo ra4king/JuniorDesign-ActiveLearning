@@ -241,12 +241,15 @@ class App extends React.Component {
 class HeaderPanel extends React.Component {
     render() {
         var username = (this.props.user && this.props.user.username ? ' ' + this.props.user.username : '') + '!';
-        var termName = this.props.selectedTerm ? ' ' + this.props.selectedTerm.course.name + ' - ' + this.props.selectedTerm.name : '';
+        var termName = this.props.selectedTerm ? '\n' + this.props.selectedTerm.course.name + ' - ' + this.props.selectedTerm.name : '';
 
         return (
             <div id='header-panel'>
                 <img id='logo' src='images/active_learning_logo_white.png' width='175' height='75' alt='logo'/>
-                <h2 id='name'>Welcome{username + termName}</h2>
+                <div id='name'>
+                    <h2>Welcome, {username}</h2>
+                    <h2>{termName}</h2>
+                </div>
                 <nav>
                     <form method='post' id='nav-links'>
                         <IndexLink to='/active-learning/select-term' className='header-nav-link' activeClassName='header-nav-link-selected'>Change Term</IndexLink>
