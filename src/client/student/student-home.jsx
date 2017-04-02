@@ -70,7 +70,7 @@ class QuizList extends React.Component {
                     var chooseQuizId = this.props.chooseQuiz.bind(null, id);
                     return (
                         <li key={id} className='quiz'>
-                            <button className='quiz-body' onClick={chooseQuizId}>{unescapeHTML(quiz.name)}</button>
+                            <button className={'quiz-body' + (quiz.is_live ? ' is-live-quiz-body' : '')} onClick={chooseQuizId}>{unescapeHTML(quiz.name)}</button>
                         </li>
                     );
                 })}
