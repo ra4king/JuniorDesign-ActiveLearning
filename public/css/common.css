@@ -357,6 +357,10 @@ button {
     border: none;
 }
 
+.is-live-quiz-body {
+    background-color: #14C500;
+}
+
 #question-list {
     list-style: none;
     overflow: auto;

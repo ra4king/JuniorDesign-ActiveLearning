@@ -40,6 +40,8 @@ class App extends React.Component {
 
         socket.on('login', (user) => {
             if(user) {
+                console.log('USER');
+                console.log(user);
                 this.setState({ user: user });
 
                 if(user.lastSelectedTerm) {
@@ -119,6 +121,8 @@ class App extends React.Component {
                 return { submissions: submissions };
             });
         });
+
+        socket.connect();
     }
 
     // { permissions, isTermAdmin }

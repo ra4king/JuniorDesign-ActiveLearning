@@ -11,7 +11,7 @@ export default new function() {
     var websocket;
     var loggedIn = false;
 
-    var connect = () => {
+    this.connect = () => {
         if(session_id == null) {
             console.error('Could not find session_id cookie?!');
             return;
@@ -130,6 +130,4 @@ export default new function() {
             callback('Not connected');
         }
     }
-
-    connect();
 }
