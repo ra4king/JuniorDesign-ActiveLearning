@@ -462,12 +462,13 @@ class QuestionPanel extends React.Component {
         this.state = {
             editQuestion: null,
             searchTerm: '',
+            searchTag: '',
             shownQuestions: props.questions
         };
     }
 
-    componentWillReceiveProps(nextProps) {
-        this.updateShownQuestions(this.state.searchTerm, nextProps.questions);
+    componentWillReceiveProps(newProps) {
+        this.updateShownQuestions(newProps.questions);
     }
 
     chooseQuestion(id) {
@@ -500,17 +501,18 @@ class QuestionPanel extends React.Component {
                 children: tags.sort((a,b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: 'base'})) }];
     }
 
-    updateShownQuestions(searchTerm, questions) {
-        if(searchTerm) {
-            searchTerm = searchTerm.toLowerCase();
-            
-            var filtered = {};
-            for (var key in this.props.questions) {
-                var match = this.props.questions[key].title.toLowerCase().indexOf(searchTerm) != -1 ||
-                            this.props.questions[key].tags.map((t) => t.toLowerCase()).indexOf(searchTerm) != -1;
+    updateShownQuestions(questions = this.props.questions) {
+        var { searchTerm, searchTag } = this.state;
 
-                if (match) {
-                    filtered[key] = this.props.questions[key];
+        if(searchTerm || searchTag) {
+            var filtered = {};
+            for (var key in questions) {
+                if(!searchTag || questions[key].tags.indexOf(searchTag) != -1) {
+                    var match = !searchTerm || questions[key].title.toLowerCase().indexOf(searchTerm) != -1;
+
+                    if (match) {
+                        filtered[key] = questions[key];
+                    }
                 }
             }
 
@@ -532,7 +534,7 @@ class QuestionPanel extends React.Component {
                         (<div id='question-search-input'>
                             Search:
                             <input type="text" id='search-input'
-                                onChange={(e) => this.updateShownQuestions(e.target.value, this.props.questions)} />
+                                onChange={(e) => this.setState({ searchTerm: e.target.value.toLowerCase() }, this.updateShownQuestions) } />
                         </div>)}
                 </div>
 
@@ -545,7 +547,7 @@ class QuestionPanel extends React.Component {
                             hideQuestionEditor={this.hideQuestionEditor.bind(this)}
                             showConfirm={this.props.showConfirm} />)
                     : (<div id='question-tags-list'>
-                            <Hierarchy tags={this.getFolderHierarchy()} />
+                            <Hierarchy tags={this.getFolderHierarchy()} searchTag={(tag) => this.setState({ searchTag: tag }, this.updateShownQuestions) } />
                             <QuestionList
                                 questions={this.state.shownQuestions}
                                 creatingQuiz={this.props.creatingQuiz}
@@ -933,7 +935,8 @@ class Hierarchy extends React.Component {
         super(props);
 
         this.state = {
-            tags: this.formatTags(props.tags)
+            tags: this.formatTags(props.tags),
+            selectedTag: '',
         };
     }
 
@@ -982,7 +985,10 @@ class Hierarchy extends React.Component {
                 }
                 listItems.push(<ul key={element.name + idx} className='parent-holder'>{curr}</ul>);
             } else {
-                listItems.push(<li className='leaf-node tree-node' key={element.name + element.id} onClick={() => this.openLeafNode(element)}>{element.name}</li>);
+                listItems.push(<li
+                                className={'leaf-node tree-node' + (this.state.selectedTag == element.name ? ' leaf-node-selected' : '')}
+                                key={element.name + element.id}
+                                onClick={() => this.openLeafNode(element)}>{element.name}</li>);
             }
         });
         return listItems;
@@ -994,9 +1000,11 @@ class Hierarchy extends React.Component {
     }
 
     openLeafNode(leaf) {
-        /*TODO - use this to display question*/
-        console.log("clicked " + leaf.name);
-        // use className='leaf-node-selected'
+        this.setState((prevState) => {
+            var tag = leaf.name == prevState.selectedTag ? '' : leaf.name;
+            this.props.searchTag(tag);
+            return { selectedTag: tag };
+        });
     }
 
     render() {
@@ -1005,50 +1013,3 @@ class Hierarchy extends React.Component {
         )
     }
 }
-
-
-/*[
-    {
-        name: "menu1",
-        id: 1,
-        isOpen: true,
-        children: [
-            {
-                name: "submenu1",
-                id: 1,
-                isOpen: true,
-                children: [
-                    {
-                        name: "item1-1",
-                        id: 1
-                    },
-                    {
-                        name: "item1-2",
-                        id: 2
-                    }
-                ]
-            },
-            {
-                name: "submenu2",
-                id: 2,
-                isOpen: true,
-                children: [
-                    {
-                        name: "item2-1",
-                        id: 1
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        name: "menu2",
-        isOpen: true,
-        children: [
-            {
-                name: "item3-1",
-                id: 1
-            }
-        ]
-    }
-]*/

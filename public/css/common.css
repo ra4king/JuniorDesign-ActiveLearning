@@ -365,65 +365,6 @@ button {
     vertical-align: top;
 }
 
-.delete-button {
-    position: absolute;
-    display: block;
-    width: 21px;
-    height: 21px;
-    right: 1px;
-    top: 1px;
-
-    background-color: #FF2222;
-    color: white;
-    border: none;
-    text-align: center;
-    transition-duration: .6s;
-}
-
-.delete-button:hover {
-    background-color: #FF7777;
-}
-
-.live-button {
-    position: absolute;
-    display: block;
-    width: 21px;
-    height: 21px;
-    right: 1px;
-    bottom: 1px;
-    background-color: #222222;
-    color: white;
-    border: none;
-    text-align: center;
-    transition-duration: .6s;
-}
-
-.live-button:hover {
-    background-color: #444444;
-}
-
-.is-live {
-    background-color: #008800;
-}
-
-.edit-button {
-    position: absolute;
-    display: block;
-    width: 21px;
-    height: 21px;
-    right: 1px;
-    bottom: 1px;
-    background-color: #0000aa;
-    color: white;
-    border: none;
-    text-align: center;
-    transition-duration: .6s;
-}
-
-.edit-button:hover {
-    background-color: #6666aa;
-}
-
 .hide-button {
     position: absolute;
     display: block;
