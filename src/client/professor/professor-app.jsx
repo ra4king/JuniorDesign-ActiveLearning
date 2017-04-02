@@ -499,7 +499,7 @@ class QuestionPanel extends React.Component {
         return [{ name: this.props.user
                     ? this.props.selectedTerm.course.name + ' - ' + this.props.selectedTerm.name
                     : '',
-                children: tags }];
+                children: tags.sort((a,b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: 'base'})) }];
     }
 
     updateShownQuestions(searchTerm, questions) {
@@ -998,6 +998,7 @@ class Hierarchy extends React.Component {
     openLeafNode(leaf) {
         /*TODO - use this to display question*/
         console.log("clicked " + leaf.name);
+        // use className='leaf-node-selected'
     }
 
     render() {

@@ -57,13 +57,21 @@
 }
 
 .leaf-node {
-    background-color: #885566;
+    background-color: #555555;
     color: white;
     margin-left: 15px;
 }
 
 .leaf-node:hover {
-    background-color: #AA7788;
+    background-color: #3c6668;
+}
+
+.leaf-node-selected {
+    background-color: #0055AA;
+}
+
+.leaf-node-selected:hover {
+    background-color: #0077CC;
 }
 
 .draggable {
