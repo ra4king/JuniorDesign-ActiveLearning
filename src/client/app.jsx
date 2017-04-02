@@ -250,8 +250,8 @@ class HeaderPanel extends React.Component {
                     <h2>Welcome, {username}</h2>
                     <h2>{termName}</h2>
                 </div>
-                <form method='post' id='nav-links'>
-                    <nav>
+                <form method='post' style={{height: '100%'}}>
+                    <nav id='nav-links'>
                         <IndexLink to='/active-learning/select-term' className='header-nav-link' activeClassName='header-nav-link-selected'>Change Term</IndexLink>
                         <IndexLink to='/active-learning/' className='header-nav-link' activeClassName='header-nav-link-selected'>Home</IndexLink>
                         <IndexLink to='/active-learning/statistics' className='header-nav-link' activeClassName='header-nav-link-selected'>Statistics</IndexLink>
