@@ -2,11 +2,11 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import socket from './socket.jsx';
 
-import ProfessorHome from './professor/professor-app.jsx';
+import ProfessorHome from './professor/professor-home.jsx';
 import ProfessorStatistics from './professor/professor-statistics.jsx';
 import ProfessorSettings from './professor/professor-settings.jsx';
 
-import StudentHome from './student/student-app.jsx';
+import StudentHome from './student/student-home.jsx';
 import StudentStatistics from './student/student-statistics.jsx';
 
 import { Router, Route, IndexRoute, IndexLink, browserHistory } from 'react-router';
@@ -119,6 +119,8 @@ class App extends React.Component {
                 return { submissions: submissions };
             });
         });
+
+        socket.connect();
     }
 
     // { permissions, isTermAdmin }
@@ -243,15 +245,15 @@ class HeaderPanel extends React.Component {
             <div id='header-panel'>
                 <img id='logo' src='images/active_learning_logo_white.png' width='175' height='75' alt='logo'/>
                 <h2 id='name'>Welcome{username + termName}</h2>
-                <nav>
-                    <form method='post' id='nav-links'>
+                <form method='post' style={{height: '100%'}}>
+                    <nav id='nav-links'>
                         <IndexLink to='/active-learning/select-term' className='header-nav-link' activeClassName='header-nav-link-selected'>Change Term</IndexLink>
                         <IndexLink to='/active-learning/' className='header-nav-link' activeClassName='header-nav-link-selected'>Home</IndexLink>
                         <IndexLink to='/active-learning/statistics' className='header-nav-link' activeClassName='header-nav-link-selected'>Statistics</IndexLink>
                         <IndexLink to='/active-learning/settings' className='header-nav-link' activeClassName='header-nav-link-selected'>Settings</IndexLink>
                         <button className='header-nav-link' formAction='api/logout'>Logout</button>
-                    </form>
-                </nav>
+                    </nav>
+                </form>
             </div>
         );
     }
@@ -269,8 +271,8 @@ class ConfirmBox extends React.Component {
                 <p id='confirm-msg'>{this.props.title}</p>
                 <div id='confirm-buttons'>
                     {this.props.type == 'yesno'
-                        ? [(<button key='no' onClick={() => this.clicked(false)} className='confirm-button' id='yes-button'>{this.props.noText || 'No'}</button>),
-                            (<button key='ok' onClick={() => this.clicked(true)} className='confirm-button' id='no-button'>{this.props.yesText || 'Yes'}</button>)]
+                        ? [(<button key='no' onClick={() => this.clicked(false)} className='confirm-button' id='no-button'>{this.props.noText || 'No'}</button>),
+                            (<button key='ok' onClick={() => this.clicked(true)} className='confirm-button' id='yes-button'>{this.props.yesText || 'Yes'}</button>)]
                         : (<button onClick={() => this.clicked()} className='confirm-button' id='ok-button'>{this.props.okText || 'Ok'}</button>)}
                 </div>
             </div>

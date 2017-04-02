@@ -11,7 +11,7 @@ export default new function() {
     var websocket;
     var loggedIn = false;
 
-    var connect = () => {
+    this.connect = () => {
         if(session_id == null) {
             console.error('Could not find session_id cookie?!');
             return;
@@ -57,14 +57,14 @@ export default new function() {
             loggedIn = false;
             connecting = false;
             console.log('Connection closed.');
-            setTimeout(connect, 1000);
+            setTimeout(this.connect, 1000);
         };
     }
 
-    function isSocketAvailable() {
+    this.isSocketAvailable = () => {
         if(websocket == null) {
             alert('No connection to the server. Attemping to reconnect...');
-            connect();
+            this.connect();
             return false;
         }
 
@@ -114,7 +114,7 @@ export default new function() {
             data = undefined;
         }
 
-        if(isSocketAvailable()) {
+        if(this.isSocketAvailable()) {
             var to_send = {
                 id: next_id++,
                 command: command,
@@ -130,6 +130,4 @@ export default new function() {
             callback('Not connected');
         }
     }
-
-    connect();
 }

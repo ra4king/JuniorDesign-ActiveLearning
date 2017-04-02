@@ -101,49 +101,57 @@ class QuestionList extends React.Component {
         super(props);
 
         this._id = props.quiz._id;
-        this.answers = [];
+        this.answers = {};
     }
 
     componentWillReceiveProps(nextProps) {
         if(nextProps.quiz._id != this._id) {
-            this.answers = [];
+            this.answers = {};
         }
     }
 
-    answerSelected(idx, value) {
-        this.answers[idx] = value;
+    answerSelected(id, value) {
+        this.answers[id] = value;
     }
 
     submitClicked() {
-        var title = 'Are you sure you want to submit this quiz?'
-        var answersLen = Object.keys(this.answers).length;
-        var questionsLen = this.props.quiz.questions.length
-        if(answersLen != questionsLen) {
-            title += ' You only answered ' + answersLen + ' of the ' + questionsLen + ' questions.';
+        var submitQuiz = () => {
+            socket.send('submitQuiz', { quiz_id: this.props.quiz._id, answers: this.answers }, (err, data) => {
+                this.props.showConfirm({
+                    type: 'ok',
+                    title: err
+                        ? 'Failed to submit, please trying again. Error: ' + err
+                        : 'Your answers have been submitted.'
+                });
+
+                if(!err) {
+                    this.props.hideQuiz();
+                    this.answers = {};
+                    this._id = null;
+                }
+            });
         }
 
-        this.props.showConfirm({
-            type: 'yesno',
-            title: title,
-            onAction: (confirm) => {
-                if(confirm) {
-                    socket.send('submitQuiz', { quiz_id: this.props.quiz._id, answers: this.answers }, (err, data) => {
-                        this.props.showConfirm({
-                            type: 'ok',
-                            title: err
-                                ? 'Failed to submit, please trying again. Error: ' + err
-                                : 'Your answers have been submitted.'
-                        });
-
-                        if(!err) {
-                            this.props.hideQuiz();
-                            this.answers = {};
-                            this._id = null;
-                        }
-                    });
-                }
+        if(this.props.quiz.is_live) {
+            submitQuiz();
+        } else {
+            var title = 'Are you sure you want to submit this quiz?'
+            var answersLen = Object.keys(this.answers).length;
+            var questionsLen = this.props.quiz.questions.length
+            if(answersLen != questionsLen) {
+                title += ' You only answered ' + answersLen + ' of the ' + questionsLen + ' questions.';
             }
-        });
+
+            this.props.showConfirm({
+                type: 'yesno',
+                title: title,
+                onAction: (confirm) => {
+                    if(confirm) {
+                        submitQuiz();
+                    }
+                }
+            });
+        }
     }
 
     render() {
@@ -154,7 +162,7 @@ class QuestionList extends React.Component {
                             key={idx}
                             getResource={this.props.getResource}
                             question={question}
-                            answerSelected={this.answerSelected.bind(this, idx)} />)),
+                            answerSelected={this.answerSelected.bind(this, question._id )} />)),
                 <li key='submit-all' className='submit-all'><button className='submit-all-button' onClick={this.submitClicked.bind(this)}>Submit All</button></li>]}
             </ol>
         );

@@ -208,7 +208,8 @@ const submissionsSchema = new Schema({
     ]
 });
 submissionsSchema.post('save', (submission) => events.emit('submission', submission.toJSON()));
-submissionsSchema.index({ username: 1, timestamp: 1 }, { background: true, unique: true });
+submissionsSchema.index({ term_id: 1, username: 1 }, { background: true });
+submissionsSchema.index({ quiz_id: 1, username: 1 }, { background: true });
 const Submission = mongoose.model('Submission', submissionsSchema);
 
 
@@ -1135,13 +1136,6 @@ function submitQuiz(username, submission, callback) {
         return callback('Invalid submission object.');
     }
 
-    var to_submit = new Submission({
-        username: username,
-        term_id: submission.term_id,
-        quiz_id: submission.quiz_id,
-        answers: []
-    });
-
     Quiz.findById(new ObjectID(submission.quiz_id))
         .populate('questions')
         .exec((err, quiz) => {
@@ -1155,28 +1149,86 @@ function submitQuiz(username, submission, callback) {
                 return callback('Invalid quiz id: ' + submission.quiz_id);
             }
 
-            to_submit.quiz_name = quiz.name;
+            if(!quiz.is_published) {
+                return callback('Cannot have a submission for an unpublished quiz: ' + submission.quiz_id);
+            }
 
-            quiz.questions.forEach((question, idx) => {
-                var id = question.id;
-
-                to_submit.answers.push({
-                    question_id: id,
-                    title: question.title,
-                    answer: submission.answers[idx],
-                    score: submission.answers[idx] == question.correct ? 1 : 0,
-                    total: 1
+            var newSubmission = () => {
+                var to_submit = new Submission({
+                    username: username,
+                    term_id: submission.term_id,
+                    quiz_id: submission.quiz_id,
+                    answers: []
                 });
-            });
 
-            to_submit.save((err) => {
-                if(err) {
-                    console.error('Error when creating submission: ' + to_submit.toJSON());
-                    console.error(err);
-                }
+                to_submit.quiz_name = quiz.name;
 
-                callback(err);
-            });
+                quiz.questions.forEach((question) => {
+                    var id = question.id;
+
+                    to_submit.answers.push({
+                        question_id: id,
+                        title: question.title,
+                        answer: submission.answers[id],
+                        score: submission.answers[id] == question.correct ? 1 : 0,
+                        total: 1
+                    });
+                });
+
+                to_submit.save((err) => {
+                    if(err) {
+                        console.error('Error when creating submission: ' + to_submit.toJSON());
+                        console.error(err);
+                    }
+
+                    callback(err);
+                });
+            }
+
+            if(quiz.is_live) {
+                Submission.find({ username: username, quiz_id: new ObjectID(submission.quiz_id) }, (err, submissions) => {
+                    if(err) {
+                        console.error('Error getting past submission for quiz: ' + submission.quiz_id);
+                        console.error(err);
+                        return callback(err);
+                    }
+
+                    if(submissions.length == 0) {
+                        return newSubmission();
+                    }
+
+                    if(submissions.length > 1) {
+                        console.error('Inconsistency found, live quiz cannot have more than 1 submission! Username: ' + username + ', Quiz: ' + submission.quiz_id);
+                        return callback('Internal error, inconsistency found with live quiz having more than 1 submission.');
+                    }
+
+                    var to_submit = submissions[0];
+
+                    Object.keys(submission.answers).forEach((id) => {
+                        var idx = quiz.questions.findIndex((question) => question.id == id);
+                        if(idx != -1) {
+                            to_submit.answers.set(idx, {
+                                question_id: id,
+                                title: to_submit.answers[idx].title,
+                                answer: submission.answers[id],
+                                score: submission.answers[id] == quiz.questions[idx].correct ? 1 : 0,
+                                total: 1
+                            });
+                        }
+                    });
+
+                    to_submit.save((err) => {
+                        if(err) {
+                            console.error('Error when updating submission: ' + JSON.stringify(to_submit.toJSON()));
+                            console.error(err);
+                        }
+
+                        callback(err);
+                    });
+                });
+            } else {
+                newSubmission();
+            }
         });
 }
 
