@@ -30,6 +30,7 @@ class App extends React.Component {
 
         this.state = {
             user: null,
+            selectedTerm: null,
             resources: {},
             questions: {},
             quizzes: {},
@@ -48,11 +49,21 @@ class App extends React.Component {
                 }
             }
         });
+
+        socket.on('term', (term) => {
+            this.setState({ selectedTerm: term });
+        });
+
         socket.on('user', (user) => {
             console.log('USER')
             console.log(user);
 
-            this.setState({ user: user });
+            this.setState((prevState) => {
+                if(JSON.stringify(prevState.user) != JSON.stringify(user)) {
+                    this.selectTerm(user.lastSelectedTerm.term_id);
+                    return { user: user };
+                }
+            });
         });
 
         socket.on('questions', (data) => {
@@ -102,11 +113,7 @@ class App extends React.Component {
                 Object.assign(submissions, prevState.submissions);
 
                 data.forEach((submission) => {
-                    if(submission.removed) {
-                        delete submissions[submission._id];
-                    } else {
-                        submissions[submission._id] = submission;
-                    }
+                    submissions[submission._id] = submission;
                 });
 
                 return { submissions: submissions };
@@ -139,6 +146,9 @@ class App extends React.Component {
                     this.setState({ selectedTerm: null });
                     browserHistory.push('/active-learning/select-term');
                 } else {
+                    console.log('TERM');
+                    console.log(term);
+
                     this.setState({ selectedTerm: term });
                 }
             }));
@@ -158,23 +168,24 @@ class App extends React.Component {
                 callback(null, this.state.resources[resource_id]);
             }
 
-            this.setState({ questions: this.state.questions });
+            this.forceUpdate();
         } else {
-            socket.send('get_resource', resource_id, (err, resource) => {
+            socket.send('getResource', resource_id, (err, resource) => {
                 if(err) {
                     console.error('Failed to load image with resource id ' + resource_id + ': ' + err);
                     if(callback) {
                         callback(err);
                     }
                 } else {
-                    var resources = this.state.resources;
-                    resources[resource_id] = resource;
-
-                    if(callback) {
-                        callback(null, resource);
-                    }
-
-                    this.setState({ questions: this.state.questions, resources: resources });
+                    this.setState((prevState) => {
+                        let resources = prevState.resources;
+                        resources[resource_id] = resource;
+                        return { resources: resources };
+                    }, () => {
+                        if(callback) {
+                            callback(null, resource);
+                        }
+                    });
                 }
             });
         }
@@ -202,12 +213,13 @@ class App extends React.Component {
                     <ConfirmBox hide={() => this.hideConfirm()} {...this.state.showConfirm} />}
 
                 <div id='content' className={(this.state.currentLiveQuiz || this.state.showConfirm) && 'blur'}>
-                    <HeaderPanel user={this.state.user} />
+                    <HeaderPanel user={this.state.user} selectedTerm={this.state.selectedTerm} />
 
                     {React.Children.map(this.props.children, (child) =>
                         React.cloneElement(child, {
                             user: this.state.user,
                             getPermissions: this.getPermissions.bind(this),
+                            selectedTerm: this.state.selectedTerm,
                             selectTerm: this.selectTerm.bind(this),
                             questions: this.state.questions,
                             quizzes: this.state.quizzes,
@@ -224,10 +236,13 @@ class App extends React.Component {
 
 class HeaderPanel extends React.Component {
     render() {
+        var username = (this.props.user && this.props.user.username ? ' ' + this.props.user.username : '') + '!';
+        var termName = this.props.selectedTerm ? ' ' + this.props.selectedTerm.course.name + ' - ' + this.props.selectedTerm.name : '';
+
         return (
             <div id='header-panel'>
                 <img id='logo' src='images/active_learning_logo_white.png' width='175' height='75' alt='logo'/>
-                <h2 id='name'>{this.props.user && this.props.user.username ? ('Welcome, ' + this.props.user.username + '!') : ''}</h2>
+                <h2 id='name'>Welcome{username + termName}</h2>
                 <nav>
                     <form method='post' id='nav-links'>
                         <IndexLink to='/active-learning/select-term' className='header-nav-link' activeClassName='header-nav-link-selected'>Change Term</IndexLink>
@@ -308,7 +323,7 @@ class SelectTermPanels extends React.Component {
             if(err) {
                 this.props.showConfirm({ type: 'ok', title: 'Error getting courses: ' + err });
             } else {
-                this.setState({ courses: courses });
+                this.setState({ courses: courses, terms: [] });
             }
         });
     }
@@ -387,8 +402,6 @@ class HomePanels extends React.Component {
 class StatisticsPanels extends React.Component {
     render() {
         var permissions = this.props.getPermissions();
-
-        console.log('Statistics');
 
         return !permissions
             ? <div>Logging in...</div>

@@ -331,6 +331,11 @@
     margin-bottom: 5px;
 }
 
+#username-title {
+    font-size: 20px;
+    margin-bottom: 5px;
+}
+
 .switch {
     position: relative;
     display: inline-block;

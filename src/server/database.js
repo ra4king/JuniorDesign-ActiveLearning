@@ -38,9 +38,9 @@ module.exports = {
     createQuestion: createQuestion,
     updateQuestion: updateQuestion,
     deleteQuestion: deleteQuestion,
-    getQuestionById: getQuestionById,
     getQuestionsByCourse: getQuestionsByCourse,
-    getQuestionsByQuiz: getQuestionsByQuiz,
+    //getQuestionById: getQuestionById,
+    ///getQuestionsByQuiz: getQuestionsByQuiz,
 
     createQuiz: createQuiz,
     updateQuiz: updateQuiz,
@@ -78,23 +78,23 @@ mongoose.connect('mongodb://roiatalla.com:27017/admin', { user: config.user, pas
 const schoolsSchema = new Schema({
     name: { type: String, required: true }
 });
-schoolsSchema.post('save', (school) => events.emit('schools', school.toJSON()));
+schoolsSchema.post('save', (school) => events.emit('school', school.toJSON()));
 const School = mongoose.model('School', schoolsSchema);
 
 const coursesSchema = new Schema({
     name: { type: String, required: true },
     school_id: { type: Schema.Types.ObjectId, required: true }
 });
-coursesSchema.post('save', (course) => events.emit('courses', course.toJSON()));
+coursesSchema.post('save', (course) => events.emit('course', course.toJSON()));
 const Course = mongoose.model('Course', coursesSchema);
 
 const termsSchema = new Schema({
     name: { type: String, required: true },
-    course_id: { type: Schema.Types.ObjectId, required: true },
-    school_id: { type: Schema.Types.ObjectId, required: true },
+    course_id: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
+    school_id: { type: Schema.Types.ObjectId, ref: 'School', required: true },
     users: { type: [{ type: String, ref: 'User' }], default: [] }
 });
-termsSchema.post('save', (term) => events.emit('terms', term.toJSON()));
+termsSchema.post('save', (term) => events.emit('term', term.toJSON()));
 const Term = mongoose.model('Term', termsSchema);
 
 const usersSchema = new Schema({
@@ -128,13 +128,12 @@ const usersSchema = new Schema({
         type: {
             term_id: { type: Schema.Types.ObjectId, ref: 'Term', required: true },
             course_id: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
-            school_id: { type: Schema.Types.ObjectId, ref: 'School', required: true },
-            name: { type: String, required: true }
+            school_id: { type: Schema.Types.ObjectId, ref: 'School', required: true }
         },
         default: null
     }
 });
-usersSchema.post('save', (user) => events.emit('users', cleanupUser(user.toJSON())));
+usersSchema.post('save', (user) => events.emit('user', cleanupUser(user.toJSON())));
 const User = mongoose.model('User', usersSchema);
 
 const sessionsSchema = new Schema({
@@ -162,21 +161,23 @@ const questionsSchema = new Schema({
     },
     image_id: { type: Schema.Types.ObjectId, default: null } // resource_id of an image
 });
-questionsSchema.post('save', (question) => events.emit('questions', question.toJSON()));
+questionsSchema.post('save', (question) => events.emit('question', question.toJSON()));
+questionsSchema.post('remove', (question) => events.emit('question', { _id: question.id, course_id: question.course_id, removed: true }));
 const Question = mongoose.model('Question', questionsSchema);
 
 const quizzesSchema = new Schema({
     term_id: { type: Schema.Types.ObjectId, required: true, index: true },
     name: { type: String, required: true },
+    timestamp: { type: Date, default: Date.now },
     is_published: { type: Boolean, required: true },
     is_live: { type: Boolean, default: false },
     questions: {
         type: [{ type: Schema.Types.ObjectId, ref: 'Question' }],
-        validate: (q) => q.length > 0
+        default: []
     },
     settings: {
         type: {
-            live_question: { type: Number, default: -1, validate: function(n) { return n >= 0 && n < this.questions.length; } },
+            live_question: { type: Number, default: -1 },
             open_date: { type: Date, required: true },
             close_date: { type: Date, required: true, validate: function(close_date) { return this.settings.open_date < close_date } },
             max_submission: { type: Number, default: 0 },
@@ -186,12 +187,13 @@ const quizzesSchema = new Schema({
         required: true
     }
 });
-quizzesSchema.post('save', (quiz) => events.emit('quizzes', quiz.toJSON()));
+quizzesSchema.post('save', (quiz) => events.emit('quiz', quiz.toJSON()));
+quizzesSchema.post('remove', (quiz) => events.emit('quiz', { _id: quiz.id, term_id: quiz.term_id, removed: true }));
 const Quiz = mongoose.model('Quiz', quizzesSchema, 'quizzes');
 
 const submissionsSchema = new Schema({
     timestamp: { type: Date, default: Date.now },
-    user: { type: String, ref: 'User', required: true },
+    username: { type: String, required: true },
     term_id: { type: Schema.Types.ObjectId, ref: 'Term', required: true },
     quiz_id: { type: Schema.Types.ObjectId, ref: 'Quiz', required: true },
     quiz_name: { type: String, required: true },
@@ -205,8 +207,8 @@ const submissionsSchema = new Schema({
         }
     ]
 });
-submissionsSchema.post('save', (submission) => events.emit('submissions', submission.toJSON()));
-submissionsSchema.index({ user: 1, timestamp: 1 }, { background: true, unique: true });
+submissionsSchema.post('save', (submission) => events.emit('submission', submission.toJSON()));
+submissionsSchema.index({ username: 1, timestamp: 1 }, { background: true, unique: true });
 const Submission = mongoose.model('Submission', submissionsSchema);
 
 
@@ -246,6 +248,12 @@ function createUser(username, passwords, callback) {
             var salt = buf.toString('base64');
             var iterations = 100000;
             crypto.pbkdf2(password, salt, iterations, 512, 'sha512', (err, buf) => {
+                if(err) {
+                    console.error('Error when generating hash when creating user: ' + username);
+                    console.error(err);
+                    return callback(err);
+                }
+
                 var hash = buf.toString('base64');
 
                 new User({
@@ -374,7 +382,7 @@ function getUser(username, callback) {
 }
 
 function getAllUsers(term_id, callback) {
-    Term.findById(new ObjectID(term_id), (err, term) => {
+    Term.findById(new ObjectID(term_id), 'users', (err, term) => {
         if(err) {
             console.error('Error when getting term: ' + term_id);
             console.error(err);
@@ -393,6 +401,7 @@ function getAllUsers(term_id, callback) {
                 if(err) {
                     console.error('Error when getting all users');
                     console.error(err);
+                    return callback(err);
                 }
 
                 var users = [];
@@ -535,6 +544,10 @@ function createTerm(user, term, callback) {
 }
 
 function updateTerm(new_term, callback) {
+    if('course_id' in new_term || 'school_id' in new_term) {
+        return callback('Cannot set course_id or school_id of term.');
+    }
+
     var term_id = new_term._id;
     delete new_term._id;
 
@@ -606,6 +619,8 @@ function addUser(term_id, username, permissions, callback) {
             var idx = user.permissions.findIndex((perm) => perm.term_id == term_id);
             if(idx != -1) {
                 console.error('User "' + username + '" already has permissions for term ' + term_id);
+                delete permissions.course_id;
+                delete permissions.school_id;
                 return setPermissions(username, permissions, callback);
             }
 
@@ -661,7 +676,7 @@ function removeUser(term_id, username, callback) {
                         return callback(err);
                     }
 
-                    var idx = user.permissions.findIndex((perm) => perm.term_id == term_id);
+                    var idx = user.permissions.findIndex((perm) => String(perm.term_id) == term_id);
                     if(idx == -1) {
                         return callback();
                     }
@@ -683,6 +698,10 @@ function removeUser(term_id, username, callback) {
 }
 
 function setPermissions(username, permissions, callback) {
+    if('course_id' in permissions || 'school_id' in permissions) {
+        return callback('Cannot set course_id or school_id in permissions.');
+    }
+
     User.findById(username, '-auth', (err, user) => {
         if(err) {
             console.error('Error when finding user: ' + username);
@@ -694,9 +713,9 @@ function setPermissions(username, permissions, callback) {
             return callback('Did not find user: ' + username);
         }
 
-        var idx = user.permissions.findIndex((perm) => perm.term_id == permissions.term_id);
+        var idx = user.permissions.findIndex((perm) => String(perm.term_id) == permissions.term_id);
         if(idx == -1) {
-            return callback('User not in the class.');
+            return callback('User not in the term.');
         }
 
         Object.assign(user.permissions[idx], permissions);
@@ -714,6 +733,8 @@ function setPermissions(username, permissions, callback) {
 
 function selectTerm(username, term_id, callback) {
     Term.findById(new ObjectID(term_id))
+        .populate('school_id course_id')
+        .select('-users')
         .lean()
         .exec((err, term) => {
             if(err) {
@@ -735,13 +756,17 @@ function selectTerm(username, term_id, callback) {
 
                 user.lastSelectedTerm = {
                     term_id: term_id,
-                    course_id: term.course_id,
-                    school_id: term.school_id,
-                    name: term.name,
+                    course_id: term.course_id._id,
+                    school_id: term.school_id._id
                 };
 
                 user.save((err) => {
-                    return callback(null, term);
+                    return callback(null, {
+                        _id: term_id,
+                        name: term.name,
+                        course: term.course_id,
+                        school: term.school_id,
+                    });
                 });
             });
         });
@@ -771,7 +796,7 @@ function deleteResource(resource_id, callback) {
 }
 
 function getResource(resource_id, callback) {
-    Resource.findById(new ObjectID(resource_id), { lean: true }, (err, resource) => {
+    Resource.findById(new ObjectID(resource_id)).lean().exec((err, resource) => {
         if(err) {
             console.error('Error when getting resource: ' + resource_id);
             console.error(err);
@@ -797,10 +822,14 @@ function createQuestion(question, callback) {
     });
 }
 
-function updateQuestion(question, callback) {
+function updateQuestion(question, required_course_id, callback) {
+    if('term_id' in question) {
+        return callback('Cannot set term_id in question.');
+    }
+
     var question_id = question._id;
     delete question._id;
-    
+
     Question.findById(new ObjectID(question_id), (err, result) => {
         if(err) {
             console.error('Error when update question: ' + JSON.stringify(question, null, 4));
@@ -808,8 +837,8 @@ function updateQuestion(question, callback) {
             return callback(err);
         }
 
-        if(!result) {
-            return callback('Could not find question with id: ' + question_id);
+        if(!result || String(result.course_id) != required_course_id) {
+            return callback('Question not found with id: ' + question_id);
         }
 
         result.set(question);
@@ -824,45 +853,69 @@ function updateQuestion(question, callback) {
     });
 }
 
-function deleteQuestion(question_id, callback) {
+function deleteQuestion(question_id, required_course_id, callback) {
     question_id = new ObjectID(question_id);
 
-    Question.findByIdAndRemove(question_id, (err) => {
+    Question.findById(question_id, (err, question) => {
         if(err) {
             console.error('Error when deleting question: ' + question_id);
             console.error(err);
             return callback(err);
         }
 
-        Quiz.updateMany({ questions: { $elemMatch: { $eq: question_id }}}, { $pull: { questions: question_id }}, (err) => {
+        if(!question || String(question.course_id) != required_course_id) {
+            return callback('Question not found with id: ' + question_id);
+        }
+
+        question.remove((err) => {
             if(err) {
-                console.error('Error when deleting question from quizzes: ' + question_id);
+                console.error('Error deleting question: ' + question_id);
                 console.error(err);
+                return callback(err);
             }
 
-            callback(err);
-        });
-    });
-}
-
-function getQuestionById(is_admin, question_id, callback) {
-    Question.findById(new ObjectID(question_id))
-            .select(is_admin ? '' : '-correct')
-            .lean()
-            .exec((err, question) => {
+            Quiz.find({ questions: { $elemMatch: { $eq: question_id }}}, (err, quizzes) => {
                 if(err) {
-                    console.error('Error when getting question by id: ' + question_id);
+                    console.error('Error when deleting question from quizzes: ' + question_id);
                     console.error(err);
                     return callback(err);
                 }
 
-                if(question) {
-                    callback(null, question);
-                } else {
-                    return callback('Question not found with id: ' + question_id);
-                }
+                var promises = [];
+
+                quizzes.forEach((quiz) => {
+                    quiz.questions.pull(question_id);
+                    promises.push(quiz.save());
+                });
+
+                Promise.all(promises).then(() => callback(), (err) => {
+                    console.error('Error when saving quizzes when deleting question: ' + question_id);
+                    console.error(err);
+                    callback(err);
+                });
             });
+        });
+    });
 }
+
+// function getQuestionById(is_admin, question_id, callback) {
+//     Question.findById(new ObjectID(question_id))
+//             .select(is_admin ? '' : '-correct')
+//             .lean()
+//             .exec((err, question) => {
+//                 if(err) {
+//                     console.error('Error when getting question by id: ' + question_id);
+//                     console.error(err);
+//                     return callback(err);
+//                 }
+
+//                 if(question) {
+//                     callback(null, question);
+//                 } else {
+//                     return callback('Question not found with id: ' + question_id);
+//                 }
+//             });
+// }
 
 function getQuestionsByCourse(course_id, callback) {
     Question.find({ course_id: new ObjectID(course_id) })
@@ -878,21 +931,21 @@ function getQuestionsByCourse(course_id, callback) {
             });
 }
 
-function getQuestionsByQuiz(is_admin, quiz_id, callback) {
-    Quiz.findById(new ObjectID(quiz_id))
-        .select('questions')
-        .populate('questions', is_admin ? '' : '-correct')
-        .lean()
-        .exec((err, results) => {
-            if(err) {
-                console.error('Error when getting questions by quiz');
-                console.error(err);
-                return callback(err);
-            }
+// function getQuestionsByQuiz(is_admin, quiz_id, callback) {
+//     Quiz.findById(new ObjectID(quiz_id))
+//         .select('questions')
+//         .populate('questions', is_admin ? undefined : '-correct')
+//         .lean()
+//         .exec((err, results) => {
+//             if(err) {
+//                 console.error('Error when getting questions by quiz');
+//                 console.error(err);
+//                 return callback(err);
+//             }
 
-            callback(err, results.questions);
-        });
-}
+//             callback(err, results.questions);
+//         });
+// }
 
 function createQuiz(quiz, callback) {
     var ids = quiz.questions.map((id) => new ObjectID(id));
@@ -918,7 +971,11 @@ function createQuiz(quiz, callback) {
     });
 }
 
-function updateQuiz(quiz, callback) {
+function updateQuiz(quiz, required_term_id, callback) {
+    if('course_id' in quiz) {
+        return callback('Cannot set course_id in quiz.');
+    }
+
     var quiz_id = quiz._id;
     delete quiz._id;
 
@@ -930,8 +987,8 @@ function updateQuiz(quiz, callback) {
                 return callback(err);
             }
 
-            if(!result) {
-                return callback('Could not find quiz with id: ' + quiz_id);
+            if(!result || String(result.term_id) != required_term_id) {
+                return callback('Quiz not found with id: ' + quiz_id);
             }
 
             if(result.is_published) {
@@ -969,12 +1026,16 @@ function updateQuiz(quiz, callback) {
     }
 }
 
-function updateLiveQuiz(quiz_id, question_idx, callback) {
+function updateLiveQuiz(quiz_id, required_term_id, question_idx, callback) {
     Quiz.findById(new ObjectID(quiz_id), (err, quiz) => {
         if(err) {
             console.error('Error when getting live quiz: ' + quiz_id);
             console.error(err);
             return callback(err);
+        }
+
+        if(!quiz || String(quiz.term_id) != required_term_id) {
+            return callback('Quiz not found with id: ' + quiz_id);
         }
 
         if(!quiz.is_live) {
@@ -993,22 +1054,34 @@ function updateLiveQuiz(quiz_id, question_idx, callback) {
     });
 }
 
-function deleteQuiz(quiz_id, callback) {
-    Quiz.findByIdAndRemove(new ObjectID(quiz_id), (err) => {
+function deleteQuiz(quiz_id, required_term_id, callback) {
+    Quiz.findById(new ObjectID(quiz_id), (err, quiz) => {
         if(err) {
             console.error('Error when deleting quiz: ' + quiz_id);
             console.error(err);
+            return callback(err);
         }
 
-        callback(err);
+        if(!quiz || String(quiz.term_id) != required_term_id) {
+            return callback('Quiz not found with id: ' + quiz_id);
+        }
+
+        quiz.remove((err) => {
+            if(err){
+                console.error('Error deleting quiz: ' + quiz_id);
+                console.error(err);
+            }
+
+            callback(err);
+        });
     });
 }
 
 function processQuiz(is_admin, quiz) {
     if(!is_admin && quiz.is_live) {
         var live_idx = quiz.settings.live_question;
-        if(live_idx == -1) {
-            delete quiz.questions;
+        if(live_idx < 0 || live_idx >= quiz.questions.length) {
+            quiz.questions = [];
         } else {
             quiz.questions = [quiz.questions[live_idx]];
         }
@@ -1057,17 +1130,13 @@ function getQuizzesByTerm(is_admin, term_id, callback) {
     });
 }
 
-function submitQuiz(user, submission, callback) {
-    // if(!user.permissions[submission.term_id] || !user.permissions[submission.term_id].is_student) {
-    //     return callback('User not allowed to submit quizzes: ' + user.username);
-    // }
-
+function submitQuiz(username, submission, callback) {
     if(!submission || !submission.answers) {
         return callback('Invalid submission object.');
     }
 
     var to_submit = new Submission({
-        user: user.username,
+        username: username,
         term_id: submission.term_id,
         quiz_id: submission.quiz_id,
         answers: []
@@ -1088,14 +1157,14 @@ function submitQuiz(user, submission, callback) {
 
             to_submit.quiz_name = quiz.name;
 
-            quiz.questions.forEach((question) => {
+            quiz.questions.forEach((question, idx) => {
                 var id = question.id;
 
                 to_submit.answers.push({
                     question_id: id,
-                    name: question.name,
-                    answer: submission.answers[id],
-                    score: submission.answers[id] === question.correct ? 1 : 0,
+                    title: question.title,
+                    answer: submission.answers[idx],
+                    score: submission.answers[idx] == question.correct ? 1 : 0,
                     total: 1
                 });
             });
@@ -1112,8 +1181,8 @@ function submitQuiz(user, submission, callback) {
 }
 
 function getSubmissionsByUser(username, term_id, callback) {
-    Submission.find({ user: username, term_id: term_id })
-            .sort({ user: 1, timestamp: 1 })
+    Submission.find({ username: username, term_id: term_id })
+            .sort({ username: 1, timestamp: 1 })
             .lean()
             .exec((err, results) => {
                 if(err) {
@@ -1132,7 +1201,7 @@ function getSubmissionsByTerm(term_id, callback) {
     // }
 
     Submission.find({ term_id: term_id })
-            .sort({ user: 1, timestamp: 1 })
+            .sort({ username: 1, timestamp: 1 })
             .lean()
             .exec((err, results) => {
                 if(err) {

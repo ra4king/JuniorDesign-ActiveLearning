@@ -28,8 +28,11 @@ export default class StatisticsPanels extends React.Component {
         super(props);
 
         this.state = {
+            showStudent: null,
+            showQuiz: null,
+            showAllQuizes: false,
             showAllStudents: true
-        }
+        };
     }
 
     showStudentStats(studentName) {
@@ -72,6 +75,7 @@ export default class StatisticsPanels extends React.Component {
         return (
             <div id='panels'>
                 <StudentPanel
+                    getPermissions={this.props.getPermissions}
                     showStudentStats={this.showStudentStats.bind(this)}
                     showQuizStats={this.showQuizStats.bind(this)}
                     showAllQuizStats={this.showAllQuizStats.bind(this)}
@@ -94,8 +98,24 @@ class StudentPanel extends React.Component {
         super(props);
 
         this.state = {
+            users: [],
             showStudents: true
-        }
+        };
+
+        socket.send('getAllUsers', (err, users) => {
+            if(err) {
+                console.error('Error getting users: ' + err);
+            } else {
+                var students = [];
+                users.forEach((user) => {
+                    if(!user.admin && !user.permissions.isCreator && !user.permissions.isTA) {
+                        students.push(user);
+                    }
+                });
+
+                this.setState({ users: students });
+            }
+        });
     }
 
     showStudents() {
@@ -112,8 +132,8 @@ class StudentPanel extends React.Component {
         var submissions = this.props.submissions;
 
         var quizNames = [];
-        for(var username in submissions) {
-            var quizName = submissions[username].quiz_name;
+        for(var id in submissions) {
+            var quizName = submissions[id].quiz_name;
             if(quizNames.indexOf(quizName) == -1) {
                 quizNames.push(quizName);
             }
@@ -140,10 +160,10 @@ class StudentPanel extends React.Component {
 
                 {this.state.showStudents
                     ? (<ul className='student-list'>
-                        {Object.keys(this.props.submissions).map((studentName) => (
-                            <li key={studentName}>
-                                <button className='list-button' onClick={() => this.props.showStudentStats(studentName)}>
-                                    {studentName}
+                        {this.state.users.map((user) => (
+                            <li key={user.username}>
+                                <button className='list-button' onClick={() => this.props.showStudentStats(user.username)}>
+                                    {user.username}
                                 </button>
                             </li>
                         ))}
@@ -163,6 +183,35 @@ class StudentPanel extends React.Component {
 }
 
 class GraphPanel extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            statistics: this.getStatistics(props.submissions)
+        };
+    }
+
+    componentWillReceiveProps(newProps) {
+        this.setState({ statistics: this.getStatistics(newProps.submissions) });
+    }
+
+    getStatistics(submissions) {
+        var statistics = {};
+        for(var id in submissions) {
+            var submission = submissions[id];
+
+            if(!(submission.username in statistics)) {
+                statistics[submission.username] = {};
+            }
+
+            statistics[submission.username][submission.quiz_id] = {
+                name: submission.quiz_name,
+                answers: submission.answers
+            };
+        }
+        return statistics;
+    }
+
     createChart(info, displayX) {
         return new Chart(document.getElementById('statistics-chart'), {
             type: 'bar', 
@@ -185,7 +234,7 @@ class GraphPanel extends React.Component {
     }
 
     displayStudentStatistics(username){
-        var statistics = this.props.statistics;
+        var statistics = this.state.statistics;
 
         var quizNames = [];
         var quizScores = [];
@@ -193,12 +242,12 @@ class GraphPanel extends React.Component {
         for (var quiz_id in statistics[username]) {
             var score = 0;
             var total = 0;
-            for (var question_id in statistics[username][quiz_id]['questions']){
-                var question = statistics[username][quiz_id]['questions'][question_id];
-                score += question['score'];
-                total += question['total'];
+            for (var question_id in statistics[username][quiz_id].answers){
+                var question = statistics[username][quiz_id].answers[question_id];
+                score += question.score;
+                total += question.total;
             }
-            quizNames.push(unescapeHTML(statistics[username][quiz_id]['name']));
+            quizNames.push(unescapeHTML(statistics[username][quiz_id].name));
             quizScores.push(100.0 * (score / total));
         }
 
@@ -220,44 +269,44 @@ class GraphPanel extends React.Component {
     }
 
     displayQuizStatistics(name) {
-        var statistics = this.props.statistics;
+        var statistics = this.state.statistics;
 
         var questions = {}
         for (var username in statistics){
             for (var quiz_id in statistics[username]) {
-                if (statistics[username][quiz_id]['name'] == name) {
-                    for (var question_id in statistics[username][quiz_id]['questions']){
+                if (statistics[username][quiz_id].name == name) {
+                    for (var question_id in statistics[username][quiz_id].answers){
                         var prevScore = 0;
                         var prevTotal = 0;
                         var prevA = 0;
                         var prevB = 0;
                         var prevC = 0;
                         var prevD = 0
-                        var question_name = statistics[username][quiz_id]['questions'][question_id]['name'];
-                        var question = statistics[username][quiz_id]['questions'][question_id];
+                        var question_name = statistics[username][quiz_id].answers[question_id].title;
+                        var question = statistics[username][quiz_id].answers[question_id];
                         if (questions[question_name] != null){
-                            prevScore = questions[question_name]['score'];
-                            prevTotal = questions[question_name]['total'];
+                            prevScore = questions[question_name].score;
+                            prevTotal = questions[question_name].total;
                             prevA = questions[question_name]['A'];
                             prevB = questions[question_name]['B'];
                             prevC = questions[question_name]['C'];
                             prevD = questions[question_name]['D'];
                         }
                         if (question['answer'] == 0){
-                            prevA += question['total'];
+                            prevA += question.total;
                         }
                         if (question['answer'] == 1){
-                            prevB += question['total'];
+                            prevB += question.total;
                         }
                         if (question['answer'] == 2){
-                            prevC += question['total'];
+                            prevC += question.total;
                         }
                         if (question['answer'] == 3){
-                            prevD += question['total'];
+                            prevD += question.total;
                         }
                         questions[question_name] = {
-                        score: prevScore + question['score'], 
-                        total: prevTotal + question['total'],
+                        score: prevScore + question.score, 
+                        total: prevTotal + question.total,
                         A: prevA,
                         B: prevB,
                         C: prevC,
@@ -271,10 +320,10 @@ class GraphPanel extends React.Component {
         var data = []
         for(question in questions) {
             var str = unescapeHTML(question);
-            var perA = (100 * (questions[question]['A'] / questions[question]['total'])).toFixed(2);
-            var perB = (100 * (questions[question]['B'] / questions[question]['total'])).toFixed(2);
-            var perC = (100 * (questions[question]['C'] / questions[question]['total'])).toFixed(2);
-            var perD = (100 * (questions[question]['D'] / questions[question]['total'])).toFixed(2);
+            var perA = (100 * (questions[question]['A'] / questions[question].total)).toFixed(2);
+            var perB = (100 * (questions[question]['B'] / questions[question].total)).toFixed(2);
+            var perC = (100 * (questions[question]['C'] / questions[question].total)).toFixed(2);
+            var perD = (100 * (questions[question]['D'] / questions[question].total)).toFixed(2);
             if (perA > 0) {
                 str += " A: " + perA + "%";
             }
@@ -288,7 +337,7 @@ class GraphPanel extends React.Component {
                 str += " D: " + perD + "%";
             }
             labels.push(str);
-            data.push(100.0 * (questions[question]['score'] / questions[question]['total']));
+            data.push(100.0 * (questions[question].score / questions[question].total));
         }
 
 
@@ -310,23 +359,23 @@ class GraphPanel extends React.Component {
     }
 
     displayAllQuizStatistics() {
-        var statistics = this.props.statistics;
+        var statistics = this.state.statistics;
 
         var quizzes = {}
 
         for (var username in statistics){
             for (var quiz_id in statistics[username]){
-                var quizName = statistics[username][quiz_id]['name'];
+                var quizName = statistics[username][quiz_id].name;
                 var score = 0;
                 var total = 0;
-                for (var question_id in statistics[username][quiz_id]['questions']){
-                    var question = statistics[username][quiz_id]['questions'][question_id];
-                    score += question['score'];
-                    total += question['total'];
+                for (var question_id in statistics[username][quiz_id].answers){
+                    var question = statistics[username][quiz_id].answers[question_id];
+                    score += question.score;
+                    total += question.total;
                 }
                 if(quizzes[quizName] != null) {
-                    quizzes[quizName]['score'] += score; 
-                    quizzes[quizName]['total'] += total; 
+                    quizzes[quizName].score += score; 
+                    quizzes[quizName].total += total; 
                 } else {
                     quizzes[quizName] = {score: score, total: total};
                 }
@@ -336,7 +385,7 @@ class GraphPanel extends React.Component {
         var data = []
         for (var quizName in quizzes) {
             labels.push(unescapeHTML(quizName));
-            data.push(100.0 * (quizzes[quizName]['score'] / quizzes[quizName]['total']));
+            data.push(100.0 * (quizzes[quizName].score / quizzes[quizName].total));
         }
         var info = {
             labels: labels,
@@ -356,7 +405,7 @@ class GraphPanel extends React.Component {
     }
 
     displayAllStudentStatistics() {
-        var statistics = this.props.statistics;
+        var statistics = this.state.statistics;
 
         var usernames = [];
         var scores = [];
@@ -367,10 +416,10 @@ class GraphPanel extends React.Component {
             for(var quiz_id in statistics[username]) {
                 var score = 0;
                 var total = 0;
-                for (var question_id in statistics[username][quiz_id]['questions']){
-                    var question = statistics[username][quiz_id]['questions'][question_id];
-                    score += question['score'];
-                    total += question['total'];
+                for (var question_id in statistics[username][quiz_id].answers){
+                    var question = statistics[username][quiz_id].answers[question_id];
+                    score += question.score;
+                    total += question.total;
                 }
                 grade += 100.0 * (score / total);
                 count++;
@@ -400,15 +449,15 @@ class GraphPanel extends React.Component {
     setupChart(canvas) {
         this.canvas = this.canvas || canvas;
 
-        // if(this.props.showStudent) {
-        //     this.displayStudentStatistics(this.props.showStudent);
-        // } else if(this.props.showQuiz) {
-        //     this.displayQuizStatistics(this.props.showQuiz);
-        // } else if(this.props.showAllQuizzes) {
-        //     this.displayAllQuizStatistics();
-        // } else {
-        //     this.displayAllStudentStatistics();
-        // }
+        if(this.props.showStudent) {
+            this.displayStudentStatistics(this.props.showStudent);
+        } else if(this.props.showQuiz) {
+            this.displayQuizStatistics(this.props.showQuiz);
+        } else if(this.props.showAllQuizzes) {
+            this.displayAllQuizStatistics();
+        } else {
+            this.displayAllStudentStatistics();
+        }
     }
 
     render() {

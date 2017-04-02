@@ -23,6 +23,7 @@ export default class HomePanels extends React.Component {
             <div id='panels'>
                 <QuizPanel
                     user={this.props.user}
+                    selectedTerm={this.props.selectedTerm}
                     questions={this.props.questions}
                     quizzes={this.props.quizzes}
                     setCreatingQuiz={this.setCreatingQuiz.bind(this)}
@@ -31,6 +32,7 @@ export default class HomePanels extends React.Component {
 
                 <QuestionPanel
                     user={this.props.user}
+                    selectedTerm={this.props.selectedTerm}
                     questions={this.props.questions}
                     creatingQuiz={this.state.creatingQuiz}
                     getResource={this.props.getResource}
@@ -90,6 +92,7 @@ class QuizPanel extends React.Component {
                 {this.state.editQuiz
                     ? (<QuizEditor
                         user={this.props.user}
+                        selectedTerm={this.props.selectedTerm}
                         quiz={this.state.editQuiz}
                         questions={this.props.questions}
                         hideQuizEditor={this.hideQuizEditor.bind(this)}
@@ -129,25 +132,24 @@ class QuizEditor extends React.Component {
     }
 
     componentWillReceiveProps(newProps) {
-        console.log('editor received new props');
-        console.log(newProps);
+        this.setState((prevState) => {
+            let settings = newProps.quiz.settings || prevState.settings;
 
-        let settings = newProps.quiz.settings || {};
-
-        this.setState({
-            _id: newProps.quiz._id,
-            name: newProps.quiz.name || '',
-            is_published: newProps.quiz.is_published || false,
-            is_live: newProps.quiz.is_live || false,
-            questions: newProps.quiz.questions || [],
-            settings: {
-                live_question: settings.live_question,
-                open_date: new Date(settings.open_date || Date.now()).toISOString().substring(0, 10),
-                close_date: new Date(settings.close_date || Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().substring(0, 10), // 1 week
-                max_submission: settings.max_submission || 0,
-                allow_question_review: settings.allow_question_review || false,
-                allow_answer_review: settings.allow_answer_review || false,
-            }
+            return {
+                _id: newProps.quiz._id,
+                name: newProps.quiz.name || prevState.name,
+                is_published: newProps.quiz.is_published || prevState.is_published,
+                is_live: newProps.quiz.is_live || prevState.is_live,
+                questions: newProps.quiz.questions || prevState.questions,
+                settings: {
+                    live_question: settings.live_question,
+                    open_date: new Date(settings.open_date || Date.now()).toISOString().substring(0, 10),
+                    close_date: new Date(settings.close_date || Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().substring(0, 10), // 1 week
+                    max_submission: settings.max_submission || 0,
+                    allow_question_review: settings.allow_question_review || false,
+                    allow_answer_review: settings.allow_answer_review || false,
+                }
+            };
         });
     }
 
@@ -162,7 +164,11 @@ class QuizEditor extends React.Component {
             var newSettings = {}
             Object.assign(newSettings, prevState.settings);
 
-            newSettings.open_date = new Date(value).toISOString().substring(0, 10);
+            try {
+                newSettings.open_date = new Date(value).toISOString().substring(0, 10);
+            } catch(e) {
+                newSettings.open_date = new Date().toISOString().substring(0, 10);
+            }
             return { settings: newSettings };
         });
     }
@@ -174,7 +180,11 @@ class QuizEditor extends React.Component {
             var newSettings = {}
             Object.assign(newSettings, prevState.settings);
 
-            newSettings.close_date = new Date(value).toISOString().substring(0, 10);
+            try {
+                newSettings.close_date = new Date(value).toISOString().substring(0, 10);
+            } catch(e) {
+                newSettings.close_date = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().substring(0, 10);
+            }
             return { settings: newSettings };
         });
     }
@@ -206,7 +216,6 @@ class QuizEditor extends React.Component {
         if(this.state._id) {
             socket.send('updateQuiz', {
                 _id: this.state._id,
-                term_id: this.props.user.lastSelectedTerm.term_id,
                 name: this.state.name,
                 is_published: publish,
                 is_live: this.state.is_live,
@@ -215,7 +224,6 @@ class QuizEditor extends React.Component {
             }, callback);
         } else {
             socket.send('createQuiz', {
-                term_id: this.props.user.lastSelectedTerm.term_id,
                 name: this.state.name,
                 is_published: publish,
                 is_live: this.state.is_live,
@@ -325,24 +333,52 @@ class QuizEditor extends React.Component {
                     <div id='quiz-name'>
                         Name: {this.state.is_published
                                     ? this.state.name
-                                    : (<input type='text' id='quiz-name-field' value={this.state.name} onChange={this.onNameChange.bind(this)}/>)}
+                                    : (<input
+                                        type='text'
+                                        id='quiz-name-field'
+                                        value={this.state.name}
+                                        onChange={this.onNameChange.bind(this)}/>)}
                     </div>
+
                     {!this.state.is_published &&
                         <div>
                             <button id='save-quiz-button' onClick={this.submitQuiz.bind(this, false)}>Save</button>
                             <button id='publish-quiz-buton' onClick={this.submitQuiz.bind(this, true)}>Publish</button>
                         </div>}
+
                     <div>
                         <p className='quiz-creator-header-entry'>Open Date:&nbsp;
-                            {this.state.is_published ? this.state.settings.open_date : <input type='date' value={this.state.settings.open_date} onChange={this.onOpenDateChange.bind(this)} />}</p>
+                            {this.state.is_published
+                                ? this.state.settings.open_date
+                                : <input
+                                    type='date'
+                                    value={this.state.settings.open_date}
+                                    onChange={this.onOpenDateChange.bind(this)} />}</p>
                         <p className='quiz-creator-header-entry'>Close Date:&nbsp;
-                            {this.state.is_published ? this.state.settings.close_date : <input type='date' value={this.state.settings.close_date} onChange={this.onCloseDateChange.bind(this)} />}</p>
+                            {this.state.is_published
+                                ? this.state.settings.close_date
+                                : <input type='date'
+                                    value={this.state.settings.close_date}
+                                    onChange={this.onCloseDateChange.bind(this)} />}</p>
                     </div>
+
                     <div>
-                        Live Quiz: {this.state.is_published ? String(this.state.is_live) : <input type='checkbox' checked={this.state.is_live} onChange={() => this.setState((prevState) => ({ is_live: !prevState.is_live }))} />}
+                        Live Quiz: {this.state.is_published
+                                        ? String(this.state.is_live)
+                                        : <input
+                                            type='checkbox'
+                                            checked={this.state.is_live}
+                                            onChange={() => this.setState((prevState) => ({ is_live: !prevState.is_live }))} />}
                     </div>
+
                     <div className='quiz-creator-header-entry'>
-                        Submissions allowed: {this.state.is_published ? (this.state.settings.max_submission || 'Unlimited') : <input type='number' size='2' value={this.state.settings.max_submission} onChange={this.onMaxSubmissionChange.bind(this)} />}
+                        Submissions allowed: {this.state.is_published
+                                                ? (this.state.settings.max_submission || 'Unlimited')
+                                                : <input
+                                                    type='number'
+                                                    size='2'
+                                                    value={this.state.settings.max_submission}
+                                                    onChange={this.onMaxSubmissionChange.bind(this)} />}
                         {!this.state.is_published && ' 0 for unlimited'}
                     </div>
                 </div>
@@ -356,7 +392,7 @@ class QuizEditor extends React.Component {
                                 onDragStart={this.onDragStart.bind(this, id)}
                                 draggedOver={this.state.dragOverId == id}>
 
-                                <button className='delete-button' onClick={() => this.removeQuestion(id)}>&#10006;</button>
+                                {!this.state.is_published && <button className='delete-button' onClick={() => this.removeQuestion(id)}>&#10006;</button>}
                                 {this.state.is_live && this.state.is_published &&
                                     <button
                                         className={'live-button' + (this.state.settings.live_question == idx ? ' is-live' : '')}
@@ -395,11 +431,11 @@ class Quiz extends React.Component {
             title: 'Are you sure you want to delete this quiz?',
             onAction: (choice) => {
             if(choice) {
-                socket.send('delete_quiz', this.props.quiz._id, (err, data) => {
+                socket.send('deleteQuiz', this.props.quiz._id, (err, data) => {
                     if(err) {
                         this.props.showConfirm({
                             type: 'ok',
-                            title: err
+                            title: String(err)
                         });
                     }
                 });
@@ -456,7 +492,10 @@ class QuestionPanel extends React.Component {
             });
         }
 
-        return [{ name: this.props.user ? this.props.user.lastSelectedTerm.name : '', children: tags }];
+        return [{ name: this.props.user
+                    ? this.props.selectedTerm.course.name + ' - ' + this.props.selectedTerm.name
+                    : '',
+                children: tags }];
     }
 
     updateShownQuestions(searchTerm, questions) {
@@ -647,7 +686,6 @@ class QuestionEditor extends React.Component {
                 });
             } else {
                 var toSend = {
-                    course_id: this.props.user.lastSelectedTerm.course_id,
                     title: this.state.title,
                     answers: answers,
                     correct: String(this.state.correct),
@@ -666,9 +704,9 @@ class QuestionEditor extends React.Component {
 
         if(!this.state.image_id) {
             if(this.state.image) {
-                socket.send('create_resource', this.state.image, sendQuestion);
+                socket.send('createResource', this.state.image, sendQuestion);
             } else if(this.props.question.image_id) {
-                socket.send('delete_resource', this.props.question.image_id, sendQuestion);
+                socket.send('deleteResource', this.props.question.image_id, sendQuestion);
                 this.props.deleteResource(this.props.question.image_id);
             } else {
                 sendQuestion(null, null);
@@ -776,11 +814,11 @@ class QuestionList extends React.Component {
             title: 'Are you sure you want to delete this question?',
             onAction: (choice) => {
             if(choice) {
-                socket.send('delete_question', id, (err, data) => {
+                socket.send('deleteQuestion', id, (err, data) => {
                     if(err) {
                         this.props.showConfirm({
                             type: 'ok',
-                            title: err
+                            title: String(err)
                         });
                     }
                 });
@@ -820,7 +858,7 @@ class Question extends React.Component {
         this.state = {
             image_id: null,
             image: null,
-            hideAnswers: false,//true
+            hideAnswers: true
         };
     }
 
@@ -906,7 +944,7 @@ class Hierarchy extends React.Component {
             } else {
                 return {
                     name: tag.name,
-                    isOpen: false,
+                    isOpen: true,
                     children: this.formatTags(tag.children)
                 }
             }

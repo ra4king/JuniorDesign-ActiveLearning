@@ -191,14 +191,12 @@ class PermissionPanel extends React.Component {
                     canManageRoster: this.state.canManageRoster,
                     canManageTAs: this.state.canManageTAs
                 }}, (err) => {
-                    if(err) {
-                        this.props.showConfirm({
-                            type: 'ok',
-                            title: 'Could not set permissions: ' + err
-                        });
-                    } else {
-                        this.props.getUsers();
-                    }
+                    this.props.getUsers();
+
+                    this.props.showConfirm({
+                        type: 'ok',
+                        title: err ? 'Could not set permissions: ' + err : 'Permissions updated.'
+                    });
                 });
         } else {
             this.props.showConfirm({
@@ -243,7 +241,7 @@ class PermissionPanel extends React.Component {
         return (
             <div className='panel' id='permission-panel'>
                 {this.props.selectedUser
-                    ? [<p key='title'>{this.props.selectedUser.username}</p>,
+                    ? [<p key='title' id='username-title'>{this.props.selectedUser.username}</p>,
                       !this.state.isTA
                         ? (<button key='maketa' className='option-button' id='make-ta-button' onClick={this.updatePermissions.bind(this)}>Make a TA</button>)
                         : (<div key='permissions'>

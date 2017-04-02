@@ -9,8 +9,6 @@ module.exports = function(base_url, server, database) {
     var subscriptions = {};
 
     function subscribe(event, connection) {
-        console.log('Subscribing to event ' + event + ' for connection ' + connection.user.username);
-
         if(subscriptions[event]) {
             subscriptions[event].push(connection);
         } else {
@@ -19,8 +17,6 @@ module.exports = function(base_url, server, database) {
     }
 
     function unsubscribe(event, connection) {
-        console.log('UNSUBscribing to event ' + event + ' for connection + ' + connection.user.username);
-
         if(subscriptions[event]) {
             let idx = subscriptions[event].findIndex((conn) => conn == connection);
             if(idx != -1) {
@@ -31,21 +27,23 @@ module.exports = function(base_url, server, database) {
 
     var allConnections = {};
 
-    database.events.on('users', (user) => {
-        if(allConnections[user.username]) {
-            console.log('SAVED USER:');
-            console.log(user);
+    database.events.on('term', (term) => {
+        let name = term._id + '-terms';
 
+        if(subscriptions[name]) {
+            subscriptions[name].forEach((connection) => {
+                connection.socket.sendEvent('term', [term]);
+            });
+        }
+    });
+    database.events.on('user', (user) => {
+        if(allConnections[user.username]) {
             allConnections[user.username].user = user;
 
             allConnections[user.username].socket.sendEvent('user', user);
         }
     });
-
-    database.events.on('questions', (question) => {
-        console.log('SAVED QUESTION:');
-        console.log(question);
-
+    database.events.on('question', (question) => {
         let name = question.course_id + '-questions';
 
         if(subscriptions[name]) {
@@ -54,40 +52,36 @@ module.exports = function(base_url, server, database) {
             });
         }
     });
-    database.events.on('quizzes', (quiz) => {
-        console.log('SAVE QUIZ:');
-        console.log(quiz);
-
+    database.events.on('quiz', (quiz) => {
         let name = quiz.term_id + '-quizzes';
 
         if(subscriptions[name]) {
-            console.log('Sending quizzes to ' + subscriptions[name].length + ' subscibers.');
-
-            database.getQuizById(false, String(quiz._id), (err, quizWithQuestions) => {
-                if(err) {
-                    console.error('Error when getting quiz with questions');
-                    console.error(err);
-                } else {
-                    console.log(quizWithQuestions);
-                }
+            if(quiz.removed) {
+                let toSend = { _id: quiz._id, removed: true };
 
                 subscriptions[name].forEach((connection) => {
-                    var [permissions, admin] = getPermissions(connection);
-                    if(admin) {
-                        console.log('Sending professor quiz');
-                        connection.socket.sendEvent('quizzes', [quiz]);
-                    } else if(quizWithQuestions) {
-                        console.log('Sending student quiz');
-                        connection.socket.sendEvent('quizzes', [quizWithQuestions]);
-                    }
+                    connection.socket.sendEvent('quizzes', [toSend]);
                 });
-            });
+            } else {
+                database.getQuizById(false, String(quiz._id), (err, quizWithQuestions) => {
+                    if(err) {
+                        console.error('Error when getting quiz with questions');
+                        console.error(err);
+                    }
+
+                    subscriptions[name].forEach((connection) => {
+                        var [permissions, admin] = getPermissions(connection);
+                        if(admin) {
+                            connection.socket.sendEvent('quizzes', [quiz]);
+                        } else if(quizWithQuestions) {
+                            connection.socket.sendEvent('quizzes', [quizWithQuestions]);
+                        }
+                    });
+                });
+            }
         }
     });
-    database.events.on('submissions', (submission) => {
-        console.log('SUBMISSION SAVED:');
-        console.log(submission);
-
+    database.events.on('submission', (submission) => {
         let name = submission.term_id + '-submissions';
 
         if(subscriptions[name]) {
@@ -178,19 +172,22 @@ module.exports = function(base_url, server, database) {
                     unsubscribe(connection.selectedTerm.course_id + '-questions', connection);
                     unsubscribe(connection.selectedTerm.term_id + '-quizzes', connection);
                     unsubscribe(connection.selectedTerm.term_id + '-submissions', connection);
+                    unsubscribe(connection.selectedTerm.term_id + '-terms', connection);
                 }
 
                 connection.selectedTerm = {
                     term_id: term_id,
-                    course_id: term.course_id
+                    course_id: String(term.course._id),
+                    school_id: String(term.school._id)
                 };
 
                 if(termAdmin) {
-                    subscribe(term.course_id + '-questions', connection);
+                    subscribe(term.course._id + '-questions', connection);
                 }
 
                 subscribe(term_id + '-quizzes', connection);
                 subscribe(term_id + '-submissions', connection);
+                subscribe(term_id + '-terms', connection);
 
                 reply(null, term);
 
@@ -231,14 +228,33 @@ module.exports = function(base_url, server, database) {
         }
     });
 
+    commands.on('createResource', (connection, resource, reply) => {
+        var [permissions, admin] = getPermissions(connection);
+        if(connection.user.admin || (permissions && (permissions.isCreator || (permissions.isTA && permissions.canCreateQuestions)))) {
+            database.createResource(resource, reply);
+        } else {
+            reply('Permission denied.');
+        }
+    });
+
+    commands.on('deleteResource', (connection, resource_id, reply) => {
+        var [permissions, admin] = getPermissions(connection);
+        if(connection.user.admin || (permissions && (permissions.isCreator || (permissions.isTA && permissions.canCreateQuestions)))) {
+            database.deleteResource(resource_id, reply);
+        } else {
+            reply('Permission denied.');
+        }
+    });
+
+    commands.on('getResource', (connection, resource_id, reply) => {
+        database.getResource(resource_id, reply);
+    });
+
     commands.on('createQuestion', (connection, question, reply) => {
         var [permissions, admin] = getPermissions(connection);
         if(connection.user.admin || (permissions && (permissions.isCreator || (permissions.isTA && permissions.canCreateQuestions)))) {
-            if(permissions.course_id != question.course_id) {
-                reply('Incorrect course_id');
-            } else {
-                database.createQuestion(question, reply);
-            }
+            question.course_id = permissions.course_id;
+            database.createQuestion(question, reply);
         } else {
             reply('Permission denied.');
         }
@@ -247,11 +263,16 @@ module.exports = function(base_url, server, database) {
     commands.on('updateQuestion', (connection, question, reply) => {
         var [permissions, admin] = getPermissions(connection);
         if(connection.user.admin || (permissions && (permissions.isCreator || (permissions.isTA && permissions.canEditQuestions)))) {
-            if(permissions.course_id != question.course_id) {
-                reply('Incorrect course_id');
-            } else {
-                database.updateQuestion(question, reply);
-            }
+            database.updateQuestion(question, permissions.course_id, reply);
+        } else {
+            reply('Permission denied.');
+        }
+    });
+
+    commands.on('deleteQuestion', (connection, question_id, reply) => {
+        var [permissions, admin] = getPermissions(connection);
+        if(connection.user.admin || (permissions && (permissions.isCreator || (permissions.isTA && permissions.canEditQuestions)))) {
+            database.deleteQuestion(question_id, permissions.course_id, reply);
         } else {
             reply('Permission denied.');
         }
@@ -260,11 +281,8 @@ module.exports = function(base_url, server, database) {
     commands.on('createQuiz', (connection, quiz, reply) => {
         var [permissions, admin] = getPermissions(connection);
         if(connection.user.admin || (permissions && (permissions.isCreator || (permissions.isTA && permissions.canCreateQuizzes)))) {
-            if(permissions.term_id != quiz.term_id) {
-                reply('Incorrect term_id');
-            } else {
-                database.createQuiz(quiz, reply);
-            }
+            quiz.term_id = permissions.term_id;
+            database.createQuiz(quiz, reply);
         } else {
             reply('Permission denied.');
         }
@@ -273,11 +291,7 @@ module.exports = function(base_url, server, database) {
     commands.on('updateQuiz', (connection, quiz, reply) => {
         var [permissions, admin] = getPermissions(connection);
         if(connection.user.admin || (permissions && (permissions.isCreator || (permissions.isTA && permissions.canEditQuizzes)))) {
-            if(permissions.term_id != quiz.term_id) {
-                reply('Incorrect term_id');
-            } else {
-                database.updateQuiz(quiz, reply);
-            }
+            database.updateQuiz(quiz, permissions.term_id, reply);
         } else {
             reply('Permission denied.');
         }
@@ -286,14 +300,29 @@ module.exports = function(base_url, server, database) {
     commands.on('updateLiveQuiz', (connection, live_quiz, reply) => {
         var [permissions, admin] = getPermissions(connection);
         if(connection.user.admin || (permissions && (permissions.isCreator || (permissions.isTA && permissions.canEditQuizzes)))) {
-            database.updateLiveQuiz(live_quiz.quiz_id, live_quiz.question_idx, reply);
+            database.updateLiveQuiz(live_quiz.quiz_id, permissions.term_id, live_quiz.question_idx, reply);
+        } else {
+            reply('Permission denied.');
+        }
+    });
+
+    commands.on('deleteQuiz', (connection, quiz_id, reply) => {
+        var [permissions, admin] = getPermissions(connection);
+        if(connection.user.admin || (permissions && (permissions.isCreator || (permissions.isTA && permissions.canEditQuizzes)))) {
+            database.deleteQuiz(quiz_id, permissions.term_id, reply);
         } else {
             reply('Permission denied.');
         }
     });
 
     commands.on('submitQuiz', (connection, submission, reply) => {
-
+        var [permissions, admin] = getPermissions(connection);
+        if(admin) {
+            reply('Cannot submit a quiz as a term admin.');
+        } else {
+            submission.term_id = permissions.term_id;
+            database.submitQuiz(connection.user.username, submission, reply);
+        }
     });
 
 
