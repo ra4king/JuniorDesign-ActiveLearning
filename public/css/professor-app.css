@@ -31,7 +31,8 @@
 
 .parent-holder {
     list-style-type: none;
-    min-width: 150px;
+    min-width: 160px;
+    max-width: 160px;
 }
 
 .tree-node {
