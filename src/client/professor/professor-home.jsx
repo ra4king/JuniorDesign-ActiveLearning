@@ -329,63 +329,61 @@ class QuizEditor extends React.Component {
     render() {
         return (
             <div id='quiz-creator'>
-        {!this.state.is_published &&
-        <div>
-            <button id='save-quiz-button' onClick={this.submitQuiz.bind(this, false)}>Save</button>
-            <button id='publish-quiz-buton' onClick={this.submitQuiz.bind(this, true)}>Publish</button>
-        </div>}
-        <div id='quiz-creator-header'>
-            <div className='quiz-table-row'>
-                <div id='quiz-name' className='quiz-table-cell'>
-                    Name: {this.state.is_published
-                                ? this.state.name
-                                : (<input
-                                    type='text'
-                                    id='quiz-name-field'
-                                    value={this.state.name}
-                                    onChange={this.onNameChange.bind(this)}/>)}
-                </div>
-            </div>
-
-            
-
-            <div className='quiz-table-row'>
-                <p className='quiz-creator-header-entry quiz-table-cell'>Open Date:&nbsp;
-                    {this.state.is_published
-                        ? this.state.settings.open_date
-                        : <input
-                            type='date'
-                            value={this.state.settings.open_date}
-                            onChange={this.onOpenDateChange.bind(this)} />}</p>
-                <p className='quiz-creator-header-entry quiz-table-cell'>Close Date:&nbsp;
-                    {this.state.is_published
-                        ? this.state.settings.close_date
-                        : <input type='date'
-                            value={this.state.settings.close_date}
-                            onChange={this.onCloseDateChange.bind(this)} />}</p>
-            </div>
-            <div className='quiz-table-row'>
-                <div className='quiz-table-cell'>
-                    Live Quiz: {this.state.is_published
-                                    ? String(this.state.is_live)
+                {!this.state.is_published &&
+                    <div id='save-publish-buttons'>
+                        <button id='save-quiz-button' onClick={this.submitQuiz.bind(this, false)}>Save</button>
+                        <button id='publish-quiz-buton' onClick={this.submitQuiz.bind(this, true)}>Publish</button>
+                    </div>}
+                <div id='quiz-creator-header'>
+                    <div id='quiz-creator-table'>
+                        <div className='quiz-table-row'>
+                            <div id='quiz-name' className='quiz-table-cell'>
+                                Name: {this.state.is_published
+                                            ? this.state.name
+                                            : (<input
+                                                type='text'
+                                                id='quiz-name-field'
+                                                value={this.state.name}
+                                                onChange={this.onNameChange.bind(this)}/>)}
+                            </div>
+                        </div>
+                        <div className='quiz-table-row'>
+                            <p className='quiz-creator-header-entry quiz-table-cell'>Open Date:&nbsp;
+                                {this.state.is_published
+                                    ? this.state.settings.open_date
                                     : <input
-                                        type='checkbox'
-                                        checked={this.state.is_live}
-                                        onChange={() => this.setState((prevState) => ({ is_live: !prevState.is_live }))} />}
+                                        type='date'
+                                        value={this.state.settings.open_date}
+                                        onChange={this.onOpenDateChange.bind(this)} />}</p>
+                            <p className='quiz-creator-header-entry quiz-table-cell'>Close Date:&nbsp;
+                                {this.state.is_published
+                                    ? this.state.settings.close_date
+                                    : <input type='date'
+                                        value={this.state.settings.close_date}
+                                        onChange={this.onCloseDateChange.bind(this)} />}</p>
+                        </div>
+                        <div className='quiz-table-row'>
+                            <div className='quiz-table-cell'>
+                                Live Quiz: {this.state.is_published
+                                                ? String(this.state.is_live)
+                                                : <input
+                                                    type='checkbox'
+                                                    checked={this.state.is_live}
+                                                    onChange={() => this.setState((prevState) => ({ is_live: !prevState.is_live }))} />}
+                            </div>
+                            <div className='quiz-creator-header-entry quiz-table-cell'>
+                                Submissions: {this.state.is_published
+                                                        ? (this.state.settings.max_submission || 'Unlimited')
+                                                        : <input
+                                                            type='number'
+                                                            size='2'
+                                                            value={this.state.settings.max_submission}
+                                                            onChange={this.onMaxSubmissionChange.bind(this)} />}
+                                {!this.state.is_published && '      0 for unlimited'}
+                            </div>
+                        </div>
+                    </div>
                 </div>
-
-                <div className='quiz-creator-header-entry quiz-table-cell'>
-                    Submissions: {this.state.is_published
-                                            ? (this.state.settings.max_submission || 'Unlimited')
-                                            : <input
-                                                type='number'
-                                                size='2'
-                                                value={this.state.settings.max_submission}
-                                                onChange={this.onMaxSubmissionChange.bind(this)} />}
-                    {!this.state.is_published && '      0 for unlimited'}
-                </div>
-            </div>
-        </div>
                 <ol id='quiz-question-list' onDrop={this.onDrop.bind(this)} onDragOver={this.onDragOver.bind(this)}>
                     {this.state.questions.length > 0
                         ? [this.state.questions.map((id, idx) => (

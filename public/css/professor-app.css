@@ -96,17 +96,15 @@
 
 #quiz-creator-header {
     flex: 0 1 auto;
-
-    display: table;
-    width: 98%;
-    flex-flow: row wrap;
-    justify-content: space-between;
-    align-items: center;
-
-    margin-bottom: 10px;
-    min-height: 30px;
     border: 2px solid white;
     background-color: #909090;
+    margin-bottom: 10px;
+}
+
+#quiz-creator-table {
+    display: table;
+    width: 100%;
+    min-height: 30px;
 }
 
 .quiz-table-row {
@@ -127,6 +125,10 @@
     width: 50%;
 }
 
+#save-publish-buttons {
+    margin-bottom: 10px;
+}
+
 #save-quiz-button {
     flex: 0 1 auto;
     width: 100px;
@@ -137,7 +139,6 @@
     color: white;
     border: none;
     margin-right: 5px;
-    margin-bottom: 5px;
 }
 
 #publish-quiz-buton {
@@ -150,7 +151,6 @@
     color: white;
     border: none;
     margin-left: 5px;
-    margin-bottom: 5px;
 }
 
 .quiz-creator-header-entry {
