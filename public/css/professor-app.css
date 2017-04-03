@@ -22,17 +22,18 @@
     flex-flow: row nowrap;
     justify-content: flex-start;
     align-items: stretch;
-    overflow: auto;
+    overflow: hidden;
 }
 
 #hierarchy-panel {
     margin-right: 10px;
+    min-width: 160px;
+    max-width: 160px;
+    overflow-y: auto;
 }
 
 .parent-holder {
     list-style-type: none;
-    min-width: 160px;
-    max-width: 160px;
 }
 
 .tree-node {

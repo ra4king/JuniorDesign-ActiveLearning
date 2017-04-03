@@ -53,6 +53,7 @@ export default class SettingsPanels extends React.Component {
             <div id='panels'>
                 <StudentPanel
                     users={this.state.users}
+                    getUsers={this.getUsers.bind(this)}
                     selectUser={this.selectUser.bind(this)}
                     showConfirm={this.props.showConfirm} />
 
@@ -82,6 +83,7 @@ class StudentPanel extends React.Component {
                     this.props.showConfirm({ type: 'ok', title: 'Error adding user: ' + err });
                 } else {
                     this.setState({ userToAdd: '' });
+                    this.props.getUsers();
                 }
             });
         }
