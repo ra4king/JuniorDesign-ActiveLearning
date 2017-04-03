@@ -59,6 +59,7 @@ export default class SettingsPanels extends React.Component {
 
                 <PermissionPanel
                     getUsers={this.getUsers.bind(this)}
+                    selectUser={this.selectUser.bind(this)}
                     selectedUser={this.state.selectedUser}
                     showConfirm={this.props.showConfirm} />
             </div>
@@ -239,13 +240,29 @@ class PermissionPanel extends React.Component {
         }
     }
 
+    removeStudent() {
+        if(this.props.selectedUser) {
+            socket.send('removeUser', this.props.selectedUser.username, (err) => {
+                if(err) {
+                    this.props.showConfirm({
+                        type: 'ok',
+                        title: 'Error removing student: ' + err
+                    });
+                }
+
+                this.props.getUsers();
+                this.props.selectUser(null);
+            });
+        }
+    }
+
     render() {
         return (
             <div className='panel' id='permission-panel'>
                 {this.props.selectedUser
                     ? [<p key='title' id='username-title'>{this.props.selectedUser.username}</p>,
                       !this.state.isTA
-                        ? (<button key='maketa' className='option-button' id='make-ta-button' onClick={this.updatePermissions.bind(this)}>Make a TA</button>)
+                        ? (<div key='maketa'><button className='option-button' id='make-ta-button' onClick={this.updatePermissions.bind(this)}>Make a TA</button></div>)
                         : (<div key='permissions'>
                             <ul id='permission-list'>
                                 <li><label className="switch">
@@ -293,7 +310,8 @@ class PermissionPanel extends React.Component {
                             </ul>
                             <div><button className='option-button' id='make-ta-button' onClick={this.updatePermissions.bind(this)}>Update</button></div>
                             <div><button className='option-button' id='remove-ta-button' onClick={this.removeTA.bind(this)}>Remove TA</button></div>
-                        </div>)]
+                        </div>),
+                        <div key='removestudent'><button className='option-button' id='remove-student-button' onClick={this.removeStudent.bind(this)}>Remove Student</button></div>]
                     : <p>Please selected a user on the left panel.</p>}
             </div>
         );

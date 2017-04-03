@@ -40,8 +40,9 @@ class App extends React.Component {
 
         socket.on('login', (user) => {
             if(user) {
-                console.log('USER');
+                console.log('LOGIN');
                 console.log(user);
+
                 this.setState({ user: user });
 
                 if(user.lastSelectedTerm) {
@@ -50,10 +51,6 @@ class App extends React.Component {
                     browserHistory.push('/active-learning/select-term');
                 }
             }
-        });
-
-        socket.on('term', (term) => {
-            this.setState({ selectedTerm: term });
         });
 
         socket.on('user', (user) => {

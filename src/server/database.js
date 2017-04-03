@@ -337,6 +337,7 @@ function validateSession(session_id, callback) {
     Session.findById(session_id)
         .select('user')
         .populate('user', '-auth')
+        .lean()
         .exec((err, result) => {
             if(err) {
                 console.error('Error when validating session');
@@ -663,37 +664,50 @@ function removeUser(term_id, username, callback) {
             return callback('User not in the course.');
         }
 
-        term.users.pull(username);
-        term.save((err) => {
+        User.findById(username, '-auth', (err, user) => {
             if(err) {
-                console.error('Error when removing user: ' + term_id + ', ' + username);
+                console.error('Error when finding user: ' + username);
                 console.error(err);
-                callback(err);
-            } else {
-                User.findByid(username, '-auth', (err, user) => {
-                    if(err) {
-                        console.error('Error when finding user: ' + username);
-                        console.error(err);
-                        return callback(err);
-                    }
-
-                    var idx = user.permissions.findIndex((perm) => String(perm.term_id) == term_id);
-                    if(idx == -1) {
-                        return callback();
-                    }
-
-                    user.permissions.splice(idx, 1);
-
-                    user.save((err) => {
-                        if(err) {
-                            console.error('Error when saving user permissions.');
-                            console.error(err);
-                        }
-
-                        callback(err);
-                    });
-                });
+                return callback(err);
             }
+
+            if(!user) {
+                term.users.pull(username);
+                term.save((err) => {
+                    if(err) {
+                        console.error('Error when removing user: ' + term_id + ', ' + username);
+                        console.error(err);
+                    }
+                    
+                    callback(err || 'User not found.');
+                });
+                return;
+            }
+
+            var idx = user.permissions.findIndex((perm) => String(perm.term_id) == term_id);
+            if(idx == -1) {
+                return callback();
+            }
+
+            user.permissions.splice(idx, 1);
+
+            user.save((err) => {
+                if(err) {
+                    console.error('Error when saving user permissions.');
+                    console.error(err);
+                    return callback(err);
+                }
+
+                term.users.pull(username);
+                term.save((err) => {
+                    if(err) {
+                        console.error('Error when removing user: ' + term_id + ', ' + username);
+                        console.error(err);
+                    }
+                    
+                    callback(err);
+                });
+            });
         });
     });
 }

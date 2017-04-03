@@ -27,15 +27,6 @@ module.exports = function(base_url, server, database) {
 
     var allConnections = {};
 
-    database.events.on('term', (term) => {
-        let name = term._id + '-terms';
-
-        if(subscriptions[name]) {
-            subscriptions[name].forEach((connection) => {
-                connection.socket.sendEvent('term', [term]);
-            });
-        }
-    });
     database.events.on('user', (user) => {
         if(allConnections[user.username]) {
             allConnections[user.username].user = user;
@@ -213,6 +204,15 @@ module.exports = function(base_url, server, database) {
         var [permissions, admin] = getPermissions(connection);
         if(connection.user.admin || (permissions && (permissions.isCreator || (permissions.isTA && permissions.canManageRoster)))) {
             database.addUser(permissions.term_id, username, {}, reply);
+        } else {
+            reply('Permission denied.');
+        }
+    });
+
+    commands.on('removeUser', (connection, username, reply) => {
+        var [permissions, admin] = getPermissions(connection);
+        if(connection.user.admin || (permissions && (permissions.isCreator || (permissions.isTA && permissions.canManageRoster)))) {
+            database.removeUser(permissions.term_id, username, reply);
         } else {
             reply('Permission denied.');
         }
