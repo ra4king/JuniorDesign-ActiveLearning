@@ -46,6 +46,7 @@ class App extends React.Component {
                 this.setState({ user: user });
 
                 if(user.lastSelectedTerm) {
+                    console.log('login: selecting term...');
                     this.selectTerm(user.lastSelectedTerm.term_id);
                 } else {
                     browserHistory.push('/active-learning/select-term');
@@ -59,6 +60,7 @@ class App extends React.Component {
 
             this.setState((prevState) => {
                 if(JSON.stringify(prevState.user) != JSON.stringify(user)) {
+                    console.log('user update: selecting term...');
                     this.selectTerm(user.lastSelectedTerm.term_id);
                     return { user: user };
                 }

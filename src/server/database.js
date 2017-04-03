@@ -213,6 +213,13 @@ submissionsSchema.index({ quiz_id: 1, username: 1 }, { background: true });
 const Submission = mongoose.model('Submission', submissionsSchema);
 
 
+function handleError(err, callback) {
+    var msg = err.errors ? Object.keys(err.errors).map((prop) => err.errors[prop].message).join(', ') : String(err);
+
+    console.error(msg);
+    callback(msg)
+}
+
 function createUser(username, passwords, callback) {
     var password = passwords[0];
     var password2 = passwords[1];
@@ -231,8 +238,7 @@ function createUser(username, passwords, callback) {
     User.findById(username, '-auth', (err, result) => {
         if(err) {
             console.error('Error when checking if username exists before creating it: ' + username);
-            console.error(err);
-            return callback(err);
+            return handleError(err, callback);
         }
 
         if(result) {
@@ -242,8 +248,7 @@ function createUser(username, passwords, callback) {
         crypto.randomBytes(128, (err, buf) => {
             if(err) {
                 console.error('Error when generating salt when creating user: ' + username);
-                console.error(err);
-                return callback(err);
+                return handleError(err, callback);
             }
 
             var salt = buf.toString('base64');
@@ -251,8 +256,7 @@ function createUser(username, passwords, callback) {
             crypto.pbkdf2(password, salt, iterations, 512, 'sha512', (err, buf) => {
                 if(err) {
                     console.error('Error when generating hash when creating user: ' + username);
-                    console.error(err);
-                    return callback(err);
+                    return handleError(err, callback);
                 }
 
                 var hash = buf.toString('base64');
@@ -268,10 +272,10 @@ function createUser(username, passwords, callback) {
                 }).save((err, result) => {
                     if(err) {
                         console.error('Error when inserting new user: ' + username);
-                        console.error(err);
+                        return handleError(err, callback);
                     }
 
-                    callback(err, result);
+                    callback(null, result);
                 });
             });
         });
@@ -286,8 +290,7 @@ function createSession(username, password, callback) {
     User.findById(username, (err, result) => {
         if(err) {
             console.error('Error when creating session: ' + username);
-            console.error(err);
-            return callback(err);
+            return handleError(err, callback);
         }
 
         if(result) {
@@ -298,8 +301,7 @@ function createSession(username, password, callback) {
                     crypto.randomBytes(128, (err, buf) => {
                         if(err) {
                             console.error('Error when generating session id: ' + username);
-                            console.error(err);
-                            return callback(err);
+                            return handleError(err, callback);
                         }
 
                         var id = buf.toString('base64');
@@ -310,11 +312,10 @@ function createSession(username, password, callback) {
                         }).save((err) => {
                             if(err) {
                                 console.error('Error when saving session: ' + username);
-                                console.error(err);
-                                callback(err);
-                            } else {
-                                callback(null, id);
+                                return handleError(err, callback);
                             }
+                            
+                            callback(null, id);
                         });
                     });
                 } else {
@@ -341,8 +342,7 @@ function validateSession(session_id, callback) {
         .exec((err, result) => {
             if(err) {
                 console.error('Error when validating session');
-                console.error(err);
-                return callback(err);
+                return handleError(err, callback);
             }
 
             if(result && result.user) {
@@ -357,10 +357,10 @@ function destroySession(session_id, callback) {
     Session.findByIdAndRemove(session_id, (err, result) => {
         if(err) {
             console.error('Error when destroying session');
-            console.error(err);
+            return handleError(err, callback);
         }
 
-        callback(err);
+        callback();
     });
 }
 
@@ -371,8 +371,7 @@ function getUser(username, callback) {
         .exec((err, user) => {
             if(err) {
                 console.error('Error when getting user: ' + username);
-                console.error(err);
-                return callback(err);
+                return handleError(err, callback);
             }
 
             if(!user) {
@@ -387,8 +386,7 @@ function getAllUsers(term_id, callback) {
     Term.findById(new ObjectID(term_id), 'users', (err, term) => {
         if(err) {
             console.error('Error when getting term: ' + term_id);
-            console.error(err);
-            return callback(err);
+            return handleError(err, callback);
         }
 
         if(!term) {
@@ -402,8 +400,7 @@ function getAllUsers(term_id, callback) {
             .exec((err, results) => {
                 if(err) {
                     console.error('Error when getting all users');
-                    console.error(err);
-                    return callback(err);
+                    return handleError(err, callback);
                 }
 
                 var users = [];
@@ -422,7 +419,7 @@ function getAllUsers(term_id, callback) {
                     users.push(cleanupUser(user));
                 });
 
-                callback(err, users);
+                callback(null, users);
             });
     });
 }
@@ -431,8 +428,7 @@ function createSchool(school, callback) {
     new School(school).save((err, school) => {
         if(err) {
             console.error('Error when creating school: ' + school);
-            console.error(err);
-            return callback(err);
+            return handleError(err, callback);
         }
 
         callback(null, school.id);
@@ -446,8 +442,7 @@ function updateSchool(new_school, callback) {
     School.findById(new ObjectID(school_id), (err, school) => {
         if(err) {
             console.error('Error when getting school: ' + school_id);
-            console.error(err);
-            return callback(err);
+            return handleError(err, callback);
         }
 
         if(!school) {
@@ -458,10 +453,10 @@ function updateSchool(new_school, callback) {
         school.save((err) => {
             if(err) {
                 console.error('Error when saving updated school: ' + school);
-                console.error(err);
+                return handleError(err, callback);
             }
 
-            callback(err);
+            callback();
         });
     });
 }
@@ -470,10 +465,10 @@ function getSchools(callback) {
     School.find((err, schools) => {
         if(err) {
             console.error('Error when getting schools');
-            console.error(err);
+            return handleError(err, callback);
         }
 
-        callback(err, schools);
+        callback(null, schools);
     });
 }
 
@@ -481,8 +476,7 @@ function createCourse(course, callback) {
     new Course(course).save((err, course) => {
         if(err) {
             console.error('Error when creating course: ' + course);
-            console.error(err);
-            return callback(err);
+            return handleError(err, callback);
         }
 
         callback(null, course.id);
@@ -496,8 +490,7 @@ function updateCourse(new_course, callback) {
     Course.findById(new ObjectID(course_id), (err, course) => {
         if(err) {
             console.error('Error when getting course: ' + course_id);
-            console.error(err);
-            return callback(err);
+            return handleError(err, callback);
         }
 
         if(!course) {
@@ -508,10 +501,10 @@ function updateCourse(new_course, callback) {
         course.save((err) => {
             if(err) {
                 console.error('Error when saving updated course: ' + course);
-                console.error(err);
+                return handleError(err, callback);
             }
 
-            callback(err);
+            callback();
         });
     });
 }
@@ -520,10 +513,10 @@ function getCourses(school_id, callback) {
     Course.find({ school_id: new ObjectID(school_id) }, (err, courses) => {
         if(err) {
             console.error('Error when getting courses for school: ' + school_id);
-            console.error(err);
+            return handleError(err, callback);
         }
 
-        callback(err, courses);
+        callback(null, courses);
     });
 }
 
@@ -531,13 +524,12 @@ function createTerm(user, term, callback) {
     new Term(term).save((err, term) => {
         if(err) {
             console.error('Error when creating term: ' + term);
-            console.error(err);
-            return callback(err);
+            return handleError(err, callback);
         }
 
         addUser(term.id, user.username, { isCreator: true }, (err) => {
             if(err) {
-                callback(err);
+                return handleError(err, callback);
             } else {
                 callback(null, term.id);
             }
@@ -556,8 +548,7 @@ function updateTerm(new_term, callback) {
     Term.findById(new ObjectID(term_id), (err, term) => {
         if(err) {
             console.error('Error when getting term: ' + term_id);
-            console.error(err);
-            return callback(err);
+            return handleError(err, callback);
         }
 
         if(!term) {
@@ -568,10 +559,10 @@ function updateTerm(new_term, callback) {
         term.save((err) => {
             if(err) {
                 console.error('Error when saving updated term: ' + term);
-                console.error(err);
+                return handleError(err, callback);
             }
 
-            callback(err);
+            callback();
         });
     });
 }
@@ -580,10 +571,10 @@ function getTerms(course_id, callback) {
     Term.find({ course_id: new ObjectID(course_id) }, (err, terms) => {
         if(err) {
             console.error('Error when getting terms for course: ' + course_id);
-            console.error(err);
+            return handleError(err, callback);
         }
 
-        callback(err, terms);
+        callback(null, terms);
     });
 }
 
@@ -591,8 +582,7 @@ function addUser(term_id, username, permissions, callback) {
     Term.findById(new ObjectID(term_id), (err, term) => {
         if(err) {
             console.error('Error when getting term: ' + term_id);
-            console.error(err);
-            return callback(err);
+            return handleError(err, callback);
         }
 
         if(!term) {
@@ -610,8 +600,7 @@ function addUser(term_id, username, permissions, callback) {
         User.findById(username, '-auth', (err, user) => {
             if(err) {
                 console.error('Error when getting user: ' + username);
-                console.error(err);
-                return callback(err);
+                return handleError(err, callback);
             }
 
             if(!user) {
@@ -630,17 +619,16 @@ function addUser(term_id, username, permissions, callback) {
             term.save((err) => {
                 if(err) {
                     console.error('Error when adding user: ' + term_id + ', ' + username);
-                    console.error(err);
-                    callback(err);
+                    return handleError(err, callback);
                 } else {
                     user.permissions.push(permissions);
                     user.save((err) => {
                         if(err) {
                             console.error('Error when saving user permissions for ' + username);
-                            console.error(err);
+                            return handleError(err, callback);
                         }
 
-                        callback(err);
+                        callback();
                     });
                 }
             });
@@ -652,8 +640,7 @@ function removeUser(term_id, username, callback) {
     Term.findById(new ObjectID(term_id), (err, term) => {
         if(err) {
             console.error('Error when getting term: ' + term_id);
-            console.error(err);
-            return callback(err);
+            return handleError(err, callback);
         }
 
         if(!term) {
@@ -667,8 +654,7 @@ function removeUser(term_id, username, callback) {
         User.findById(username, '-auth', (err, user) => {
             if(err) {
                 console.error('Error when finding user: ' + username);
-                console.error(err);
-                return callback(err);
+                return handleError(err, callback);
             }
 
             if(!user) {
@@ -676,10 +662,10 @@ function removeUser(term_id, username, callback) {
                 term.save((err) => {
                     if(err) {
                         console.error('Error when removing user: ' + term_id + ', ' + username);
-                        console.error(err);
+                        return handleError(err, callback);
                     }
                     
-                    callback(err || 'User not found.');
+                    callback('User not found.');
                 });
                 return;
             }
@@ -694,18 +680,17 @@ function removeUser(term_id, username, callback) {
             user.save((err) => {
                 if(err) {
                     console.error('Error when saving user permissions.');
-                    console.error(err);
-                    return callback(err);
+                    return handleError(err, callback);
                 }
 
                 term.users.pull(username);
                 term.save((err) => {
                     if(err) {
                         console.error('Error when removing user: ' + term_id + ', ' + username);
-                        console.error(err);
+                        return handleError(err, callback);
                     }
                     
-                    callback(err);
+                    callback();
                 });
             });
         });
@@ -720,8 +705,7 @@ function setPermissions(username, permissions, callback) {
     User.findById(username, '-auth', (err, user) => {
         if(err) {
             console.error('Error when finding user: ' + username);
-            console.error(err);
-            return callback(err);
+            return handleError(err, callback);
         }
 
         if(!user) {
@@ -738,10 +722,10 @@ function setPermissions(username, permissions, callback) {
         user.save((err) => {
             if(err) {
                 console.error('Error when saving user permissions for user ' + username);
-                console.error(err);
+                return handleError(err, callback);
             }
 
-            callback(err);
+            callback();
         });
     });
 }
@@ -754,8 +738,7 @@ function selectTerm(username, term_id, callback) {
         .exec((err, term) => {
             if(err) {
                 console.error('Error when selecting term: ' + term_id);
-                console.error(err);
-                return callback(err);
+                return handleError(err, callback);
             }
 
             if(!term) {
@@ -765,8 +748,7 @@ function selectTerm(username, term_id, callback) {
             User.findById(username, '-auth', (err, user) => {
                 if(err) {
                     console.error('Error when getting user: ' + username);
-                    console.error(err);
-                    return callback(err);
+                    return handleError(err, callback);
                 }
 
                 user.lastSelectedTerm = {
@@ -791,8 +773,7 @@ function createResource(resource, callback) {
     new Resource({ data: resource }).save((err, result) => {
         if(err) {
             console.error('Error when creating resource: ' + resource);
-            console.error(err);
-            return callback(err);
+            return handleError(err, callback);
         }
 
         callback(null, result.id);
@@ -803,10 +784,10 @@ function deleteResource(resource_id, callback) {
     Resource.findByIdAndRemove(new ObjectID(resource_id), (err) => {
         if(err) {
             console.error('Error when deleting resource: ' + resource_id);
-            console.error(err);
+            return handleError(err, callback);
         }
 
-        callback(err);
+        callback();
     });
 }
 
@@ -814,8 +795,7 @@ function getResource(resource_id, callback) {
     Resource.findById(new ObjectID(resource_id)).lean().exec((err, resource) => {
         if(err) {
             console.error('Error when getting resource: ' + resource_id);
-            console.error(err);
-            return callback(err);
+            return handleError(err, callback);
         }
 
         if(resource) {
@@ -830,10 +810,10 @@ function createQuestion(question, callback) {
     new Question(question).save((err) => {
         if(err) {
             console.error('Error when inserting question: ' + JSON.stringify(question, null, 4));
-            console.error(err);
+            return handleError(err, callback);
         }
 
-        callback(err);
+        callback();
     });
 }
 
@@ -848,8 +828,7 @@ function updateQuestion(question, required_course_id, callback) {
     Question.findById(new ObjectID(question_id), (err, result) => {
         if(err) {
             console.error('Error when update question: ' + JSON.stringify(question, null, 4));
-            console.error(err);
-            return callback(err);
+            return handleError(err, callback);
         }
 
         if(!result || String(result.course_id) != required_course_id) {
@@ -860,10 +839,10 @@ function updateQuestion(question, required_course_id, callback) {
         result.save((err) => {
             if(err) {
                 console.error('Error when saving question: ' + JSON.stringify(question, null, 4));
-                console.error(err);
+                return handleError(err, callback);
             }
 
-            callback(err);
+            callback();
         });
     });
 }
@@ -874,8 +853,7 @@ function deleteQuestion(question_id, required_course_id, callback) {
     Question.findById(question_id, (err, question) => {
         if(err) {
             console.error('Error when deleting question: ' + question_id);
-            console.error(err);
-            return callback(err);
+            return handleError(err, callback);
         }
 
         if(!question || String(question.course_id) != required_course_id) {
@@ -885,15 +863,13 @@ function deleteQuestion(question_id, required_course_id, callback) {
         question.remove((err) => {
             if(err) {
                 console.error('Error deleting question: ' + question_id);
-                console.error(err);
-                return callback(err);
+                return handleError(err, callback);
             }
 
             Quiz.find({ questions: { $elemMatch: { $eq: question_id }}}, (err, quizzes) => {
                 if(err) {
                     console.error('Error when deleting question from quizzes: ' + question_id);
-                    console.error(err);
-                    return callback(err);
+                    return handleError(err, callback);
                 }
 
                 var promises = [];
@@ -905,8 +881,7 @@ function deleteQuestion(question_id, required_course_id, callback) {
 
                 Promise.all(promises).then(() => callback(), (err) => {
                     console.error('Error when saving quizzes when deleting question: ' + question_id);
-                    console.error(err);
-                    callback(err);
+                    return handleError(err, callback);
                 });
             });
         });
@@ -938,8 +913,7 @@ function getQuestionsByCourse(course_id, callback) {
             .exec((err, results) => {
                 if(err) {
                     console.error('Error when getting questions by term');
-                    console.error(err);
-                    return callback(err);
+                    return handleError(err, callback);
                 }
 
                 callback(null, results);
@@ -978,10 +952,10 @@ function createQuiz(quiz, callback) {
         new Quiz(quiz).save((err) => {
             if(err) {
                 console.error('Error when creating quiz: ' + JSON.stringify(quiz, null, 4));
-                console.error(err);
+                return handleError(err, callback);
             }
 
-            callback(err);
+            callback();
         });
     });
 }
@@ -998,8 +972,7 @@ function updateQuiz(quiz, required_term_id, callback) {
         Quiz.findById(new ObjectID(quiz_id), (err, result) => {
             if(err) {
                 console.error('Error when updating quiz: ' + JSON.stringify(quiz, null, 4));
-                console.error(err);
-                return callback(err);
+                return handleError(err, callback);
             }
 
             if(!result || String(result.term_id) != required_term_id) {
@@ -1014,10 +987,10 @@ function updateQuiz(quiz, required_term_id, callback) {
             result.save((err) => {
                 if(err) {
                     console.error('Error when saving quiz: ' + JSON.stringify(quiz, null, 4));
-                    console.error(err);
+                    return handleError(err, callback);
                 }
 
-                callback(err);
+                callback();
             });
         });
 
@@ -1045,8 +1018,7 @@ function updateLiveQuiz(quiz_id, required_term_id, question_idx, callback) {
     Quiz.findById(new ObjectID(quiz_id), (err, quiz) => {
         if(err) {
             console.error('Error when getting live quiz: ' + quiz_id);
-            console.error(err);
-            return callback(err);
+            return handleError(err, callback);
         }
 
         if(!quiz || String(quiz.term_id) != required_term_id) {
@@ -1061,10 +1033,10 @@ function updateLiveQuiz(quiz_id, required_term_id, question_idx, callback) {
         quiz.save((err) => {
             if(err) {
                 console.error('Error when updating live quiz: ' + quiz_id);
-                console.error(err);
+                return handleError(err, callback);
             }
 
-            callback(err);
+            callback();
         });
     });
 }
@@ -1073,8 +1045,7 @@ function deleteQuiz(quiz_id, required_term_id, callback) {
     Quiz.findById(new ObjectID(quiz_id), (err, quiz) => {
         if(err) {
             console.error('Error when deleting quiz: ' + quiz_id);
-            console.error(err);
-            return callback(err);
+            return handleError(err, callback);
         }
 
         if(!quiz || String(quiz.term_id) != required_term_id) {
@@ -1084,10 +1055,10 @@ function deleteQuiz(quiz_id, required_term_id, callback) {
         quiz.remove((err) => {
             if(err){
                 console.error('Error deleting quiz: ' + quiz_id);
-                console.error(err);
+                return handleError(err, callback);
             }
 
-            callback(err);
+            callback();
         });
     });
 }
@@ -1115,8 +1086,7 @@ function getQuizById(is_admin, quiz_id, callback) {
     query.exec((err, quiz) => {
         if(err) {
             console.error('Error when getting quiz by id: ' + quiz_id);
-            console.error(err);
-            return callback(err);
+            return handleError(err, callback);
         }
 
         if(quiz && (is_admin || quiz.is_published)) {
@@ -1137,8 +1107,7 @@ function getQuizzesByTerm(is_admin, term_id, callback) {
     query.exec((err, quizzes) => {
         if(err) {
             console.error('Error when getting all quizzes for term: ' + term_id);
-            console.error(err);
-            return callback(err);
+            return handleError(err, callback);
         }
 
         callback(null, quizzes.map((q) => processQuiz(is_admin, q)));
@@ -1155,8 +1124,7 @@ function submitQuiz(username, submission, callback) {
         .exec((err, quiz) => {
             if(err) {
                 console.error('Error when getting quiz and questions ' + submission.quiz_id);
-                console.error(err);
-                return callback(err);
+                return handleError(err, callback);
             }
 
             if(!quiz) {
@@ -1192,10 +1160,10 @@ function submitQuiz(username, submission, callback) {
                 to_submit.save((err) => {
                     if(err) {
                         console.error('Error when creating submission: ' + to_submit.toJSON());
-                        console.error(err);
+                        return handleError(err, callback);
                     }
 
-                    callback(err);
+                    callback();
                 });
             }
 
@@ -1203,8 +1171,7 @@ function submitQuiz(username, submission, callback) {
                 Submission.find({ username: username, quiz_id: new ObjectID(submission.quiz_id) }, (err, submissions) => {
                     if(err) {
                         console.error('Error getting past submission for quiz: ' + submission.quiz_id);
-                        console.error(err);
-                        return callback(err);
+                        return handleError(err, callback);
                     }
 
                     if(submissions.length == 0) {
@@ -1234,10 +1201,10 @@ function submitQuiz(username, submission, callback) {
                     to_submit.save((err) => {
                         if(err) {
                             console.error('Error when updating submission: ' + JSON.stringify(to_submit.toJSON()));
-                            console.error(err);
+                            return handleError(err, callback);
                         }
 
-                        callback(err);
+                        callback();
                     });
                 });
             } else {
@@ -1253,8 +1220,7 @@ function getSubmissionsByUser(username, term_id, callback) {
             .exec((err, results) => {
                 if(err) {
                     console.error('Error when getting submissions for user: ' + username);
-                    console.error(err);
-                    return callback(err);
+                    return handleError(err, callback);
                 }
 
                 callback(null, results);
@@ -1272,8 +1238,7 @@ function getSubmissionsByTerm(term_id, callback) {
             .exec((err, results) => {
                 if(err) {
                     console.error('Error when getting submissions for term: ' + term_id);
-                    console.error(err);
-                    return callback(err);
+                    return handleError(err, callback);
                 }
 
                 callback(null, results);

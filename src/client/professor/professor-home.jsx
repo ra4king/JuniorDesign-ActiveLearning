@@ -213,6 +213,13 @@ class QuizEditor extends React.Component {
             }
         }
 
+        if(!this.state.name.trim()) {
+            return this.props.showConfirm({
+                type: 'ok',
+                title: 'Name is required'
+            });
+        }
+
         if(this.state._id) {
             socket.send('updateQuiz', {
                 _id: this.state._id,
