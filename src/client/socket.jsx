@@ -24,7 +24,7 @@ export default new function() {
         connecting = true;
 
         console.log('Connecting...');
-        var s = new WebSocket('wss://www.roiatalla.com/active-learning/api');
+        var s = new WebSocket(api_host);
         s.onopen = () => {
             websocket = s;
             console.log('Connected to server!');

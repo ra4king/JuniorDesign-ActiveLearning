@@ -1,6 +1,5 @@
 import React from 'react';
 import socket from '../socket.jsx';
-import { unescapeHTML } from '../utils.jsx';
 import Chart from 'chart.js';
 
 /* JSON Object I want
@@ -74,7 +73,7 @@ class GraphPanel extends React.Component {
                 score += question.score;
                 total += question.total;
             }
-            quizNames.push(unescapeHTML(statistics[quiz_id].name));
+            quizNames.push(statistics[quiz_id].name);
             quizScores.push(100.0 * (score / total));
         }
 

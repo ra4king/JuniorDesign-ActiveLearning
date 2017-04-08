@@ -25,6 +25,7 @@
     "csurf": "^1.9.0",
     "express": "^4.14.1",
     "express-handlebars": "^3.0.0",
+    "lodash": "^4.17.4",
     "moment": "^2.18.1",
     "mongodb": "^2.2.24",
     "mongoose": "^4.8.7",

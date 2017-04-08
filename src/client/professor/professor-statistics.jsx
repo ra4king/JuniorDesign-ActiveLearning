@@ -247,7 +247,7 @@ class GraphPanel extends React.Component {
                 score += question.score;
                 total += question.total;
             }
-            quizNames.push(unescapeHTML(statistics[username][quiz_id].name));
+            quizNames.push(statistics[username][quiz_id].name);
             quizScores.push(100.0 * (score / total));
         }
 
@@ -276,70 +276,40 @@ class GraphPanel extends React.Component {
             for (var quiz_id in statistics[username]) {
                 if (statistics[username][quiz_id].name == name) {
                     for (var question_id in statistics[username][quiz_id].answers){
-                        var prevScore = 0;
-                        var prevTotal = 0;
-                        var prevA = 0;
-                        var prevB = 0;
-                        var prevC = 0;
-                        var prevD = 0
+                        var answerScores = [];
+
                         var question_name = statistics[username][quiz_id].answers[question_id].title;
                         var question = statistics[username][quiz_id].answers[question_id];
-                        if (questions[question_name] != null){
-                            prevScore = questions[question_name].score;
-                            prevTotal = questions[question_name].total;
-                            prevA = questions[question_name]['A'];
-                            prevB = questions[question_name]['B'];
-                            prevC = questions[question_name]['C'];
-                            prevD = questions[question_name]['D'];
+
+                        var prev = questions[question_name] || { score: 0, total: 0, answerScores: new Array(question.options || 0).fill(0) }
+
+                        if(question.answer >= 0) {
+                            prev.answerScores[question.answer] += question.total;
+
+                            for(var i = 0; i < prev.answerScores.length; i++) {
+                                prev.answerScores[i] = prev.answerScores[i] || 0;
+                            }
                         }
-                        if (question['answer'] == 0){
-                            prevA += question.total;
-                        }
-                        if (question['answer'] == 1){
-                            prevB += question.total;
-                        }
-                        if (question['answer'] == 2){
-                            prevC += question.total;
-                        }
-                        if (question['answer'] == 3){
-                            prevD += question.total;
-                        }
-                        questions[question_name] = {
-                        score: prevScore + question.score, 
-                        total: prevTotal + question.total,
-                        A: prevA,
-                        B: prevB,
-                        C: prevC,
-                        D: prevD
-                    };
+
+                        prev.score += question.score;
+                        prev.total += question.total;
+
+                        questions[question_name] = prev;
                     }
                 }
             }
         }
+
         var labels = []
         var data = []
         for(question in questions) {
-            var str = unescapeHTML(question);
-            var perA = (100 * (questions[question]['A'] / questions[question].total)).toFixed(2);
-            var perB = (100 * (questions[question]['B'] / questions[question].total)).toFixed(2);
-            var perC = (100 * (questions[question]['C'] / questions[question].total)).toFixed(2);
-            var perD = (100 * (questions[question]['D'] / questions[question].total)).toFixed(2);
-            if (perA > 0) {
-                str += " A: " + perA + "%";
-            }
-            if (perB > 0) {
-                str += " B: " + perB + "%";
-            }
-            if (perC > 0) {
-                str += " C: " + perC + "%";
-            }
-            if (perD > 0) {
-                str += " D: " + perD + "%";
-            }
+            var str = question + ' ';
+            str += questions[question].answerScores.map((score, idx) => 
+                String.fromCharCode('A'.charCodeAt(0) + idx) + ': ' + ((100 * (score / questions[question].total)).toFixed(2)) + '%').join(' ');
+
             labels.push(str);
             data.push(100.0 * (questions[question].score / questions[question].total));
         }
-
 
         var info = {
             labels: labels,
@@ -384,7 +354,7 @@ class GraphPanel extends React.Component {
         var labels = []
         var data = []
         for (var quizName in quizzes) {
-            labels.push(unescapeHTML(quizName));
+            labels.push(quizName);
             data.push(100.0 * (quizzes[quizName].score / quizzes[quizName].total));
         }
         var info = {

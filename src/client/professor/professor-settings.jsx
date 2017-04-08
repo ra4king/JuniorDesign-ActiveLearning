@@ -1,6 +1,5 @@
 import React from 'react';
 import socket from '../socket.jsx';
-import { unescapeHTML } from '../utils.jsx';
 
 
 export default class SettingsPanels extends React.Component {
@@ -117,7 +116,7 @@ class StudentPanel extends React.Component {
                                 (!user.permissions || !user.permissions.isTA) &&
                                     (<li key={user.username}>
                                         <button className='list-button' onClick={() => this.props.selectUser(user)}>
-                                            {unescapeHTML(user.username)}
+                                            {user.username}
                                         </button>
                                     </li>)
                             ))}
@@ -127,7 +126,7 @@ class StudentPanel extends React.Component {
                                 user.permissions && user.permissions.isTA &&
                                     (<li key={user.username}>
                                         <button className='list-button' onClick={() => this.props.selectUser(user)}>
-                                            {unescapeHTML(user.username)}
+                                            {user.username}
                                         </button>
                                     </li>)
                             ))}

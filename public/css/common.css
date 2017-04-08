@@ -288,7 +288,14 @@ button {
     flex: 1 1 auto;
 }
 
-#quiz-list {
+#lists {
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: flex-start;
+    align-items: stretch;
+}
+
+.quiz-list {
     list-style-type: none;
     overflow: auto;
 }

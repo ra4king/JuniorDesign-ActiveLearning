@@ -9,9 +9,7 @@ module.exports = function(server, app, base_url, debug) {
     app.set('view engine', 'html');
 
     const database = require('./database.js');
-    if(!debug) {
-        require('./api.js')(base_url, server, database);
-    }
+    require('./api.js')(base_url, server, database);
 
     app.use(require('cookie-parser')('A very important secret'));
     app.use(require('body-parser').urlencoded({ extended: false }));
@@ -19,13 +17,10 @@ module.exports = function(server, app, base_url, debug) {
     app.use(express.static('public'));
 
     var check_login = (req, res, next) => {
-        console.log('Checking login');
-
         var session_id = req.cookies['session_id'];
         if(session_id) {
             database.validateSession(session_id, (err, user) => {
                 if(err || !user) {
-                    console.log('Not validated: ' + err + ' ' + user);
                     res.clearCookie('session_id');
                     res.redirect(req.baseUrl + '/login?redirect=' + req.originalUrl);
                 } else {
@@ -39,20 +34,23 @@ module.exports = function(server, app, base_url, debug) {
     };
 
     app.get('/', check_login, (req, res) => {
-        console.log('Getting home');
-        res.render('app');
+        var api_host = debug ? 'ws://localhost:1337/active-learning/api' : 'wss://roiatalla.com/active-learning/api';
+        res.render('app', {api_host: api_host});
     });
 
     app.get('/select-term', check_login, (req, res) => {
-        res.render('app');
+        var api_host = debug ? 'ws://localhost:1337/active-learning/api' : 'wss://roiatalla.com/active-learning/api';
+        res.render('app', {api_host: api_host});
     });
 
     app.get('/statistics', check_login, (req, res) => {
-        res.render('app');
+        var api_host = debug ? 'ws://localhost:1337/active-learning/api' : 'wss://roiatalla.com/active-learning/api';
+        res.render('app', {api_host: api_host});
     });
 
     app.get('/settings', check_login, (req, res) => {
-        res.render('app');
+        var api_host = debug ? 'ws://localhost:1337/active-learning/api' : 'wss://roiatalla.com/active-learning/api';
+        res.render('app', {api_host: api_host});
     });
 
     app.use('/login', require('csurf')({ cookie: true }));

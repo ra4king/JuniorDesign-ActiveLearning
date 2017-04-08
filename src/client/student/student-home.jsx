@@ -1,7 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import socket from '../socket.jsx';
-import { unescapeHTML } from '../utils.jsx';
 import StatisticsPanels from './student-statistics.jsx';
 
 import { Router, Route, IndexRoute, IndexLink, browserHistory } from 'react-router';
@@ -64,17 +63,59 @@ class QuizPanel extends React.Component {
 class QuizList extends React.Component {
     render() {
         return (
-            <ol id='quiz-list' className='list'>
-                {Object.keys(this.props.quizzes).map((id) => {
-                    var quiz = this.props.quizzes[id];
-                    var chooseQuizId = this.props.chooseQuiz.bind(null, id);
-                    return (
-                        <li key={id} className='quiz'>
-                            <button className={'quiz-body' + (quiz.is_live ? ' is-live-quiz-body' : '')} onClick={chooseQuizId}>{unescapeHTML(quiz.name)}</button>
-                        </li>
-                    );
-                })}
-            </ol>
+            <div id='lists' className='list'>
+                <p>Live quizzes</p>
+                <ol className='quiz-list'>
+                    {Object.keys(this.props.quizzes)
+                        .filter((id) => {
+                            var quiz = this.props.quizzes[id];
+                            return quiz.is_live && new Date() >= new Date(quiz.settings.open_date) && new Date() <= new Date(quiz.settings.close_date);
+                        })
+                        .map((id) => {
+                            var quiz = this.props.quizzes[id];
+                            var chooseQuizId = this.props.chooseQuiz.bind(null, id);
+                            return (
+                                <li key={id} className='quiz'>
+                                    <button className='quiz-body is-live-quiz-body' onClick={chooseQuizId}>{quiz.name}</button>
+                                </li>
+                            );
+                        })}
+                </ol>
+                <p>Active quizzes</p>
+                <ol className='quiz-list'>
+                    {Object.keys(this.props.quizzes)
+                        .filter((id) => {
+                            var quiz = this.props.quizzes[id];
+                            return !quiz.is_live && new Date() >= new Date(quiz.settings.open_date) && new Date() <= new Date(quiz.settings.close_date);
+                        })
+                        .map((id) => {
+                            var quiz = this.props.quizzes[id];
+                            var chooseQuizId = this.props.chooseQuiz.bind(null, id);
+                            return (
+                                <li key={id} className='quiz'>
+                                    <button className='quiz-body' onClick={chooseQuizId}>{quiz.name}</button>
+                                </li>
+                            );
+                        })}
+                </ol>
+                <p>Inactive quizzes</p>
+                <ol className='quiz-list'>
+                    {Object.keys(this.props.quizzes)
+                        .filter((id) => {
+                            var quiz = this.props.quizzes[id];
+                            return new Date() < new Date(quiz.settings.open_date) || new Date() > new Date(quiz.settings.close_date);
+                        })
+                        .map((id) => {
+                            var quiz = this.props.quizzes[id];
+                            var chooseQuizId = this.props.chooseQuiz.bind(null, id);
+                            return (
+                                <li key={id} className='quiz'>
+                                    <button className={'quiz-body' + (quiz.is_live ? ' is-live-quiz-body' : '')} onClick={chooseQuizId}>{quiz.name}</button>
+                                </li>
+                            );
+                        })}
+                </ol>
+            </div>
         );
     }
 }
@@ -163,7 +204,12 @@ class QuestionList extends React.Component {
                             getResource={this.props.getResource}
                             question={question}
                             answerSelected={this.answerSelected.bind(this, question._id )} />)),
-                <li key='submit-all' className='submit-all'><button className='submit-all-button' onClick={this.submitClicked.bind(this)}>Submit All</button></li>]}
+
+                    (<li key='submit-all' className='submit-all'>
+                        {new Date() >= new Date(this.props.quiz.settings.open_date) && new Date() <= new Date(this.props.quiz.settings.close_date)
+                            && <button className='submit-all-button' onClick={this.submitClicked.bind(this)}>Submit All</button>}
+                    </li>)
+                ]}
             </ol>
         );
     }
@@ -196,7 +242,7 @@ class Question extends React.Component {
         return (
             <li className='question'>
                 <div className='question-body' style={this.state.image || this.props.question.image_id ? {width: '70%'} : {}}>
-                    <p className='question-title'>{unescapeHTML(this.props.question.title)}</p>
+                    <p className='question-title'>{this.props.question.title}</p>
                     <ol className='answer-list'>
                         {this.props.question.answers.map((answer, idx) => (
                             <li key={answer + idx} className='answer'>
@@ -205,7 +251,7 @@ class Question extends React.Component {
                                     name={'answers-' + this.props.question._id}
                                     value={idx}
                                     onChange={this.answerSelected.bind(this)}/>
-                                {unescapeHTML(answer)}
+                                {answer}
                             </li>
                         ))}
                     </ol>

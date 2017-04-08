@@ -54,12 +54,7 @@ module.exports = function(base_url, server, database) {
                     connection.socket.sendEvent('quizzes', [toSend]);
                 });
             } else {
-                database.getQuizById(false, String(quiz._id), (err, quizWithQuestions) => {
-                    if(err) {
-                        console.error('Error when getting quiz with questions');
-                        console.error(err);
-                    }
-
+                var send = (quizWithQuestions) => {
                     subscriptions[name].forEach((connection) => {
                         var [permissions, admin] = getPermissions(connection);
                         if(admin) {
@@ -68,7 +63,13 @@ module.exports = function(base_url, server, database) {
                             connection.socket.sendEvent('quizzes', [quizWithQuestions]);
                         }
                     });
-                });
+                }
+
+                if(quiz.is_published) {
+                    database.getQuizById(false, String(quiz._id), (err, quizWithQuestions) => send(quizWithQuestions));
+                } else {
+                    send(null);
+                }
             }
         }
     });
@@ -411,6 +412,7 @@ module.exports = function(base_url, server, database) {
                 unsubscribe(connection.selectedTerm.course_id + '-questions', connection);
                 unsubscribe(connection.selectedTerm.term_id + '-quizzes', connection);
                 unsubscribe(connection.selectedTerm.term_id + '-submissions', connection);
+                unsubscribe(connection.selectedTerm.term_id + '-terms', connection);
             }
         });
     });

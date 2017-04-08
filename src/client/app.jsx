@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import socket from './socket.jsx';
+import _ from 'lodash';
 
 import ProfessorHome from './professor/professor-home.jsx';
 import ProfessorStatistics from './professor/professor-statistics.jsx';
@@ -59,7 +60,7 @@ class App extends React.Component {
             console.log(user);
 
             this.setState((prevState) => {
-                if(JSON.stringify(prevState.user) != JSON.stringify(user)) {
+                if(!_.isEqual(prevState.user, user)) {
                     console.log('user update: selecting term...');
                     this.selectTerm(user.lastSelectedTerm.term_id);
                     return { user: user };
@@ -308,10 +309,7 @@ class SelectTermPanels extends React.Component {
             getSchools();
         } else {
             socket.on('login', (user) => {
-                if(user.lastSelectedTerm) {
-                    this.props.selectTerm(user.lastSelectedTerm.term_id);
-                    browserHistory.push('/active-learning/');
-                } else {
+                if(!user.lastSelectedTerm) {
                     getSchools();
                 }
             });

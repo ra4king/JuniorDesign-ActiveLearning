@@ -1,6 +1,7 @@
 import React from 'react';
 import socket from '../socket.jsx';
-import { unescapeHTML } from '../utils.jsx';
+import Datetime from 'react-datetime';
+import moment from 'moment';
 
 
 export default class HomePanels extends React.Component {
@@ -113,6 +114,8 @@ class QuizEditor extends React.Component {
         super(props);
 
         let settings = props.quiz.settings || {};
+        let m1 = moment();
+        let m2 = moment();
 
         this.state = {
             _id: props.quiz._id,
@@ -122,17 +125,24 @@ class QuizEditor extends React.Component {
             questions: props.quiz.questions || [],
             settings: {
                 live_question: settings.live_question,
-                open_date: new Date(settings.open_date || Date.now()).toISOString().substring(0, 10),
-                close_date: new Date(settings.close_date || Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().substring(0, 10), // 1 week
+                open_date: new Date(settings.open_date || m1.seconds(0).milliseconds(0).minutes(Math.floor(m1.minutes() / 5) * 5).toDate()),
+                close_date: new Date(settings.close_date || m2.seconds(0).milliseconds(0).minutes(Math.floor(m2.minutes() / 5) * 5).days(m2.days() + 7).toDate()), // 1 week
                 max_submission: settings.max_submission || 0,
-                allow_question_review: settings.allow_question_review || false,
-                allow_answer_review: settings.allow_answer_review || false,
+                allow_submission_review: settings.allow_submission_review || false,
+                submission_review_after_close: settings.submission_review_after_close !== false,
+                allow_score_review: settings.allow_score_review || false,
+                score_review_after_close: settings.score_review_after_close !== false,
+                allow_correct_review: settings.allow_correct_review || false,
+                correct_review_after_close: settings.correct_review_after_close !== false
             }
         };
     }
 
     componentWillReceiveProps(newProps) {
         this.setState((prevState) => {
+            let m1 = moment();
+            let m2 = moment();
+
             let settings = newProps.quiz.settings || prevState.settings;
 
             return {
@@ -143,11 +153,15 @@ class QuizEditor extends React.Component {
                 questions: newProps.quiz.questions || prevState.questions,
                 settings: {
                     live_question: settings.live_question,
-                    open_date: new Date(settings.open_date || Date.now()).toISOString().substring(0, 10),
-                    close_date: new Date(settings.close_date || Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().substring(0, 10), // 1 week
+                    open_date: new Date(settings.open_date || m1.seconds(0).milliseconds(0).minutes(Math.floor(m1.minutes() / 5) * 5).toDate()),
+                    close_date: new Date(settings.close_date || m2.seconds(0).milliseconds(0).minutes(Math.floor(m2.minutes() / 5) * 5).days(m2.days() + 7).toDate()), // 1 week
                     max_submission: settings.max_submission || 0,
-                    allow_question_review: settings.allow_question_review || false,
-                    allow_answer_review: settings.allow_answer_review || false,
+                    allow_submission_review: settings.allow_submission_review || false,
+                    submission_review_after_close: settings.submission_review_after_close !== false,
+                    allow_score_review: settings.allow_score_review || false,
+                    score_review_after_close: settings.score_review_after_close !== false,
+                    allow_correct_review: settings.allow_correct_review || false,
+                    correct_review_after_close: settings.correct_review_after_close !== false
                 }
             };
         });
@@ -157,40 +171,40 @@ class QuizEditor extends React.Component {
         this.setState({ name: e.target.value });
     }
 
-    onOpenDateChange(e) {
-        let value = e.target.value;
+    onOpenDateChange(moment) {
+        if(typeof moment === 'string') {
+            var value = new Date(moment);
+        } else {
+            var value = moment.toDate();
+        }
 
         this.setState((prevState) => {
             var newSettings = {}
             Object.assign(newSettings, prevState.settings);
 
-            try {
-                newSettings.open_date = new Date(value).toISOString().substring(0, 10);
-            } catch(e) {
-                newSettings.open_date = new Date().toISOString().substring(0, 10);
-            }
+            newSettings.open_date = value;
             return { settings: newSettings };
         });
     }
 
-    onCloseDateChange(e) {
-        let value = e.target.value;
+    onCloseDateChange(moment) {
+        if(typeof moment === 'string') {
+            var value = new Date(moment);
+        } else {
+            var value = moment.toDate();
+        }
 
         this.setState((prevState) => {
             var newSettings = {}
             Object.assign(newSettings, prevState.settings);
 
-            try {
-                newSettings.close_date = new Date(value).toISOString().substring(0, 10);
-            } catch(e) {
-                newSettings.close_date = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().substring(0, 10);
-            }
+            newSettings.close_date = value;
             return { settings: newSettings };
         });
     }
 
     onMaxSubmissionChange(e) {
-        let value = e.target.value;
+        let value = Math.floor(Math.max(e.target.value, 0));
 
         this.setState((prevState) => {
             var newSettings = {}
@@ -355,38 +369,113 @@ class QuizEditor extends React.Component {
                             </div>
                         </div>
                         <div className='quiz-table-row'>
-                            <p className='quiz-creator-header-entry quiz-table-cell'>Open Date:&nbsp;
+                            <div className='quiz-creator-header-entry quiz-table-cell'>Open Date:&nbsp;
                                 {this.state.is_published
-                                    ? this.state.settings.open_date
-                                    : <input
-                                        type='date'
+                                    ? this.state.settings.open_date.toLocaleString()
+                                    : <Datetime
                                         value={this.state.settings.open_date}
-                                        onChange={this.onOpenDateChange.bind(this)} />}</p>
-                            <p className='quiz-creator-header-entry quiz-table-cell'>Close Date:&nbsp;
+                                        onChange={this.onOpenDateChange.bind(this)}
+                                        isValidDate={(date) => date.toDate() < this.state.settings.close_date}
+                                        timeConstraints={{ minutes: { step: 5 }}} />}</div>
+                            <div className='quiz-creator-header-entry quiz-table-cell'>Close Date:&nbsp;
                                 {this.state.is_published
-                                    ? this.state.settings.close_date
-                                    : <input type='date'
+                                    ? this.state.settings.close_date.toLocaleString()
+                                    : <Datetime
                                         value={this.state.settings.close_date}
-                                        onChange={this.onCloseDateChange.bind(this)} />}</p>
+                                        onChange={this.onCloseDateChange.bind(this)}
+                                        isValidDate={(date) => date.toDate() > this.state.settings.open_date}
+                                        timeConstraints={{ minutes: { step: 5 }}} />}</div>
                         </div>
                         <div className='quiz-table-row'>
                             <div className='quiz-table-cell'>
-                                Live Quiz: {this.state.is_published
-                                                ? String(this.state.is_live)
-                                                : <input
-                                                    type='checkbox'
-                                                    checked={this.state.is_live}
-                                                    onChange={() => this.setState((prevState) => ({ is_live: !prevState.is_live }))} />}
+                                <input
+                                    type='checkbox'
+                                    checked={this.state.is_live}
+                                    onChange={() => !this.state.is_published && this.setState((prevState) => ({ is_live: !prevState.is_live }))} />
+                                Live Quiz
                             </div>
-                            <div className='quiz-creator-header-entry quiz-table-cell'>
-                                Submissions: {this.state.is_published
-                                                        ? (this.state.settings.max_submission || 'Unlimited')
-                                                        : <input
-                                                            type='number'
-                                                            size='2'
-                                                            value={this.state.settings.max_submission}
-                                                            onChange={this.onMaxSubmissionChange.bind(this)} />}
-                                {!this.state.is_published && '      0 for unlimited'}
+                            {!this.state.is_live &&
+                                <div className='quiz-creator-header-entry quiz-table-cell'>
+                                    <div>Submissions allowed: {this.state.is_published
+                                                                ? (this.state.settings.max_submission || 'Unlimited')
+                                                                : <input
+                                                                    type='number'
+                                                                    size='2'
+                                                                    value={this.state.settings.max_submission}
+                                                                    onChange={this.onMaxSubmissionChange.bind(this)} />}</div>
+                                    {!this.state.is_published && <div>0 for unlimited</div>}
+                                </div>}
+                        </div>
+                        <div className='quiz-table-row'>
+                            <div className='quiz-table-cell'>
+                                <input
+                                    type='checkbox'
+                                    checked={this.state.settings.allow_submission_review}
+                                    onChange={(e) => !this.state.is_published && this.setState((prevState) => {
+                                        var newSettings = Object.assign({}, prevState.settings);
+                                        newSettings.allow_submission_review = !newSettings.allow_submission_review;
+                                        return { settings: newSettings };
+                                    })}  />
+                                Allow submission review
+                            </div>
+                            <div className='quiz-table-cell'>
+                                <input
+                                    type='checkbox'
+                                    checked={this.state.settings.submission_review_after_close}
+                                    onChange={(e) => !this.state.is_published && this.setState((prevState) => {
+                                        var newSettings = Object.assign({}, prevState.settings);
+                                        newSettings.submission_review_after_close = !newSettings.submission_review_after_close;
+                                        return { settings: newSettings };
+                                    })}  />
+                                Release submissions after close
+                            </div>
+                        </div>
+                        <div className='quiz-table-row'>
+                            <div className='quiz-table-cell'>
+                                <input
+                                    type='checkbox'
+                                    checked={this.state.settings.allow_score_review}
+                                    onChange={(e) => !this.state.is_published && this.setState((prevState) => {
+                                        var newSettings = Object.assign({}, prevState.settings);
+                                        newSettings.allow_score_review = !newSettings.allow_score_review;
+                                        return { settings: newSettings };
+                                    })}  />
+                                Allow score review
+                            </div>
+                            <div className='quiz-table-cell'>
+                                <input
+                                    type='checkbox'
+                                    checked={this.state.settings.score_review_after_close}
+                                    onChange={(e) => !this.state.is_published && this.setState((prevState) => {
+                                        var newSettings = Object.assign({}, prevState.settings);
+                                        newSettings.score_review_after_close = !newSettings.score_review_after_close;
+                                        return { settings: newSettings };
+                                    })}  />
+                                Release scores after close
+                            </div>
+                        </div>
+                        <div className='quiz-table-row'>
+                            <div className='quiz-table-cell'>
+                                <input
+                                    type='checkbox'
+                                    checked={this.state.settings.allow_correct_review}
+                                    onChange={(e) => !this.state.is_published && this.setState((prevState) => {
+                                        var newSettings = Object.assign({}, prevState.settings);
+                                        newSettings.allow_correct_review = !newSettings.allow_correct_review;
+                                        return { settings: newSettings };
+                                    })}  />
+                                Allow correct answer review
+                            </div>
+                            <div className='quiz-table-cell'>
+                                <input
+                                    type='checkbox'
+                                    checked={this.state.settings.correct_review_after_close}
+                                    onChange={(e) => !this.state.is_published && this.setState((prevState) => {
+                                        var newSettings = Object.assign({}, prevState.settings);
+                                        newSettings.correct_review_after_close = !newSettings.correct_review_after_close;
+                                        return { settings: newSettings };
+                                    })}  />
+                                Release correct answers after close
                             </div>
                         </div>
                     </div>
@@ -418,17 +507,50 @@ class QuizEditor extends React.Component {
 class QuizList extends React.Component {
     render() {
         return (
-            <ol id='quiz-list' className='list'>
-                {Object.keys(this.props.quizzes).map((id) => {
-                    var quiz = this.props.quizzes[id];
-                    return (
-                        <Quiz key={id}
-                            quiz={quiz}
-                            chooseQuiz={() => this.props.chooseQuiz(id)}
-                            showConfirm={this.props.showConfirm} />
-                    );
-                })}
-            </ol>
+            <div id='lists' className='list'>
+                <p>Live quizzes</p>
+                <ol className='quiz-list'>
+                    {Object.keys(this.props.quizzes)
+                        .filter((id) => this.props.quizzes[id].is_published && this.props.quizzes[id].is_live)
+                        .map((id) => {
+                            var quiz = this.props.quizzes[id];
+                            return (
+                                <Quiz key={id}
+                                    quiz={quiz}
+                                    chooseQuiz={() => this.props.chooseQuiz(id)}
+                                    showConfirm={this.props.showConfirm} />
+                            );
+                        })}
+                </ol>
+                <p>Published quizzes</p>
+                <ol className='quiz-list'>
+                    {Object.keys(this.props.quizzes)
+                        .filter((id) => this.props.quizzes[id].is_published && !this.props.quizzes[id].is_live)
+                        .map((id) => {
+                            var quiz = this.props.quizzes[id];
+                            return (
+                                <Quiz key={id}
+                                    quiz={quiz}
+                                    chooseQuiz={() => this.props.chooseQuiz(id)}
+                                    showConfirm={this.props.showConfirm} />
+                            );
+                        })}
+                </ol>
+                <p>Unpublished quizzes</p>
+                <ol className='quiz-list'>
+                    {Object.keys(this.props.quizzes)
+                        .filter((id) => !this.props.quizzes[id].is_published)
+                        .map((id) => {
+                            var quiz = this.props.quizzes[id];
+                            return (
+                                <Quiz key={id}
+                                    quiz={quiz}
+                                    chooseQuiz={() => this.props.chooseQuiz(id)}
+                                    showConfirm={this.props.showConfirm} />
+                            );
+                        })}
+                </ol>
+            </div>
         );
     }
 }
@@ -455,7 +577,7 @@ class Quiz extends React.Component {
     render() {
         return (
             <li className='quiz'>
-                <button className={'quiz-body' + (this.props.quiz.is_live ? ' is-live-quiz-body' : '')} onClick={this.props.chooseQuiz}>{unescapeHTML(this.props.quiz.name)}</button>
+                <button className={'quiz-body' + (this.props.quiz.is_live ? ' is-live-quiz-body' : '')} onClick={this.props.chooseQuiz}>{this.props.quiz.name}</button>
                 <button className='delete-button' onClick={this.deleteQuiz.bind(this)}>&#10006;</button>
             </li>
         );
@@ -909,7 +1031,7 @@ class Question extends React.Component {
                 draggable={this.props.draggable}
                 onDragStart={this.props.onDragStart}>
                 <div className='question-body' style={this.state.image || this.props.question.image_id ? {width: '70%'} : {}}>
-                    <p className='question-title'>{unescapeHTML(this.props.question.title)}</p>
+                    <p className='question-title'>{this.props.question.title}</p>
                     {!this.state.hideAnswers &&
                         (<ol className='answer-list'>
                             {this.props.question.answers.map((answer, idx) => (
@@ -918,9 +1040,7 @@ class Question extends React.Component {
                                         type='radio'
                                         value={idx}
                                         readOnly
-                                        checked={this.props.question.correct == idx} />
-                                    {unescapeHTML(answer)}
-                                </li>
+                                        checked={this.props.question.correct == idx} />{answer}</li>
                             ))}
                         </ol>)}
                 </div>

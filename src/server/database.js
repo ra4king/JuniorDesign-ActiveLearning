@@ -125,12 +125,9 @@ const usersSchema = new Schema({
         default: []
     },
     lastSelectedTerm: {
-        type: {
-            term_id: { type: Schema.Types.ObjectId, ref: 'Term', required: true },
-            course_id: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
-            school_id: { type: Schema.Types.ObjectId, ref: 'School', required: true }
-        },
-        default: null
+        term_id: { type: Schema.Types.ObjectId, ref: 'Term', required: true },
+        course_id: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
+        school_id: { type: Schema.Types.ObjectId, ref: 'School', required: true }
     }
 });
 usersSchema.post('save', (user) => events.emit('user', cleanupUser(user.toJSON())));
@@ -157,7 +154,7 @@ const questionsSchema = new Schema({
     correct: {                                                // index into answers array,
         type: Number,
         required: true,
-        validate: function(n) { return n % 1 === 0 && n >= 0 && n < this.answers.length; }
+        validate: [function(n) { return n % 1 === 0 && n >= 0 && n < this.answers.length; }, 'Correct index out of bounds']
     },
     image_id: { type: Schema.Types.ObjectId, default: null } // resource_id of an image
 });
@@ -176,15 +173,31 @@ const quizzesSchema = new Schema({
         default: []
     },
     settings: {
-        type: {
-            live_question: { type: Number, default: -1 },
-            open_date: { type: Date, required: true },
-            close_date: { type: Date, required: true, validate: function(close_date) { return this.settings.open_date < close_date } },
-            max_submission: { type: Number, default: 0 },
-            allow_question_review: { type: Boolean, default: false },
-            allow_answer_review: { type: Boolean, default: false },
+        live_question: { type: Number, default: -1 },
+        open_date: {
+            type: Date,
+            required: true,
+            validate: [function(open_date) { return new Date(open_date) < this.settings.close_date }, 'Open date is not less than close_date']
         },
-        required: true
+        close_date: {
+            type: Date,
+            required: true,
+            validate: [function(close_date) { return this.settings.open_date < new Date(close_date) }, 'Close date is not greater than open_date']
+        },
+        max_submission: {
+            type: Number,
+            default: 0,
+            validate: [function(n) { return (n >= 0) && (n % 1 == 0) }, 'Max submissions must be a positive integer or 0.']
+        },
+
+        allow_submission_review: { type: Boolean, default: false },
+        submission_review_after_close: { type: Boolean, default: true },
+
+        allow_score_review: { type: Boolean, default: false },
+        score_review_after_close: { type: Boolean, default: true },
+
+        allow_correct_review: { type: Boolean, default: false },
+        correct_review_after_close: { type: Boolean, default: true }
     }
 });
 quizzesSchema.post('save', (quiz) => events.emit('quiz', quiz.toJSON()));
@@ -201,6 +214,7 @@ const submissionsSchema = new Schema({
         {
             question_id: { type: Schema.Types.ObjectId, required: true },
             title: { type: String, required: true },
+            options: { type: Number, required: true },
             answer: { type: Number, default: -1 }, // index into answers array
             score: { type: Number, required: true },
             total: { type: Number, required: true }
@@ -949,6 +963,8 @@ function createQuiz(quiz, callback) {
 
         quiz.questions = verifiedIds;
 
+        delete quiz.settings.open_date;
+
         new Quiz(quiz).save((err) => {
             if(err) {
                 console.error('Error when creating quiz: ' + JSON.stringify(quiz, null, 4));
@@ -1064,12 +1080,18 @@ function deleteQuiz(quiz_id, required_term_id, callback) {
 }
 
 function processQuiz(is_admin, quiz) {
-    if(!is_admin && quiz.is_live) {
-        var live_idx = quiz.settings.live_question;
-        if(live_idx < 0 || live_idx >= quiz.questions.length) {
-            quiz.questions = [];
-        } else {
-            quiz.questions = [quiz.questions[live_idx]];
+    if(!is_admin) {
+        if(quiz.is_live) {
+            var live_idx = quiz.settings.live_question;
+            if(live_idx < 0 || live_idx >= quiz.questions.length) {
+                quiz.questions = [];
+            } else {
+                quiz.questions = [quiz.questions[live_idx]];
+            }
+        }
+
+        if(!quiz.settings.allow_correct_review && (new Date() <= quiz.settings.close_date || !quiz.settings.correct_review_after_close)) {
+            quiz.questions.forEach((question) => delete question.correct);
         }
     }
 
@@ -1080,7 +1102,7 @@ function getQuizById(is_admin, quiz_id, callback) {
     var query = Quiz.findById(new ObjectID(quiz_id)).lean();
 
     if(!is_admin) {
-        query = query.populate('questions', '-correct');
+        query = query.populate('questions');
     }
 
     query.exec((err, quiz) => {
@@ -1101,7 +1123,7 @@ function getQuizzesByTerm(is_admin, term_id, callback) {
     var query = Quiz.find({ term_id: new ObjectID(term_id) }).lean();
 
     if(!is_admin) {
-        query = query.where({ is_published: true }).populate('questions', '-correct');
+        query = query.where({ is_published: true }).populate('questions');
     }
 
     query.exec((err, quizzes) => {
@@ -1135,6 +1157,14 @@ function submitQuiz(username, submission, callback) {
                 return callback('Cannot have a submission for an unpublished quiz: ' + submission.quiz_id);
             }
 
+            if(String(quiz.term_id) != submission.term_id) {
+                return callback('Incorrect term_id for quiz: ' + submission.quiz_id);
+            }
+
+            if(new Date() < quiz.settings.open_date || new Date() > quiz.settings.close_date) {
+                return callback('Quiz is not active.');
+            }
+
             var newSubmission = () => {
                 var to_submit = new Submission({
                     username: username,
@@ -1151,6 +1181,7 @@ function submitQuiz(username, submission, callback) {
                     to_submit.answers.push({
                         question_id: id,
                         title: question.title,
+                        options: question.answers.length,
                         answer: submission.answers[id],
                         score: submission.answers[id] == question.correct ? 1 : 0,
                         total: 1
@@ -1167,17 +1198,17 @@ function submitQuiz(username, submission, callback) {
                 });
             }
 
-            if(quiz.is_live) {
-                Submission.find({ username: username, quiz_id: new ObjectID(submission.quiz_id) }, (err, submissions) => {
-                    if(err) {
-                        console.error('Error getting past submission for quiz: ' + submission.quiz_id);
-                        return handleError(err, callback);
-                    }
+            Submission.find({ username: username, quiz_id: new ObjectID(submission.quiz_id) }, (err, submissions) => {
+                if(err) {
+                    console.error('Error getting past submission for quiz: ' + submission.quiz_id);
+                    return handleError(err, callback);
+                }
 
-                    if(submissions.length == 0) {
-                        return newSubmission();
-                    }
+                if(submissions.length == 0) {
+                    return newSubmission();
+                }
 
+                if(quiz.is_live) {
                     if(submissions.length > 1) {
                         console.error('Inconsistency found, live quiz cannot have more than 1 submission! Username: ' + username + ', Quiz: ' + submission.quiz_id);
                         return callback('Internal error, inconsistency found with live quiz having more than 1 submission.');
@@ -1191,6 +1222,7 @@ function submitQuiz(username, submission, callback) {
                             to_submit.answers.set(idx, {
                                 question_id: id,
                                 title: to_submit.answers[idx].title,
+                                options: quiz.questions[idx].answers.length,
                                 answer: submission.answers[id],
                                 score: submission.answers[id] == quiz.questions[idx].correct ? 1 : 0,
                                 total: 1
@@ -1206,15 +1238,18 @@ function submitQuiz(username, submission, callback) {
 
                         callback();
                     });
-                });
-            } else {
-                newSubmission();
-            }
+                } else if(quiz.settings.max_submission == 0 || submissions.length < quiz.settings.max_submission) {
+                    newSubmission();
+                } else {
+                    return callback('Reached submission limit.');
+                }
+            });
         });
 }
 
 function getSubmissionsByUser(username, term_id, callback) {
     Submission.find({ username: username, term_id: term_id })
+            .populate('quiz_id')
             .sort({ username: 1, timestamp: 1 })
             .lean()
             .exec((err, results) => {
@@ -1223,15 +1258,30 @@ function getSubmissionsByUser(username, term_id, callback) {
                     return handleError(err, callback);
                 }
 
-                callback(null, results);
+                var toSend = [];
+
+                results.forEach((submission) => {
+                    var quiz = submission.quiz_id;
+                    if(!quiz) return;
+
+                    var isClosed = new Date() > quiz.settings.close_date;
+
+                    if(!quiz.settings.allow_submission_review && (!isClosed || !quiz.settings.submission_review_after_close)) {
+                        submission.answers = [];
+                    } else if(!quiz.settings.allow_score_review && (!isClosed || !quiz.settings.score_review_after_close)) {
+                        submission.answers.forEach((answer) => {
+                            delete answer.score;
+                        });
+                    }
+
+                    toSend.push(submission);
+                });
+
+                callback(null, toSend);
             });
 }
 
 function getSubmissionsByTerm(term_id, callback) {
-    // if(!user.admin && !user.permissions.can_view_class_stats) {
-    //     return callback('Permission denied');
-    // }
-
     Submission.find({ term_id: term_id })
             .sort({ username: 1, timestamp: 1 })
             .lean()
