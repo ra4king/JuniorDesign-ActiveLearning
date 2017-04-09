@@ -22,7 +22,7 @@ window.onload = () => {
                 <Route path='/active-learning/statistics' component={StatisticsPanels} />
                 <Route path='/active-learning/settings' component={SettingsPanels} />
             </Route>
-        </Router>, document.getElementById('page'));
+        </Router>, document.getElementById('app'));
 }
 
 class App extends React.Component {

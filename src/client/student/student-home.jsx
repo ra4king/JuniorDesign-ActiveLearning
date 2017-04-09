@@ -200,7 +200,7 @@ class QuestionList extends React.Component {
             <ol id='question-list' className='list'>
                 {[this.props.quiz.questions.map((question, idx) =>
                     (<Question
-                            key={idx}
+                            key={question._id}
                             getResource={this.props.getResource}
                             question={question}
                             answerSelected={this.answerSelected.bind(this, question._id )} />)),

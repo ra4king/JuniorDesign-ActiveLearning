@@ -61,6 +61,7 @@ const mongodb = require('mongodb');
 const ObjectID = mongodb.ObjectID;
 
 const mongoose = require('mongoose');
+mongoose.Promise = Promise;
 const Schema = mongoose.Schema;
 
 const config = require('./config.json');
@@ -150,11 +151,11 @@ const questionsSchema = new Schema({
     course_id: { type: Schema.Types.ObjectId, required: true, index: true },
     title: { type: String, trim: true, required: true },
     tags: [{ type: String, lowercase: true, trim: true, required: true }],
-    answers: { type: [{ type: String, trim: true, required: true }], required: true, validate: [(a) => a.length >= 2, 'Minimum 2 answers needed'] },
+    answers: { type: [{ type: String, trim: true, required: true }], required: true, validate: [(a) => a.length >= 2, 'Minimum 2 answers needed.'] },
     correct: {                                                // index into answers array,
         type: Number,
         required: true,
-        validate: [function(n) { return n % 1 === 0 && n >= 0 && n < this.answers.length; }, 'Correct index out of bounds']
+        validate: [function(n) { return n % 1 === 0 && n >= 0 && n < this.answers.length; }, 'Correct index out of bounds.']
     },
     image_id: { type: Schema.Types.ObjectId, default: null } // resource_id of an image
 });
@@ -177,17 +178,17 @@ const quizzesSchema = new Schema({
         open_date: {
             type: Date,
             required: true,
-            validate: [function(open_date) { return new Date(open_date) < this.settings.close_date }, 'Open date is not less than close_date']
+            validate: [function(open_date) { return new Date(open_date) < this.settings.close_date }, 'Open date is not less than close_date.']
         },
         close_date: {
             type: Date,
             required: true,
-            validate: [function(close_date) { return this.settings.open_date < new Date(close_date) }, 'Close date is not greater than open_date']
+            validate: [function(close_date) { return this.settings.open_date < new Date(close_date) }, 'Close date is not greater than open_date.']
         },
         max_submission: {
             type: Number,
             default: 0,
-            validate: [function(n) { return (n >= 0) && (n % 1 == 0) }, 'Max submissions must be a positive integer or 0.']
+            validate: [(n) => (n >= 0) && (n % 1 == 0), 'Max submissions must be a positive integer or 0.']
         },
 
         allow_submission_review: { type: Boolean, default: false },
@@ -197,7 +198,9 @@ const quizzesSchema = new Schema({
         score_review_after_close: { type: Boolean, default: true },
 
         allow_correct_review: { type: Boolean, default: false },
-        correct_review_after_close: { type: Boolean, default: true }
+        correct_review_after_close: { type: Boolean, default: true },
+
+        choose_highest_score: { type: Boolean, default: true }
     }
 });
 quizzesSchema.post('save', (quiz) => events.emit('quiz', quiz.toJSON()));
@@ -228,7 +231,7 @@ const Submission = mongoose.model('Submission', submissionsSchema);
 
 
 function handleError(err, callback) {
-    var msg = err.errors ? Object.keys(err.errors).map((prop) => err.errors[prop].message).join(', ') : String(err);
+    var msg = err.errors ? Object.keys(err.errors).map((prop) => err.errors[prop].message).join(' ') : String(err);
 
     console.error(msg);
     callback(msg)
@@ -962,8 +965,6 @@ function createQuiz(quiz, callback) {
         });
 
         quiz.questions = verifiedIds;
-
-        delete quiz.settings.open_date;
 
         new Quiz(quiz).save((err) => {
             if(err) {

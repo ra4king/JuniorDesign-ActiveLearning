@@ -113,16 +113,25 @@ class QuizEditor extends React.Component {
     constructor(props) {
         super(props);
 
-        let settings = props.quiz.settings || {};
+        this.state = this.getNewState({}, props);
+    }
+
+    componentWillReceiveProps(newProps) {
+        this.setState((prevState) => this.getNewState(prevState, newProps));
+    }
+
+    getNewState(prevState, newProps) {
         let m1 = moment();
         let m2 = moment();
 
-        this.state = {
-            _id: props.quiz._id,
-            name: props.quiz.name || '',
-            is_published: props.quiz.is_published || false,
-            is_live: props.quiz.is_live || false,
-            questions: props.quiz.questions || [],
+        let settings = newProps.quiz.settings || prevState.settings || {};
+
+        return {
+            _id: newProps.quiz._id,
+            name: newProps.quiz.name || prevState.name || '',
+            is_published: newProps.quiz.is_published || prevState.is_published || false,
+            is_live: newProps.quiz.is_live || prevState.is_live || false,
+            questions: newProps.quiz.questions || prevState.questions || [],
             settings: {
                 live_question: settings.live_question,
                 open_date: new Date(settings.open_date || m1.seconds(0).milliseconds(0).minutes(Math.floor(m1.minutes() / 5) * 5).toDate()),
@@ -133,38 +142,10 @@ class QuizEditor extends React.Component {
                 allow_score_review: settings.allow_score_review || false,
                 score_review_after_close: settings.score_review_after_close !== false,
                 allow_correct_review: settings.allow_correct_review || false,
-                correct_review_after_close: settings.correct_review_after_close !== false
+                correct_review_after_close: settings.correct_review_after_close !== false,
+                choose_highest_score: settings.choose_highest_score !== false
             }
         };
-    }
-
-    componentWillReceiveProps(newProps) {
-        this.setState((prevState) => {
-            let m1 = moment();
-            let m2 = moment();
-
-            let settings = newProps.quiz.settings || prevState.settings;
-
-            return {
-                _id: newProps.quiz._id,
-                name: newProps.quiz.name || prevState.name,
-                is_published: newProps.quiz.is_published || prevState.is_published,
-                is_live: newProps.quiz.is_live || prevState.is_live,
-                questions: newProps.quiz.questions || prevState.questions,
-                settings: {
-                    live_question: settings.live_question,
-                    open_date: new Date(settings.open_date || m1.seconds(0).milliseconds(0).minutes(Math.floor(m1.minutes() / 5) * 5).toDate()),
-                    close_date: new Date(settings.close_date || m2.seconds(0).milliseconds(0).minutes(Math.floor(m2.minutes() / 5) * 5).days(m2.days() + 7).toDate()), // 1 week
-                    max_submission: settings.max_submission || 0,
-                    allow_submission_review: settings.allow_submission_review || false,
-                    submission_review_after_close: settings.submission_review_after_close !== false,
-                    allow_score_review: settings.allow_score_review || false,
-                    score_review_after_close: settings.score_review_after_close !== false,
-                    allow_correct_review: settings.allow_correct_review || false,
-                    correct_review_after_close: settings.correct_review_after_close !== false
-                }
-            };
-        });
     }
 
     onNameChange(e) {
@@ -375,7 +356,7 @@ class QuizEditor extends React.Component {
                                     : <Datetime
                                         value={this.state.settings.open_date}
                                         onChange={this.onOpenDateChange.bind(this)}
-                                        isValidDate={(date) => date.toDate() < this.state.settings.close_date}
+                                        isValidDate={(date) => typeof date === 'string' || date.toDate() <= this.state.settings.close_date}
                                         timeConstraints={{ minutes: { step: 5 }}} />}</div>
                             <div className='quiz-creator-header-entry quiz-table-cell'>Close Date:&nbsp;
                                 {this.state.is_published
@@ -383,7 +364,7 @@ class QuizEditor extends React.Component {
                                     : <Datetime
                                         value={this.state.settings.close_date}
                                         onChange={this.onCloseDateChange.bind(this)}
-                                        isValidDate={(date) => date.toDate() > this.state.settings.open_date}
+                                        isValidDate={(date) => typeof date === 'string' || date.toDate() >= this.state.settings.open_date}
                                         timeConstraints={{ minutes: { step: 5 }}} />}</div>
                         </div>
                         <div className='quiz-table-row'>
@@ -400,7 +381,7 @@ class QuizEditor extends React.Component {
                                                                 ? (this.state.settings.max_submission || 'Unlimited')
                                                                 : <input
                                                                     type='number'
-                                                                    size='2'
+                                                                    min='0'
                                                                     value={this.state.settings.max_submission}
                                                                     onChange={this.onMaxSubmissionChange.bind(this)} />}</div>
                                     {!this.state.is_published && <div>0 for unlimited</div>}
@@ -476,6 +457,19 @@ class QuizEditor extends React.Component {
                                         return { settings: newSettings };
                                     })}  />
                                 Release correct answers after close
+                            </div>
+                        </div>
+                        <div className='quiz-table-row'>
+                            <div className='quiz-table-cell'>
+                                <input
+                                    type='checkbox'
+                                    checked={this.state.settings.choose_highest_score}
+                                    onChange={(e) => !this.state.is_published && this.setState((prevState) => {
+                                        var newSettings = Object.assign({}, prevState.settings);
+                                        newSettings.choose_highest_score = !newSettings.choose_highest_score;
+                                        return { settings: newSettings };
+                                    })}  />
+                                Choose highest score
                             </div>
                         </div>
                     </div>
@@ -660,7 +654,7 @@ class QuestionPanel extends React.Component {
                     {!this.state.editQuestion &&
                         (<div id='question-search-input'>
                             Search:
-                            <input type="text" id='search-input'
+                            <input type='text' id='search-input'
                                 onChange={(e) => this.setState({ searchTerm: e.target.value.toLowerCase() }, this.updateShownQuestions) } />
                         </div>)}
                 </div>
@@ -1100,10 +1094,10 @@ class Hierarchy extends React.Component {
         this.setState({ tags: this.mergeTags(this.state.tags, this.formatTags(nextProps.tags)) })
     }
 
-    recursivelyOpen(treeArray) {
+    recursivelyOpen(treeArray, root) {
         var listItems = []
         treeArray.map((element, idx) => {
-            if(element.children && element.children.length > 0) {
+            if(root || element.children && element.children.length > 0) {
                 var curr = [<li className='parent-node tree-node' key={element.name + element.id} onClick={() => this.openParentNode(element)}>{element.name}</li>]
                 if (element.isOpen) {
                     curr = curr.concat(this.recursivelyOpen(element.children));
@@ -1120,8 +1114,8 @@ class Hierarchy extends React.Component {
     }
 
     openParentNode(node) {
-        node.isOpen = !node.isOpen;
-        this.forceUpdate();
+        // node.isOpen = !node.isOpen;
+        // this.forceUpdate();
     }
 
     openLeafNode(leaf) {
@@ -1134,7 +1128,7 @@ class Hierarchy extends React.Component {
 
     render() {
         return(
-            <ul id='hierarchy-panel'>{this.recursivelyOpen(this.state.tags)}</ul>
+            <div id='hierarchy-panel'>{this.recursivelyOpen(this.state.tags, true)}</div>
         )
     }
 }

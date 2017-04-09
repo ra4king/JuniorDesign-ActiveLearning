@@ -115,12 +115,11 @@ button {
 }
 
 #header-panel {
-    flex: 1 1 auto;
-
     display: flex;
     flex-flow: row nowrap;
     justify-content: space-between;
     align-items: center;
+
     min-height: 65px;
     max-height: 65px;
     margin-bottom: 10px;
@@ -316,6 +315,9 @@ button {
     height: 50px;
     width: 100%;
     vertical-align: top;
+
+    font-size: 25px;
+    font-weight: bold;
 
     background-color: #FFFFFF;
     border: none;
