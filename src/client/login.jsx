@@ -63,6 +63,7 @@ class LoginTab extends React.Component {
         return (
             <form method='post'>
                 <input type='hidden' name='_csrf' value={csurf} />
+                <input type='hidden' name='invitation' value={invitation} />
                 <input type='text' className='text' name='username' value={this.props.username} placeholder='Username' onChange={this.props.editUsername} />
                 <input type='password' className='text' name='password' placeholder='Password' />
                 <input type='submit' className='login' value='Login' formAction={'api/login?redirect=' + redirect} />
@@ -76,6 +77,7 @@ class RegisterTab extends React.Component {
         return (
             <form method='post'>
                 <input type='hidden' name='_csrf' value={csurf} />
+                <input type='hidden' name='invitation' value={invitation} />
                 <input type='text' className='text' name='username' value={this.props.username} placeholder='Username' onChange={this.props.editUsername} />
                 <input type='password' className='text' name='password' placeholder='Password' />
                 <input type='password' className='text' name='password' placeholder='Retype Password' />

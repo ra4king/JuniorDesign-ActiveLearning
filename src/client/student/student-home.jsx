@@ -11,20 +11,24 @@ export default class HomePanels extends React.Component {
         super(props);
         
         this.state = {
-            selectedQuiz: null
+            selectedQuiz: null,
+            showDiscardConfirm: false,
         };
     }
 
     chooseQuiz(id) {
-        if(!id || !this.state.selectedQuiz) {
-            this.setState({ selectedQuiz: id });
-        } else {
+        if(id == this.state.selectedQuiz)
+            return;
+
+        if(!id || !this.state.selectedQuiz || !this.state.showDiscardConfirm) {
+            this.setState({ selectedQuiz: id, showDiscardConfirm: false });
+        } else if(this.state.showDiscardConfirm) {
             this.props.showConfirm({
                 type: 'yesno',
                 title: 'Discard current quiz?',
                 onAction: ((confirm) => {
                     if(confirm) {
-                        this.setState({ selectedQuiz: id });
+                        this.setState({ selectedQuiz: id, showDiscardConfirm: false });
                     }
                 })
             });
@@ -42,6 +46,7 @@ export default class HomePanels extends React.Component {
                 <QuestionPanel
                     getResource={this.props.getResource}
                     showConfirm={this.props.showConfirm}
+                    showDiscardConfirm={() => this.setState({ showDiscardConfirm: true })}
                     hideQuiz={() => this.chooseQuiz(null)}
                     quiz={this.state.selectedQuiz && this.props.quizzes[this.state.selectedQuiz]} />
             </div>
@@ -121,17 +126,51 @@ class QuizList extends React.Component {
 }
 
 class QuestionPanel extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            startQuiz: false
+        };
+    }
+
     render() {
         return (
             <div id='question-panel' className='panel home-panel'>
                 <h2 id='quiz-title'>{this.props.quiz ? this.props.quiz.name : 'Quiz'}</h2>
                 {this.props.quiz
-                    ? (<QuestionList
+                    ? (this.state.startQuiz
+                        ? (<QuestionList
                             quiz={this.props.quiz}
                             getResource={this.props.getResource}
                             showConfirm={this.props.showConfirm}
                             hideQuiz={this.props.hideQuiz} />)
+                        : (<QuizInfo
+                            quiz={this.props.quiz}
+                            startQuiz={() => this.setState({ startQuiz: true }) || this.props.showDiscardConfirm()}
+                            showConfirm={this.props.showConfirm}
+                            hideQuiz={this.props.hideQuiz} />))
                     : (<p id='choose-quiz-msg'>Choose a quiz from the left side!</p>)}
+            </div>
+        );
+    }
+}
+
+class QuizInfo extends React.Component {
+    render() {
+        return (
+            <div id='quiz-info' className='list'>
+                {new Date() >= new Date(this.props.quiz.settings.open_date) && new Date() <= new Date(this.props.quiz.settings.close_date)
+                    && <button className='option-button' onClick={this.props.startQuiz}>Start Quiz</button>}
+
+                {this.props.quiz.is_live && <p>Live quiz</p>}
+                <p>Open date: {this.props.quiz.settings.open_date}</p>
+                <p>Close date: {this.props.quiz.settings.close_date}</p>
+                <p>Submissions allowed: {this.props.quiz.settings.max_submissions}</p>
+                <p><label><input type='checkbox' checked={this.props.quiz.settings.allow_submission_review || false} />Allow submission review</label></p>
+                <p><label><input type='checkbox' checked={this.props.quiz.settings.allow_score_review || false} />Allow score review</label></p>
+                <p><label><input type='checkbox' checked={this.props.quiz.settings.allow_correct_review || false} />Allow correct review</label></p>
+                {this.props.quiz.settings.choose_highest_score ? <p>Highest score chosen</p> : <p>Last score chosen</p>}
             </div>
         );
     }
@@ -156,7 +195,7 @@ class QuestionList extends React.Component {
     }
 
     submitClicked() {
-        var submitQuiz = () => {
+        var submitQuiz = (hide) => {
             socket.send('submitQuiz', { quiz_id: this.props.quiz._id, answers: this.answers }, (err, data) => {
                 this.props.showConfirm({
                     type: 'ok',
@@ -165,7 +204,7 @@ class QuestionList extends React.Component {
                         : 'Your answers have been submitted.'
                 });
 
-                if(!err) {
+                if(!err && hide) {
                     this.props.hideQuiz();
                     this.answers = {};
                     this._id = null;
@@ -174,7 +213,7 @@ class QuestionList extends React.Component {
         }
 
         if(this.props.quiz.is_live) {
-            submitQuiz();
+            submitQuiz(false);
         } else {
             var title = 'Are you sure you want to submit this quiz?'
             var answersLen = Object.keys(this.answers).length;
@@ -188,7 +227,7 @@ class QuestionList extends React.Component {
                 title: title,
                 onAction: (confirm) => {
                     if(confirm) {
-                        submitQuiz();
+                        submitQuiz(true);
                     }
                 }
             });

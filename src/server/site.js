@@ -34,22 +34,22 @@ module.exports = function(server, app, base_url, debug) {
     };
 
     app.get('/', check_login, (req, res) => {
-        var api_host = debug ? 'ws://localhost:1337/active-learning/api' : 'wss://roiatalla.com/active-learning/api';
+        var api_host = debug ? 'ws://localhost:1337/active-learning/api' : 'wss://www.roiatalla.com/active-learning/api';
         res.render('app', {api_host: api_host});
     });
 
     app.get('/select-term', check_login, (req, res) => {
-        var api_host = debug ? 'ws://localhost:1337/active-learning/api' : 'wss://roiatalla.com/active-learning/api';
+        var api_host = debug ? 'ws://localhost:1337/active-learning/api' : 'wss://www.roiatalla.com/active-learning/api';
         res.render('app', {api_host: api_host});
     });
 
     app.get('/statistics', check_login, (req, res) => {
-        var api_host = debug ? 'ws://localhost:1337/active-learning/api' : 'wss://roiatalla.com/active-learning/api';
+        var api_host = debug ? 'ws://localhost:1337/active-learning/api' : 'wss://www.roiatalla.com/active-learning/api';
         res.render('app', {api_host: api_host});
     });
 
     app.get('/settings', check_login, (req, res) => {
-        var api_host = debug ? 'ws://localhost:1337/active-learning/api' : 'wss://roiatalla.com/active-learning/api';
+        var api_host = debug ? 'ws://localhost:1337/active-learning/api' : 'wss://www.roiatalla.com/active-learning/api';
         res.render('app', {api_host: api_host});
     });
 
@@ -65,18 +65,20 @@ module.exports = function(server, app, base_url, debug) {
             redirect: req.query.redirect,
             register: req.query.register == 'true',
             username: req.query.username,
+            invitation: req.query.invitation,
             csurf: req.csrfToken()
         });
     });
 
     app.post('/api/login', (req, res) => {
-        database.createSession(req.body.username, req.body.password, (err, session_id) => {
+        database.createSession(req.body.username, req.body.password, req.body.invitation, (err, session_id) => {
             if(err) {
                 var message = 'message=' + querystring.escape(err.toString());
                 var redirect = req.query.redirect ? '&redirect=' + req.query.redirect : '';
                 var username = '&username=' + req.body.username;
-                var register = '&register=false'
-                res.redirect(req.baseUrl + '/login?' + message + redirect + username + register);
+                var register = '&register=false';
+                var invitation = req.body.invitation ? '&invitation=' + req.body.invitation : '';
+                res.redirect(req.baseUrl + '/login?' + message + redirect + username + register + invitation);
             } else {
                 res.cookie('session_id', session_id, { expires: new Date(Date.now() + 24 * 60 * 60 * 1000) });
                 res.redirect(req.query.redirect || req.baseUrl);
@@ -97,13 +99,14 @@ module.exports = function(server, app, base_url, debug) {
     });
 
     app.post('/api/register', (req, res) => {
-        database.createUser(req.body.username, req.body.password, (err) => {
+        database.createUser(req.body.username, req.body.password, req.body.invitation, (err) => {
             if(err) {
                 var message = 'message=' + querystring.escape(err.toString());
                 var redirect = req.query.redirect ? '&redirect=' + req.query.redirect : '';
                 var username = '&username=' + req.body.username;
-                var register = '&register=true'
-                res.redirect(req.baseUrl + '/login?' + message + redirect + username + register);
+                var register = '&register=true';
+                var invitation = req.body.invitation ? '&invitation=' + req.body.invitation : '';
+                res.redirect(req.baseUrl + '/login?' + message + redirect + username + register + invitation);
             } else {
                 var message = 'message=' + querystring.escape('Register success, please login.');
                 var redirect = req.query.redirect ? '&redirect=' + req.query.redirect : '';

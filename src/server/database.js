@@ -28,6 +28,7 @@ module.exports = {
     addUser: addUser,
     removeUser: removeUser,
     setPermissions: setPermissions,
+    createInvitation: createInvitation,
 
     selectTerm: selectTerm,
 
@@ -126,9 +127,9 @@ const usersSchema = new Schema({
         default: []
     },
     lastSelectedTerm: {
-        term_id: { type: Schema.Types.ObjectId, ref: 'Term', required: true },
-        course_id: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
-        school_id: { type: Schema.Types.ObjectId, ref: 'School', required: true }
+        term_id: { type: Schema.Types.ObjectId, ref: 'Term' },
+        course_id: { type: Schema.Types.ObjectId, ref: 'Course' },
+        school_id: { type: Schema.Types.ObjectId, ref: 'School' }
     }
 });
 usersSchema.post('save', (user) => events.emit('user', cleanupUser(user.toJSON())));
@@ -139,8 +140,16 @@ const sessionsSchema = new Schema({
     user: { type: String, ref: 'User', required: true },
     createdAt: { type: Date, default: Date.now }
 });
-sessionsSchema.index({ user: 1, createdAt: 1 }, { background: true, expireAfterSeconds: 24 * 60 * 60 });
+sessionsSchema.index({ createdAt: 1 }, { background: true, expireAfterSeconds: 24 * 60 * 60 });
 const Session = mongoose.model('Session', sessionsSchema);
+
+const invitationsSchema = new Schema({
+    _id: { type: String, required: true, index: true },
+    term_id: { type: Schema.Types.ObjectId, ref: 'Term', required: true },
+    createdAt: { type: Date, default: Date.now }
+});
+invitationsSchema.index({ createdAt: 1 }, { background: true, expireAfterSeconds: 15 * 60 });
+const Invitation = mongoose.model('Invitation', invitationsSchema);
 
 const resourcesSchema = new Schema({
     data: { type: String, required: true },
@@ -157,6 +166,43 @@ const questionsSchema = new Schema({
         required: true,
         validate: [function(n) { return n % 1 === 0 && n >= 0 && n < this.answers.length; }, 'Correct index out of bounds.']
     },
+    // answer_type: { type: String, enum: ['multiple-choice', 'multiple-answer', 'answer-write-in', 'free-response']}
+    // multiple_choice: {
+    //     choices: {
+    //         type: [{ type: String, trim: true, required: true }],
+    //         required: true,
+    //         validate: [function(a) { return this.answer_type == 'multiple-choice' && a.length >= 2; }, 'Minimum 2 choices needed.']
+    //     },
+    //     correct: {
+    //         type: Number,
+    //         validate: [function(n) {
+    //                         return this.answer_type == 'multiple-choice' && n % 1 === 0 && n >= 0 && n < this.multiple_choice.choices.length;
+    //                     }, 'Correct index out of bounds.']
+    //     },
+    // },
+    // multiple_answer: {
+    //     choices: {
+    //         type: [{ type: String, trim: true, required: true }],
+    //         required: true,
+    //         validate: [function(a) { return !a || (this.answer_type == 'multiple-answer' && a.length >= 3) }, 'Minimum 3 choices needed.']
+    //     },
+    //     correct: {
+    //         type: [{
+    //             type: Number,
+    //             validate: [function(n) { return n % 1 === 0 && n >= 0 && n < this.multiple_answer.choices.length; }, 'Correct index out of bounds.']
+    //         }],
+    //         validate: [function(n) { return !n || this.answer_type == 'multiple-answer' }, 'Incorrect field set']
+    //     }
+    // },
+    // answer_write_in: {
+    //     correct: {
+    //         type: [String],
+    //         validate: [function(n) { return !n || this.answer_type == 'answer-write-in'}, 'Incorrect field set']
+    //     }
+    // },
+    // free_response: {
+    //     max_length: Number
+    // },
     image_id: { type: Schema.Types.ObjectId, default: null } // resource_id of an image
 });
 questionsSchema.post('save', (question) => events.emit('question', question.toJSON()));
@@ -170,7 +216,7 @@ const quizzesSchema = new Schema({
     is_published: { type: Boolean, required: true },
     is_live: { type: Boolean, default: false },
     questions: {
-        type: [{ type: Schema.Types.ObjectId, ref: 'Question' }],
+        type: [{ type: Schema.Types.ObjectId, ref: 'Question', required: true }],
         default: []
     },
     settings: {
@@ -237,7 +283,7 @@ function handleError(err, callback) {
     callback(msg)
 }
 
-function createUser(username, passwords, callback) {
+function createUser(username, passwords, invitation, callback) {
     var password = passwords[0];
     var password2 = passwords[1];
 
@@ -292,14 +338,18 @@ function createUser(username, passwords, callback) {
                         return handleError(err, callback);
                     }
 
-                    callback(null, result);
+                    if(invitation) {
+                        handleInvitation(username, invitation, callback);
+                    } else {
+                        callback(null, result);
+                    }
                 });
             });
         });
     });
 }
 
-function createSession(username, password, callback) {
+function createSession(username, password, invitation, callback) {
     if(!username || !password) {
         return callback('Username and password cannot be empty.');
     }
@@ -331,8 +381,12 @@ function createSession(username, password, callback) {
                                 console.error('Error when saving session: ' + username);
                                 return handleError(err, callback);
                             }
-                            
-                            callback(null, id);
+
+                            if(invitation) {
+                                handleInvitation(username, invitation, callback);
+                            } else {
+                                callback(null, id);
+                            }
                         });
                     });
                 } else {
@@ -744,6 +798,52 @@ function setPermissions(username, permissions, callback) {
 
             callback();
         });
+    });
+}
+
+function createInvitation(term_id, callback) {
+    Term.findById(new ObjectID(term_id), (err, term) => {
+        if(err) {
+            console.error('Error when getting term for creating invitation: ' + term_id);
+            return handleError(err, callback);
+        }
+
+        if(!term) {
+            return callback('Term not found');
+        }
+
+        crypto.randomBytes(32, (err, buf) => {
+            if(err) {
+                console.error('Error generating invitation id for term: ' + term_id);
+                return handleError(err, callback);
+            }
+
+            var id = buf.toString('hex');
+
+            new Invitation({ _id: id, term_id: term_id }).save((err) => {
+                if(err) {
+                    console.error('Error saving invitation for term: ' + term_id);
+                    return handleError(err, callback);
+                }
+
+                callback(null, id);
+            });
+        });
+    });
+}
+
+function handleInvitation(username, invitation_id, callback) {
+    Invitation.findById(invitation_id, (err, invitation) => {
+        if(err) {
+            console.error('Error getting invitation: ' + invitation_id);
+            return handleError(err, callback);
+        }
+
+        if(!invitation) {
+            return callback('Invitation not found: ' + invitation_id);
+        }
+
+        addUser(invitation.term_id, username, {}, callback);
     });
 }
 

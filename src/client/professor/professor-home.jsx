@@ -196,7 +196,7 @@ class QuizEditor extends React.Component {
         });
     }
 
-    submitQuiz(publish) {
+    submitQuiz(publish, confirmed) {
         var callback = (err) => {
             if(err) {
                 this.props.showConfirm({
@@ -212,6 +212,14 @@ class QuizEditor extends React.Component {
             return this.props.showConfirm({
                 type: 'ok',
                 title: 'Name is required'
+            });
+        }
+
+        if(publish && !confirmed) {
+            return this.props.showConfirm({
+                type: 'yesno',
+                title: 'Are you sure you want to publish this quiz?',
+                onAction: (confirm) => confirm && this.submitQuiz(true, true)
             });
         }
 
@@ -333,8 +341,8 @@ class QuizEditor extends React.Component {
             <div id='quiz-creator'>
                 {!this.state.is_published &&
                     <div id='save-publish-buttons'>
-                        <button id='save-quiz-button' onClick={this.submitQuiz.bind(this, false)}>Save</button>
-                        <button id='publish-quiz-buton' onClick={this.submitQuiz.bind(this, true)}>Publish</button>
+                        <button id='save-quiz-button' onClick={() => this.submitQuiz(false)}>Save</button>
+                        <button id='publish-quiz-buton' onClick={() => this.submitQuiz(true)}>Publish</button>
                     </div>}
                 <div id='quiz-creator-header'>
                     <div id='quiz-creator-table'>
@@ -369,11 +377,16 @@ class QuizEditor extends React.Component {
                         </div>
                         <div className='quiz-table-row'>
                             <div className='quiz-table-cell'>
-                                <input
-                                    type='checkbox'
-                                    checked={this.state.is_live}
-                                    onChange={() => !this.state.is_published && this.setState((prevState) => ({ is_live: !prevState.is_live }))} />
-                                Live Quiz
+                                <div className='quiz-table-cell-contents'>
+                                    <label className="switch">
+                                        <input
+                                            type='checkbox'
+                                            checked={this.state.is_live}
+                                            onChange={() => !this.state.is_published && this.setState((prevState) => ({ is_live: !prevState.is_live }))} />
+                                        <div className="slider"></div>
+                                    </label>
+                                    Live Quiz
+                                </div>
                             </div>
                             {!this.state.is_live &&
                                 <div className='quiz-creator-header-entry quiz-table-cell'>
@@ -555,17 +568,17 @@ class Quiz extends React.Component {
             type: 'yesno',
             title: 'Are you sure you want to delete this quiz?',
             onAction: (choice) => {
-            if(choice) {
-                socket.send('deleteQuiz', this.props.quiz._id, (err, data) => {
-                    if(err) {
-                        this.props.showConfirm({
-                            type: 'ok',
-                            title: String(err)
-                        });
-                    }
-                });
-            }
-        }});
+                if(choice) {
+                    socket.send('deleteQuiz', this.props.quiz._id, (err, data) => {
+                        if(err) {
+                            this.props.showConfirm({
+                                type: 'ok',
+                                title: String(err)
+                            });
+                        }
+                    });
+                }
+            }});
     }
 
     render() {

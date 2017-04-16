@@ -219,6 +219,15 @@ module.exports = function(base_url, server, database) {
         }
     });
 
+    commands.on('createInvitation', (connection, arg, reply) => {
+        var [permissions, admin] = getPermissions(connection);
+        if(connection.user.admin || (permissions && (permissions.isCreator || (permissions.isTA && permissions.canManageRoster)))) {
+            database.createInvitation(permissions.term_id, reply);
+        } else {
+            reply('Permission denied.');
+        }
+    });
+
     commands.on('setPermissions', (connection, info, reply) => {
         var [permissions, admin] = getPermissions(connection);
         if(connection.user.admin || (permissions && (permissions.isCreator || (permissions.isTA && permissions.canManageTAs)))) {

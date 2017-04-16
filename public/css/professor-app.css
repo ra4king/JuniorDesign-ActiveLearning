@@ -123,6 +123,13 @@
     width: 50%;
 }
 
+.quiz-table-cell-contents {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: flex-start;
+    align-items: center;
+}
+
 #quiz-name {
     flex: 0 1 auto;
     display: table-cell;
@@ -417,6 +424,19 @@
     width: 25%;
 }
 
+#create-invitation {
+    margin-bottom: 10px;
+}
+
+#create-invitation button {
+    width: 30%;
+}
+
+#create-invitation input {
+    margin-left: 2%;
+    width: 65%;
+}
+
 #permission-panel {
     flex: 1 1 auto;
     margin-left: 5px;
@@ -436,6 +456,10 @@
     display: inline-block;
     width: 60px;
     height: 34px;
+}
+
+.switch input {
+    visibility: hidden
 }
 
 .slider {

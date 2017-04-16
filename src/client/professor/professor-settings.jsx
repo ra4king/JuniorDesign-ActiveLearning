@@ -73,6 +73,7 @@ class StudentPanel extends React.Component {
         this.state = {
             showStudents: true,
             userToAdd: '',
+            invitationURL: '',
         };
     }
 
@@ -89,12 +90,26 @@ class StudentPanel extends React.Component {
         }
     }
 
+    createInvitation() {
+        socket.send('createInvitation', (err, id) => {
+            if(err) {
+                this.props.showConfirm({ type: 'ok', title: 'Error creating invitation: ' + err });
+            } else {
+                this.setState({ invitationURL: 'http://localhost:1337/active-learning/login?register=true&invitation=' + id });
+            }
+        });
+    }
+
     render() {
         return (
             <div className='panel' id='student-panel'>
                 <div id='add-user'>
                     <input type='text' value={this.state.userToAdd} onChange={(e) => this.setState({ userToAdd: e.target.value })} onSubmit={this.addUser.bind(this)} />
                     <button onClick={this.addUser.bind(this)}>Add user</button>
+                </div>
+                <div id='create-invitation'>
+                    <button onClick={this.createInvitation.bind(this)}>Create Invitation Link</button>
+                    <input type='text' value={this.state.invitationURL} readOnly={true} />
                 </div>
                 <div id='student-list'>
                     <ul id='tabs'>
