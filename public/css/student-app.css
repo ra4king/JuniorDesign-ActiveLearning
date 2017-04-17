@@ -10,6 +10,16 @@
     margin-bottom: 16px;
 }
 
+.quiz-view-header {
+    flex: 0 1 auto;
+    border: 2px solid white;
+    background-color: #909090;
+    margin-bottom: 10px;
+    font-size: 17px;
+    color: #000000;
+    padding: 5px 5px 5px 5px;
+}
+
 #choose-quiz-msg {
     text-align: center;
 }
