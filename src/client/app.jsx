@@ -202,21 +202,10 @@ class App extends React.Component {
     render() {
         return (
             <div>
-                {(this.state.currentLiveQuiz || this.state.showConfirm)
-                    && (<div id='overlay'></div>)}
+                {this.state.showConfirm && <div id='overlay'></div>}
+                {this.state.showConfirm && <ConfirmBox hide={() => this.hideConfirm()} {...this.state.showConfirm} />}
 
-                {this.state.currentLiveQuiz &&
-                    <LiveQuizPanel
-                        quiz={this.state.currentLiveQuiz}
-                        questions={this.state.questions}
-                        resources={this.state.resources}
-                        getResource={this.getResource.bind(this)}
-                        hideLiveQuiz={this.hideLiveQuiz.bind(this)} />}
-
-                {this.state.showConfirm &&
-                    <ConfirmBox hide={() => this.hideConfirm()} {...this.state.showConfirm} />}
-
-                <div id='content' className={(this.state.currentLiveQuiz || this.state.showConfirm) && 'blur'}>
+                <div id='content' className={this.state.showConfirm && 'blur'}>
                     <HeaderPanel user={this.state.user} selectedTerm={this.state.selectedTerm} />
 
                     {React.Children.map(this.props.children, (child) =>

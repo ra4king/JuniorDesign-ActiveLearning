@@ -213,7 +213,7 @@ class GraphPanel extends React.Component {
     }
 
     createChart(info, displayX) {
-        return new Chart(document.getElementById('statistics-chart'), {
+        return new Chart(this.canvas, {
             type: 'bar', 
             data: info,
             options: {
@@ -242,11 +242,10 @@ class GraphPanel extends React.Component {
         for (var quiz_id in statistics[username]) {
             var score = 0;
             var total = 0;
-            for (var question_id in statistics[username][quiz_id].answers){
-                var question = statistics[username][quiz_id].answers[question_id];
+            statistics[username][quiz_id].answers.forEach((question) => {
                 score += question.score;
                 total += question.total;
-            }
+            });
             quizNames.push(statistics[username][quiz_id].name);
             quizScores.push(100.0 * (score / total));
         }
@@ -260,7 +259,7 @@ class GraphPanel extends React.Component {
                 borderColor: 'rgba(200, 200, 200, 1)',
                 borderWidth: 2
             }]
-        }
+        };
 
         if(this.chart) {
             this.chart.destroy();
@@ -275,13 +274,10 @@ class GraphPanel extends React.Component {
         for (var username in statistics){
             for (var quiz_id in statistics[username]) {
                 if (statistics[username][quiz_id].name == name) {
-                    for (var question_id in statistics[username][quiz_id].answers){
+                    statistics[username][quiz_id].answers.forEach((question) => {
                         var answerScores = [];
 
-                        var question_name = statistics[username][quiz_id].answers[question_id].title;
-                        var question = statistics[username][quiz_id].answers[question_id];
-
-                        var prev = questions[question_name] || { score: 0, total: 0, answerScores: new Array(question.options || 0).fill(0) }
+                        var prev = questions[question.name] || { score: 0, total: 0, answerScores: new Array(question.options || 0).fill(0) }
 
                         if(question.answer >= 0) {
                             prev.answerScores[question.answer] += question.total;
@@ -294,8 +290,8 @@ class GraphPanel extends React.Component {
                         prev.score += question.score;
                         prev.total += question.total;
 
-                        questions[question_name] = prev;
-                    }
+                        questions[question.name] = prev;
+                    });
                 }
             }
         }
@@ -338,11 +334,11 @@ class GraphPanel extends React.Component {
                 var quizName = statistics[username][quiz_id].name;
                 var score = 0;
                 var total = 0;
-                for (var question_id in statistics[username][quiz_id].answers){
-                    var question = statistics[username][quiz_id].answers[question_id];
+                statistics[username][quiz_id].answers.forEach((question) => {
                     score += question.score;
                     total += question.total;
-                }
+                });
+
                 if(quizzes[quizName] != null) {
                     quizzes[quizName].score += score; 
                     quizzes[quizName].total += total; 
@@ -386,11 +382,11 @@ class GraphPanel extends React.Component {
             for(var quiz_id in statistics[username]) {
                 var score = 0;
                 var total = 0;
-                for (var question_id in statistics[username][quiz_id].answers){
-                    var question = statistics[username][quiz_id].answers[question_id];
+                statistics[username][quiz_id].answers.forEach((question) => {
                     score += question.score;
                     total += question.total;
-                }
+                });
+
                 grade += 100.0 * (score / total);
                 count++;
             }

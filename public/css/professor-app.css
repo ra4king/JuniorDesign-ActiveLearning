@@ -136,32 +136,33 @@
     width: 50%;
 }
 
-#save-publish-buttons {
+#quiz-creator-buttons {
     margin-bottom: 10px;
 }
 
-#save-quiz-button {
+#quiz-creator-buttons button {
     flex: 0 1 auto;
-    width: 100px;
     height: 40px;
     font-size: 20px;
-
-    background-color: #456789;
     color: white;
     border: none;
+}
+
+#save-quiz-button {
+    width: 100px;
+    background-color: #456789;
     margin-right: 5px;
 }
 
 #publish-quiz-buton {
-    flex: 0 1 auto;
     width: 100px;
-    height: 40px;
-    font-size: 20px;
-
     background-color: #176d18;
-    color: white;
-    border: none;
     margin-left: 5px;
+}
+
+#present-live-button {
+    width: 150px;
+    background-color: #14C500;
 }
 
 .quiz-creator-header-entry {
@@ -268,6 +269,46 @@
     margin-left: 10px;
 }
 
+#live-quiz-presenter {
+    position: fixed;
+    background-color: #2C2C2C;
+    color: white;
+    border: 1px solid black;
+    top: 10%;
+    left: 10%;
+    width: 80%;
+    bottom: 10%;
+    padding: 10px;
+    font-size: 32px;
+    z-index: 2;
+    overflow: hidden;
+
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: space-between;
+    align-content: flex-start;
+}
+
+#live-quiz-questions {
+    width: 60%;
+    height: 100%;
+    overflow: auto;
+}
+
+#live-quiz-name {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+#live-quiz-question-list {
+    list-style: decimal inside;
+}
+
+#live-quiz-stats {
+    width: 40%;
+    height: 60%;
+}
+
 .remove-tag-button {
     background-color: #FF2222;
     color: white;
@@ -297,10 +338,12 @@
 .live-button {
     position: absolute;
     display: block;
-    width: 21px;
-    height: 21px;
-    right: 1px;
+    width: 40px;
+
+    top: 1px;
     bottom: 1px;
+    right: 1px;
+
     background-color: #222222;
     color: white;
     border: none;

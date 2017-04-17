@@ -383,7 +383,9 @@ function createSession(username, password, invitation, callback) {
                             }
 
                             if(invitation) {
-                                handleInvitation(username, invitation, callback);
+                                handleInvitation(username, invitation, (err) => {
+                                    callback(err, id);
+                                });
                             } else {
                                 callback(null, id);
                             }
@@ -1317,19 +1319,28 @@ function submitQuiz(username, submission, callback) {
 
                     var to_submit = submissions[0];
 
-                    Object.keys(submission.answers).forEach((id) => {
-                        var idx = quiz.questions.findIndex((question) => question.id == id);
-                        if(idx != -1) {
-                            to_submit.answers.set(idx, {
-                                question_id: id,
-                                title: to_submit.answers[idx].title,
-                                options: quiz.questions[idx].answers.length,
-                                answer: submission.answers[id],
-                                score: submission.answers[id] == quiz.questions[idx].correct ? 1 : 0,
-                                total: 1
-                            });
-                        }
-                    });
+                    var answers = Object.keys(submission.answers);
+                    if(answers.length != 1) {
+                        return callback('Can only submit 1 question at a time for live quizzes.');
+                    }
+
+                    var id = answers[0];
+                    var idx = quiz.questions.findIndex((question) => question.id == id);
+
+                    if(idx != quiz.settings.live_question) {
+                        return callback('Cannot submit answer for non-live question.');
+                    }
+
+                    if(idx != -1) {
+                        to_submit.answers.set(idx, {
+                            question_id: id,
+                            title: to_submit.answers[idx].title,
+                            options: quiz.questions[idx].answers.length,
+                            answer: submission.answers[id],
+                            score: submission.answers[id] == quiz.questions[idx].correct ? 1 : 0,
+                            total: 1
+                        });
+                    }
 
                     to_submit.save((err) => {
                         if(err) {

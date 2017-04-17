@@ -68,11 +68,11 @@ class GraphPanel extends React.Component {
         for (var quiz_id in statistics) {
             var score = 0;
             var total = 0;
-            for (var question_id in statistics[quiz_id].answers){
-                var question = statistics[quiz_id].answers[question_id];
+            statistics[quiz_id].answers.forEach((question) => {
                 score += question.score;
                 total += question.total;
-            }
+            });
+
             quizNames.push(statistics[quiz_id].name);
             quizScores.push(100.0 * (score / total));
         }

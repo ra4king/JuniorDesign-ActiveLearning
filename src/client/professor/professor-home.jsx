@@ -27,6 +27,7 @@ export default class HomePanels extends React.Component {
                     selectedTerm={this.props.selectedTerm}
                     questions={this.props.questions}
                     quizzes={this.props.quizzes}
+                    submissions={this.props.submissions}
                     setCreatingQuiz={this.setCreatingQuiz.bind(this)}
                     getResource={this.props.getResource}
                     showConfirm={this.props.showConfirm} />
@@ -96,6 +97,7 @@ class QuizPanel extends React.Component {
                         selectedTerm={this.props.selectedTerm}
                         quiz={this.state.editQuiz}
                         questions={this.props.questions}
+                        submissions={this.props.submissions}
                         hideQuizEditor={this.hideQuizEditor.bind(this)}
                         getResource={this.props.getResource}
                         showConfirm={this.props.showConfirm} />)
@@ -256,22 +258,6 @@ class QuizEditor extends React.Component {
         });
     }
 
-    presentLive(id) {
-        if(!this.state.is_published || !this.state.is_live) {
-            return console.error('Cannot present live.');
-        }
-
-        var idx = this.state.questions.indexOf(id);
-        if(idx != -1) {
-            socket.send('updateLiveQuiz', { quiz_id: this.state._id, question_idx: idx }, (err) => {
-                if(err) {
-                    console.error('Error when presenting live.');
-                    console.error(err);
-                }
-            });
-        }
-    }
-
     onDragStart(id, e) {
         e.dataTransfer.setData('question-id', id);
     }
@@ -339,10 +325,24 @@ class QuizEditor extends React.Component {
     render() {
         return (
             <div id='quiz-creator'>
+                {this.state.presentLive && <div id='overlay'></div>}
+                {this.state.presentLive &&
+                    <LiveQuizPresenter
+                        closePresenter={() => this.setState({ presentLive: false })}
+                        quiz={this.props.quiz}
+                        questions={this.props.questions}
+                        submissions={this.props.submissions}
+                        getResource={this.props.getResource}
+                        showConfirm={this.props.showConfirm} /> }
+
                 {!this.state.is_published &&
-                    <div id='save-publish-buttons'>
+                    <div id='quiz-creator-buttons'>
                         <button id='save-quiz-button' onClick={() => this.submitQuiz(false)}>Save</button>
                         <button id='publish-quiz-buton' onClick={() => this.submitQuiz(true)}>Publish</button>
+                    </div>}
+                {this.state.is_published && this.state.is_live &&
+                    <div id='quiz-creator-buttons'>
+                        <button id='present-live-button' onClick={() => this.setState({ presentLive: true })}>Present Live</button>
                     </div>}
                 <div id='quiz-creator-header'>
                     <div id='quiz-creator-table'>
@@ -498,14 +498,148 @@ class QuizEditor extends React.Component {
                                 draggedOver={this.state.dragOverId == id}>
 
                                 {!this.state.is_published && <button className='delete-button' onClick={() => this.removeQuestion(id)}>&#10006;</button>}
-                                {this.state.is_live && this.state.is_published &&
-                                    <button
-                                        className={'live-button' + (this.state.settings.live_question == idx ? ' is-live' : '')}
-                                        onClick={() => this.presentLive(id)}>L</button>}
                             </Question>)),
                             (<li key='hidden' style={{ visibility: 'hidden', height: '100px' }}></li>)]
                         : (<li style={{ listStyleType: 'none', textAlign: 'center' }}>Drag questions here!</li>)}
                 </ol>
+            </div>
+        );
+    }
+}
+
+class LiveQuizPresenter extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            statistics: this.getStatistics(props.submissions)
+        };
+    }
+
+    componentWillReceiveProps(newProps) {
+        this.setState({ statistics: this.getStatistics(newProps.submissions) }, this.setupChart.bind(this));
+    }
+
+    getStatistics(submissions) {
+        var statistics = {};
+        for(var id in submissions) {
+            var submission = submissions[id];
+
+            if(!(submission.username in statistics)) {
+                statistics[submission.username] = {};
+            }
+
+            statistics[submission.username][submission.quiz_id] = {
+                name: submission.quiz_name,
+                answers: submission.answers
+            };
+        }
+        return statistics;
+    }
+
+    presentLive(id) {
+        var idx = this.props.quiz.questions.indexOf(id);
+        if(idx != -1) {
+            socket.send('updateLiveQuiz', { quiz_id: this.props.quiz._id, question_idx: idx }, (err) => {
+                if(err) {
+                    console.error('Error when presenting live.');
+                    console.error(err);
+                }
+            });
+        }
+    }
+
+    setupChart(canvas) {
+        this.canvas = this.canvas || canvas;
+
+        var max = 0;
+        var title = '';
+        var choices = [];
+        var selections = [];
+
+        if(this.props.quiz.settings.live_question >= 0) {
+            var live_question_id = this.props.quiz.questions[this.props.quiz.settings.live_question];
+
+            var statistics = this.state.statistics;
+
+            for(var username in statistics) {
+                for(var quiz_id in statistics[username]) {
+                    if(quiz_id == this.props.quiz._id) {
+                        statistics[username][quiz_id].answers.forEach((question) => {
+                            if(question.question_id == live_question_id) {
+                                if(choices.length == 0) {
+                                    title = question.title;
+                                    choices = Array.from(new Array(question.options || 0)).map((_, idx) => String.fromCharCode('A'.charCodeAt(0) + idx));
+                                    selections = Array.from(new Array(question.options || 0)).map(() => 0);
+                                }
+
+                                if(question.answer >= 0) {
+                                    selections[question.answer]++;
+
+                                    if(selections[question.answer] > max) {
+                                        max = selections[question.answer];
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
+            }
+        }
+
+        var info = {
+            labels: choices,
+            datasets: [{
+                label: title,
+                data: selections,
+                backgroundColor: 'rgba(100, 129, 237, 0.5)',
+                borderColor: 'rgba(200, 200, 200, 1)',
+                borderWidth: 2
+            }]
+        };
+
+
+        if(this.chart) {
+            this.chart.destroy();
+        }
+
+        this.chart = new Chart(this.canvas, {
+            type: 'bar', 
+            data: info,
+            options: {
+                maintainAspectRatio: false,
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero:true,
+                            max: max
+                        }
+                    }]
+                }
+            }
+        });
+    }
+
+    render() {
+        return (
+            <div id='live-quiz-presenter'>
+                <button className='delete-button' onClick={() => this.props.closePresenter()}>&#10006;</button>
+
+                <div id='live-quiz-questions'>
+                    <p id='live-quiz-name'>{this.props.quiz.name}</p>
+                    <ol id='live-quiz-question-list'>
+                        {this.props.quiz.questions.map((id, idx) => (
+                            <Question key={id} question={this.props.questions[id]} getResource={this.props.getResource}>
+                                <button
+                                    className={'live-button' + (this.props.quiz.settings.live_question == idx ? ' is-live' : '')}
+                                    onClick={() => this.presentLive(id)}>L</button>
+                            </Question>))}
+                    </ol>
+                </div>
+
+                <div id='live-quiz-stats'>
+                    <canvas ref={this.setupChart.bind(this)} id='live-quiz-chart'></canvas>
+                </div>
             </div>
         );
     }
@@ -910,11 +1044,11 @@ class QuestionEditor extends React.Component {
 
                 <div className='question-creator-row'>
                     <label className='option-button'>
-                        Select file
+                        Select image
                         <input type='file' onChange={this.imageSelected.bind(this)} />
                     </label>
                     {this.state.image &&
-                        <button className='option-button clear-image-button' onClick={this.clearImage.bind(this)}>Clear image</button>}
+                        <button id='clear-image-button' className='option-button' onClick={this.clearImage.bind(this)}>Clear image</button>}
                 </div>
 
                 {this.state.image &&

@@ -11,11 +11,20 @@ export default class SettingsPanels extends React.Component {
             selectedUser: null
         };
 
+        this.getUsers = this.getUsers.bind(this);
+
         if(socket.isLoggedIn()) {
             this.getUsers();
         } else {
-            socket.on('login', this.getUsers.bind(this));
+            socket.on('login', this.getUsers);
         }
+
+        socket.on('term', this.getUsers);
+    }
+
+    componentWillUnmount() {
+        socket.remove('login', this.getUsers);
+        socket.remove('term', this.getUsers);
     }
 
     getUsers() {
@@ -95,7 +104,7 @@ class StudentPanel extends React.Component {
             if(err) {
                 this.props.showConfirm({ type: 'ok', title: 'Error creating invitation: ' + err });
             } else {
-                this.setState({ invitationURL: 'http://localhost:1337/active-learning/login?register=true&invitation=' + id });
+                this.setState({ invitationURL: document.location.href.replace('settings', 'login?register=true&invitation=' + id) });
             }
         });
     }

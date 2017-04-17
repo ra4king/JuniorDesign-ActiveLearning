@@ -130,8 +130,17 @@ class QuestionPanel extends React.Component {
         super(props);
 
         this.state = {
+            quiz_id: props.quiz ? props.quiz._id : null,
             startQuiz: false
         };
+    }
+
+    componentWillReceiveProps(newProps) {
+        this.setState((prevState) => {
+            if(!newProps.quiz || prevState.quiz_id != newProps.quiz._id) {
+                return { quiz_id: newProps.quiz ? newProps.quiz._id : null, startQuiz: false };
+            }
+        });
     }
 
     render() {

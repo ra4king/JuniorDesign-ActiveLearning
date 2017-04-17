@@ -34,6 +34,23 @@ module.exports = function(base_url, server, database) {
             allConnections[user.username].socket.sendEvent('user', user);
         }
     });
+    database.events.on('term', (term) => {
+        let name = term._id + '-term';
+
+        if(subscriptions[name]) {
+            subscriptions[name].forEach((connection) => {
+                var termWithoutUsers = Object.assign({}, term);
+                delete termWithoutUsers.users;
+
+                var [permissions, admin] = getPermissions(connection);
+                if(admin) {
+                    connection.socket.sendEvent('term', term);
+                } else {
+                    connection.socket.sendEvent('term', termWithoutUsers);
+                }
+            });
+        }
+    });
     database.events.on('question', (question) => {
         let name = question.course_id + '-questions';
 
@@ -77,11 +94,7 @@ module.exports = function(base_url, server, database) {
         let name = submission.term_id + '-submissions';
 
         if(subscriptions[name]) {
-            // process submission object here
-
-            subscriptions[name].forEach((connection) => {
-                connection.socket.sendEvent('submissions', [submission]);
-            });
+            subscriptions[name].forEach(sendSubmissions);
         }
     });
 
@@ -164,7 +177,7 @@ module.exports = function(base_url, server, database) {
                     unsubscribe(connection.selectedTerm.course_id + '-questions', connection);
                     unsubscribe(connection.selectedTerm.term_id + '-quizzes', connection);
                     unsubscribe(connection.selectedTerm.term_id + '-submissions', connection);
-                    unsubscribe(connection.selectedTerm.term_id + '-terms', connection);
+                    unsubscribe(connection.selectedTerm.term_id + '-term', connection);
                 }
 
                 connection.selectedTerm = {
@@ -179,7 +192,7 @@ module.exports = function(base_url, server, database) {
 
                 subscribe(term_id + '-quizzes', connection);
                 subscribe(term_id + '-submissions', connection);
-                subscribe(term_id + '-terms', connection);
+                subscribe(term_id + '-term', connection);
 
                 reply(null, term);
 
@@ -421,7 +434,7 @@ module.exports = function(base_url, server, database) {
                 unsubscribe(connection.selectedTerm.course_id + '-questions', connection);
                 unsubscribe(connection.selectedTerm.term_id + '-quizzes', connection);
                 unsubscribe(connection.selectedTerm.term_id + '-submissions', connection);
-                unsubscribe(connection.selectedTerm.term_id + '-terms', connection);
+                unsubscribe(connection.selectedTerm.term_id + '-term', connection);
             }
         });
     });
