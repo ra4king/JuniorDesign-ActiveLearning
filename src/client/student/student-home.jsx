@@ -249,16 +249,18 @@ class QuestionList extends React.Component {
     render() {
         return (
             <ol id='question-list' className='list'>
-                {[this.props.quiz.questions.map((question, idx) =>
-                    (<Question
-                            key={question._id}
-                            getResource={this.props.getResource}
-                            question={question}
-                            answerSelected={this.answerSelected.bind(this, question._id )} />)),
+                {[this.props.quiz.questions.length == 0
+                    ? (<li key='no-quiz' id='no-question-available'>No question is available right now</li>)
+                    : this.props.quiz.questions.map((question, idx) =>
+                        (<Question
+                                key={question._id}
+                                getResource={this.props.getResource}
+                                question={question}
+                                answerSelected={this.answerSelected.bind(this, question._id )} />)),
 
                     (<li key='submit-all' className='submit-all'>
                         {new Date() >= new Date(this.props.quiz.settings.open_date) && new Date() <= new Date(this.props.quiz.settings.close_date)
-                            && <button className='submit-all-button' onClick={this.submitClicked.bind(this)}>Submit All</button>}
+                            && <button className='submit-all-button' onClick={this.submitClicked.bind(this)}>{this.props.quiz.is_live ? 'Submit' : 'Submit All'}</button>}
                     </li>)
                 ]}
             </ol>

@@ -24,13 +24,18 @@
     text-align: center;
 }
 
+#no-question-available {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
 .submit-all-button {
     text-align: center;
     color: white;
     background-color: #176d18;
     border: none;
     font-size: 24px;
-    margin-left: 41%;
+    margin: auto;
     margin-bottom: 10px;
     display: block;
 }
