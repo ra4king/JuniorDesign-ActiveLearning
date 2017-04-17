@@ -549,6 +549,17 @@ class LiveQuizPresenter extends React.Component {
         }
     }
 
+    closePresenter() {
+        socket.send('updateLiveQuiz', { quiz_id: this.props.quiz._id, question_idx: -1 }, (err) => {
+            if(err) {
+                console.error('Error when ending live quiz.');
+                console.error(err);
+            }
+
+            this.props.closePresenter();
+        });
+    }
+
     setupChart(canvas) {
         this.canvas = this.canvas || canvas;
 
@@ -623,7 +634,7 @@ class LiveQuizPresenter extends React.Component {
     render() {
         return (
             <div id='live-quiz-presenter'>
-                <button className='delete-button' onClick={() => this.props.closePresenter()}>&#10006;</button>
+                <button className='delete-button' onClick={this.closePresenter.bind(this)}>&#10006;</button>
 
                 <div id='live-quiz-questions'>
                     <p id='live-quiz-name'>{this.props.quiz.name}</p>
