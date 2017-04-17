@@ -9,7 +9,7 @@ import { Router, Route, IndexRoute, IndexLink, browserHistory } from 'react-rout
 export default class HomePanels extends React.Component {
     constructor(props) {
         super(props);
-        
+
         this.state = {
             selectedQuiz: null,
             showDiscardConfirm: false,
@@ -159,7 +159,7 @@ class QuestionPanel extends React.Component {
 class QuizInfo extends React.Component {
     render() {
         return (
-            <div id='quiz-info' className='list'>
+            <div id='quiz-info' className='quiz-view-header'>
                 {new Date() >= new Date(this.props.quiz.settings.open_date) && new Date() <= new Date(this.props.quiz.settings.close_date)
                     && <button className='option-button' onClick={this.props.startQuiz}>Start Quiz</button>}
 
