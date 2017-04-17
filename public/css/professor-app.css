@@ -389,7 +389,21 @@
     margin-right: 5px;
 }
 
+#student-lists {
+    flex: 1 1 auto;
+    overflow: hidden;
+
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: flex-start;
+    align-items: stretch;
+
+    height: 100%;
+}
+
 #tabs {
+    flex: 0 1 auto;
+
     display: flex;
     flex-flow: row nowrap;
     justify-content: center;
@@ -428,9 +442,14 @@
     flex-flow: column nowrap;
     justify-content: flex-start;
     align-items: stretch;
-
     width: 100%;
+}
+
+.student-list {
+    flex: 1 1 auto;
+
     list-style-type: none;
+    overflow: auto;
 }
 
 .list-button {

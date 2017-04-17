@@ -120,7 +120,7 @@ class StudentPanel extends React.Component {
                     <button onClick={this.createInvitation.bind(this)}>Create Invitation Link</button>
                     <input type='text' value={this.state.invitationURL} readOnly={true} />
                 </div>
-                <div id='student-list'>
+                <div id='student-lists'>
                     <ul id='tabs'>
                         <li>
                             <a href='#' className={'tablinks' + (this.state.showStudents ? ' tablinks-active' : '')} onClick={() => this.setState({ showStudents: true })}>
@@ -135,7 +135,7 @@ class StudentPanel extends React.Component {
                     </ul>
 
                     {this.state.showStudents
-                        ? (<div className='student-list'>
+                        ? (<ul className='student-list'>
                             {this.props.users.map((user) => (
                                 (!user.permissions || !user.permissions.isTA) &&
                                     (<li key={user.username}>
@@ -144,8 +144,8 @@ class StudentPanel extends React.Component {
                                         </button>
                                     </li>)
                             ))}
-                        </div>)
-                        : (<div className='student-list'>
+                        </ul>)
+                        : (<ul className='student-list'>
                             {this.props.users.map((user) => (
                                 user.permissions && user.permissions.isTA &&
                                     (<li key={user.username}>
@@ -154,7 +154,7 @@ class StudentPanel extends React.Component {
                                         </button>
                                     </li>)
                             ))}
-                        </div>)}
+                        </ul>)}
                 </div>
             </div>
         );
