@@ -76,6 +76,7 @@ class QuizList extends React.Component {
                             var quiz = this.props.quizzes[id];
                             return quiz.is_live && new Date() >= new Date(quiz.settings.open_date) && new Date() <= new Date(quiz.settings.close_date);
                         })
+                        .sort((id1, id2) => this.props.quizzes[id1].settings.open_date - this.props.quizzes[id2].settings.open_date)
                         .map((id) => {
                             var quiz = this.props.quizzes[id];
                             var chooseQuizId = this.props.chooseQuiz.bind(null, id);
@@ -93,6 +94,7 @@ class QuizList extends React.Component {
                             var quiz = this.props.quizzes[id];
                             return !quiz.is_live && new Date() >= new Date(quiz.settings.open_date) && new Date() <= new Date(quiz.settings.close_date);
                         })
+                        .sort((id1, id2) => this.props.quizzes[id1].settings.open_date - this.props.quizzes[id2].settings.open_date)
                         .map((id) => {
                             var quiz = this.props.quizzes[id];
                             var chooseQuizId = this.props.chooseQuiz.bind(null, id);
@@ -110,6 +112,7 @@ class QuizList extends React.Component {
                             var quiz = this.props.quizzes[id];
                             return new Date() < new Date(quiz.settings.open_date) || new Date() > new Date(quiz.settings.close_date);
                         })
+                        .sort((id1, id2) => this.props.quizzes[id1].settings.open_date - this.props.quizzes[id2].settings.open_date)
                         .map((id) => {
                             var quiz = this.props.quizzes[id];
                             var chooseQuizId = this.props.chooseQuiz.bind(null, id);

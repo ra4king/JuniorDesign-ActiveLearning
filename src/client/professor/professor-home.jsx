@@ -653,6 +653,7 @@ class QuizList extends React.Component {
                 <ol className='quiz-list'>
                     {Object.keys(this.props.quizzes)
                         .filter((id) => this.props.quizzes[id].is_published && this.props.quizzes[id].is_live)
+                        .sort((id1, id2) => this.props.quizzes[id1].settings.open_date - this.props.quizzes[id2].settings.open_date)
                         .map((id) => {
                             var quiz = this.props.quizzes[id];
                             return (
@@ -667,6 +668,7 @@ class QuizList extends React.Component {
                 <ol className='quiz-list'>
                     {Object.keys(this.props.quizzes)
                         .filter((id) => this.props.quizzes[id].is_published && !this.props.quizzes[id].is_live)
+                        .sort((id1, id2) => this.props.quizzes[id1].settings.open_date - this.props.quizzes[id2].settings.open_date)
                         .map((id) => {
                             var quiz = this.props.quizzes[id];
                             return (
@@ -681,6 +683,7 @@ class QuizList extends React.Component {
                 <ol className='quiz-list'>
                     {Object.keys(this.props.quizzes)
                         .filter((id) => !this.props.quizzes[id].is_published)
+                        .sort((id1, id2) => this.props.quizzes[id1].settings.open_date - this.props.quizzes[id2].settings.open_date)
                         .map((id) => {
                             var quiz = this.props.quizzes[id];
                             return (
