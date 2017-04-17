@@ -277,7 +277,7 @@ class GraphPanel extends React.Component {
                     statistics[username][quiz_id].answers.forEach((question) => {
                         var answerScores = [];
 
-                        var prev = questions[question.name] || { score: 0, total: 0, answerScores: new Array(question.options || 0).fill(0) }
+                        var prev = questions[question.title] || { score: 0, total: 0, answerScores: new Array(question.options || 0).fill(0) }
 
                         if(question.answer >= 0) {
                             prev.answerScores[question.answer] += question.total;
@@ -290,7 +290,7 @@ class GraphPanel extends React.Component {
                         prev.score += question.score;
                         prev.total += question.total;
 
-                        questions[question.name] = prev;
+                        questions[question.title] = prev;
                     });
                 }
             }
@@ -298,7 +298,7 @@ class GraphPanel extends React.Component {
 
         var labels = []
         var data = []
-        for(question in questions) {
+        for(var question in questions) {
             var str = question + ' ';
             str += questions[question].answerScores.map((score, idx) => 
                 String.fromCharCode('A'.charCodeAt(0) + idx) + ': ' + ((100 * (score / questions[question].total)).toFixed(2)) + '%').join(' ');
@@ -430,6 +430,8 @@ class GraphPanel extends React.Component {
         return (
             <div className='panel' id='statistics-panel'>
                 <canvas ref={this.setupChart.bind(this)} id='statistics-chart'></canvas>
+
+                <div id='statistics-info'></div>
             </div>
         );
     }
