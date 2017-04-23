@@ -66,7 +66,7 @@ mongoose.Promise = Promise;
 const Schema = mongoose.Schema;
 
 const config = require('./config.json');
-mongoose.connect('mongodb://roiatalla.com:27017/admin', { user: config.user, pass: config.pwd }, (err) => {
+mongoose.connect(config.url, { user: config.user, pass: config.pwd }, (err) => {
     if(err) {
         console.error('Error connecting to MongoDB.');
         console.error(err);
