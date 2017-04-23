@@ -3,8 +3,9 @@ The Active Learning site for Junior Design 2016-2017.
 
 Prerequisites
 -------------
-- nodejs
-- npm
+- NodeJS
+- NPM
+- MongoDB
 
 Launching the server
 --------------------
