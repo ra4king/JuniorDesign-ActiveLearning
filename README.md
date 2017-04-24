@@ -21,6 +21,7 @@ To change these, modify the values in `src/server/main.js` (and `src/server/debu
 
 
 ### Release Notes:
+--------------------
 
 #### New Features
 - Account creation with secure password encryption
