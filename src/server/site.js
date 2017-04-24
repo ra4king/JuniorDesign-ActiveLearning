@@ -33,24 +33,8 @@ module.exports = function(server, app, base_url, debug) {
         }
     };
 
-    app.get('/', check_login, (req, res) => {
-        var api_host = debug ? 'ws://localhost:1337/active-learning/api' : 'wss://www.roiatalla.com/active-learning/api';
-        res.render('app', {api_host: api_host});
-    });
-
-    app.get('/select-term', check_login, (req, res) => {
-        var api_host = debug ? 'ws://localhost:1337/active-learning/api' : 'wss://www.roiatalla.com/active-learning/api';
-        res.render('app', {api_host: api_host});
-    });
-
-    app.get('/statistics', check_login, (req, res) => {
-        var api_host = debug ? 'ws://localhost:1337/active-learning/api' : 'wss://www.roiatalla.com/active-learning/api';
-        res.render('app', {api_host: api_host});
-    });
-
-    app.get('/settings', check_login, (req, res) => {
-        var api_host = debug ? 'ws://localhost:1337/active-learning/api' : 'wss://www.roiatalla.com/active-learning/api';
-        res.render('app', {api_host: api_host});
+    app.get(['/', '/select-term', '/statistics', '/settings'], check_login, (req, res) => {
+        res.render('app', { api_path: base_url + '/api' });
     });
 
     app.use('/login', require('csurf')({ cookie: true }));

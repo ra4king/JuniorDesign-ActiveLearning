@@ -23,8 +23,25 @@ export default new function() {
 
         connecting = true;
 
+        var url = window.location.href;
+
+        var protocol;
+        var hostname;
+        //find & remove protocol (http, ftp, etc.) and get the hostname
+        if (url.indexOf("://") > -1) {
+            let pieces = url.split('/');
+            protocol = pieces[0];
+            hostname = pieces[2];
+        }
+        else {
+            hostname = url.split('/')[0];
+        }
+
+        var path = 'ws' + (protocol == 'https:' ? 's' : '') + '://' + hostname + api_path;
+        console.log(path);
+
         console.log('Connecting...');
-        var s = new WebSocket(api_host);
+        var s = new WebSocket(path);
         s.onopen = () => {
             websocket = s;
             console.log('Connected to server!');
