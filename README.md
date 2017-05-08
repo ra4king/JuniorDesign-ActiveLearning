@@ -3,13 +3,22 @@ The Active Learning site for Junior Design 2016-2017. Currently running at roiat
 
 ### Prerequisites
 -------------
-- NodeJS
-- NPM
-- MongoDB
+- NodeJS: minimum v6.0: `sudo apt-get install nodejs`
+- NPM: comes installed with NodeJS
+- MongoDB: set it up with a user account: `sudo apt-get install mongodb`
 
 ### Launching the server
 --------------------
 - Create a `config.json` file in `src/server` with keys: url, user, pwd, which are the URL of the MongoDB server, the username, and password of the MongoDB user.
+
+~~~    
+{
+  "url": "mongodb://localhost:27017/admin",
+  "user": "admin",
+  "pwd": "pwdforadmin"
+}
+~~~
+
 - `npm install`
 - `npm start`
 
