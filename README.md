@@ -9,24 +9,20 @@ The Active Learning site for Junior Design 2016-2017. Currently running at roiat
 
 ### Launching the server
 --------------------
-- Create a `config.json` file in `src/server` with keys: url, user, pwd, which are the URL of the MongoDB server, the username, and password of the MongoDB user.
+- Create a `config.json` file in `src/server` like so:
 
-~~~    
+~~~
 {
-  "url": "mongodb://localhost:27017/admin",
-  "user": "admin",
-  "pwd": "pwdforadmin"
+  "port": 1337,                                   /* the port the server will be listening on */
+  "base_path": "/active-learning",                /* the base path of the site */
+  "mongo_url": "mongodb://localhost:27017/admin", /* the URL of the MongoDB instance */
+  "user": "admin",                                /* the username of the MongoDB account */
+  "pwd": "pwdforadmin"                            /* the password of the MongoDB account */
 }
 ~~~
 
 - `npm install`
 - `npm start`
-
-To debug:
-- `npm run debug`
-
-By default the server is listening on port 1337 and expects the root path to start with `/active-learning`.
-To change these, modify the values in `src/server/main.js` (and `src/server/debug.js` if using the debug mode).
 
 
 ### Release Notes:
