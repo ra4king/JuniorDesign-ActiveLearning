@@ -2,7 +2,7 @@
 
 const config = require('./config.json');
 const port = config.port;
-const base_url = config.base_url;
+const base_path = config.base_path;
 
 var express = require('express');
 
@@ -10,9 +10,9 @@ const main = express();
 const server = require('http').createServer(main);
 
 const app = express();
-main.use(base_url, app);
+main.use(base_path, app);
 
-require('./site.js')(server, app, base_url);
+require('./site.js')(server, app, base_path);
 
 server.listen(port, function() {
     console.log('Site is up at port ' + port + '.');
