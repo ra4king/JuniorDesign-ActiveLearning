@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = function(server, app, base_url, debug) {
+module.exports = function(server, app, base_path, debug) {
     const express = require('express');
     const querystring = require('querystring');
 
@@ -9,7 +9,7 @@ module.exports = function(server, app, base_url, debug) {
     app.set('view engine', 'html');
 
     const database = require('./database.js');
-    require('./api.js')(base_url, server, database);
+    require('./api.js')(base_path, server, database);
 
     app.use(require('cookie-parser')('A very important secret'));
     app.use(require('body-parser').urlencoded({ extended: false }));
@@ -34,7 +34,7 @@ module.exports = function(server, app, base_url, debug) {
     };
 
     app.get(['/', '/select-term', '/statistics', '/settings'], check_login, (req, res) => {
-        res.render('app', { api_path: base_url + '/api' });
+        res.render('app', { api_path: base_path + '/api' });
     });
 
     app.use('/login', require('csurf')({ cookie: true }));
