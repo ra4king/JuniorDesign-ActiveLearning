@@ -16,6 +16,16 @@ export default class HomePanels extends React.Component {
         };
     }
 
+    componentWillReceiveProps(newProps) {
+        this.setState((prevState) => {
+            if(prevState.showDiscardConfirm && prevState.selectedQuiz && !newProps.quizzes[prevState.selectedQuiz]) {
+                return { selectedQuiz: null, showDiscardConfirm: false };
+            }
+
+            return {};
+        });
+    }
+
     chooseQuiz(id) {
         if(id == this.state.selectedQuiz)
             return;
@@ -196,8 +206,8 @@ class QuestionList extends React.Component {
         this.answers = {};
     }
 
-    componentWillReceiveProps(nextProps) {
-        if(nextProps.quiz._id != this._id) {
+    componentWillReceiveProps(newProps) {
+        if(newProps.quiz._id != this._id) {
             this.answers = {};
         }
     }
@@ -220,6 +230,10 @@ class QuestionList extends React.Component {
                     this.props.hideQuiz();
                     this.answers = {};
                     this._id = null;
+                }
+
+                if(this.props.quiz.is_live) {
+                    this.answers = {};
                 }
             });
         }

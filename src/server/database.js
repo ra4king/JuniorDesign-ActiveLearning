@@ -66,7 +66,7 @@ mongoose.Promise = Promise;
 const Schema = mongoose.Schema;
 
 const config = require('./config.json');
-mongoose.connect(config.url, { user: config.user, pass: config.pwd }, (err) => {
+mongoose.connect(config.mongo_url, { user: config.user, pass: config.pwd }, (err) => {
     if(err) {
         console.error('Error connecting to MongoDB.');
         console.error(err);
@@ -104,7 +104,7 @@ const usersSchema = new Schema({
     auth: {
         hash: { type: String, required: true },
         salt: { type: String, required: true },
-        iterations: { type: Number, required: true },
+        iterations: { type: Number, required: true }
     },
     admin: Boolean,
     permissions: {
@@ -152,7 +152,7 @@ invitationsSchema.index({ createdAt: 1 }, { background: true, expireAfterSeconds
 const Invitation = mongoose.model('Invitation', invitationsSchema);
 
 const resourcesSchema = new Schema({
-    data: { type: String, required: true },
+    data: { type: String, required: true }
 });
 const Resource = mongoose.model('Resource', resourcesSchema);
 
@@ -224,12 +224,12 @@ const quizzesSchema = new Schema({
         open_date: {
             type: Date,
             required: true,
-            validate: [function(open_date) { return new Date(open_date) < this.settings.close_date }, 'Open date is not less than close_date.']
+            validate: [function(open_date) { return new Date(open_date) < this.settings.close_date; }, 'Open date is not less than close_date.']
         },
         close_date: {
             type: Date,
             required: true,
-            validate: [function(close_date) { return this.settings.open_date < new Date(close_date) }, 'Close date is not greater than open_date.']
+            validate: [function(close_date) { return this.settings.open_date < new Date(close_date); }, 'Close date is not greater than open_date.']
         },
         max_submission: {
             type: Number,
@@ -280,7 +280,7 @@ function handleError(err, callback) {
     var msg = err.errors ? Object.keys(err.errors).map((prop) => err.errors[prop].message).join(' ') : String(err);
 
     console.error(msg);
-    callback(msg)
+    callback(msg);
 }
 
 function createUser(username, passwords, invitation, callback) {
@@ -330,7 +330,7 @@ function createUser(username, passwords, invitation, callback) {
                     auth: {
                         hash: hash,
                         salt: salt,
-                        iterations: iterations,
+                        iterations: iterations
                     }
                 }).save((err, result) => {
                     if(err) {
@@ -881,7 +881,7 @@ function selectTerm(username, term_id, callback) {
                         _id: term_id,
                         name: term.name,
                         course: term.course_id,
-                        school: term.school_id,
+                        school: term.school_id
                     });
                 });
             });

@@ -1,7 +1,8 @@
 'use strict';
 
-const port = 1337;
-const base_url = '/active-learning';
+const config = require('./config.json');
+const port = config.port;
+const base_url = config.base_url;
 
 var express = require('express');
 
